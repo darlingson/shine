@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "dgSpecHash": "/81sxklBphE=",
+  "success": true,
+  "projectFilePath": "c:\\Users\\darlingson.makuwila\\personal\\shine\\ShineApi\\ShineApi.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.10\\microsoft.aspnetcore.openapi.10.0.10.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\microsoft.entityframeworkcore\\10.0.12\\microsoft.entityframeworkcore.10.0.12.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\10.0.12\\microsoft.entityframeworkcore.abstractions.10.0.12.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\10.0.12\\microsoft.entityframeworkcore.analyzers.10.0.12.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\microsoft.entityframeworkcore.inmemory\\10.0.12\\microsoft.entityframeworkcore.inmemory.10.0.12.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\namotion.reflection\\3.5.0\\namotion.reflection.3.5.0.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\njsonschema\\11.6.1\\njsonschema.11.6.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\njsonschema.annotations\\11.6.1\\njsonschema.annotations.11.6.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\njsonschema.newtonsoftjson\\11.6.1\\njsonschema.newtonsoftjson.11.6.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\njsonschema.yaml\\11.6.1\\njsonschema.yaml.11.6.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\nswag.annotations\\14.7.1\\nswag.annotations.14.7.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\nswag.aspnetcore\\14.7.1\\nswag.aspnetcore.14.7.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\nswag.core\\14.7.1\\nswag.core.14.7.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\nswag.core.yaml\\14.7.1\\nswag.core.yaml.14.7.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\nswag.generation\\14.7.1\\nswag.generation.14.7.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\nswag.generation.aspnetcore\\14.7.1\\nswag.generation.aspnetcore.14.7.1.nupkg.sha512",
+    "C:\\Users\\darlingson.makuwila\\.nuget\\packages\\yamldotnet\\16.3.0\\yamldotnet.16.3.0.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc",
+      "projectPath": "c:\\Users\\darlingson.makuwila\\personal\\shine\\ShineApi\\ShineApi.csproj",
+      "warningLevel": 1,
+      "filePath": "c:\\Users\\darlingson.makuwila\\personal\\shine\\ShineApi\\ShineApi.csproj",
+      "libraryId": "Microsoft.OpenApi",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
+}
