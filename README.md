@@ -82,6 +82,18 @@ All resources follow standard REST conventions (`GET` collection + item, `POST`,
 - `/api/ClubMatchSquads`
 - `/api/NationalTeamMatchSquads`
 
+## Deploying the API (Render)
+
+Only the API deploys to Render; the frontend lives in this repo but deploys separately to Vercel.
+
+- **Runtime:** Render has no .NET runtime, so the service uses Docker with the `Dockerfile` at the repo root (multi-stage: .NET 10 SDK build → ASP.NET runtime image).
+- **Port:** the container listens on Render's `$PORT` (defaults to `10000`). No port configuration needed.
+- **Health check:** set Render's **Health Check Path** to `/healthz`.
+- **HTTPS:** TLS terminates at Render's proxy. The app honors `X-Forwarded-Proto` via forwarded headers (`Program.cs`), so the dev-only HTTPS redirection doesn't loop behind the proxy.
+- **Persistence:** the current EF InMemory (`ShineDb`) store resets on every restart — acceptable for the initial version. The planned Neon (Postgres) migration should take its connection string from an environment variable, never a committed file.
+
+Swagger UI is only served in Development; in production use `/healthz` and the `/api/*` endpoints.
+
 ## Status and roadmap
 
 Implemented: CRUD API for the six core entities over an InMemory store, with service/repository layering and Swagger docs.

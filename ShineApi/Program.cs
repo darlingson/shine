@@ -6,6 +6,7 @@ using ShineApi.Services;
 using ShineApi.Services.Interfaces;
 
 using System;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using Serilog.Events;
 
@@ -48,6 +49,18 @@ builder.Services.AddScoped<INationalTeamMatchSquadService, NationalTeamMatchSqua
 
 var app = builder.Build();
 
+// Render terminates TLS at its proxy and forwards plain HTTP with
+// X-Forwarded-Proto. Honor those headers (first in the pipeline) so URL
+// generation and the HTTPS-redirection middleware see the original
+// client scheme instead of redirect-looping behind the proxy.
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -63,5 +76,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Liveness probe for the hosting platform (Render health check path: /healthz).
+app.MapGet("/healthz", () => Results.Ok("healthy"));
 
 app.Run();
