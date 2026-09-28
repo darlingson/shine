@@ -1,0 +1,20 @@
+# Git and editor artefacts
+.git/
+.vs/
+.vscode/
+.idea/
+
+# Build output (rebuilt inside the image)
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]ogs/
+logs/
+publish/
+
+# Docs and misc not needed to build the API
+docs/
+*.md
+
+# Docker files themselves
+Dockerfile
+.dockerignore
