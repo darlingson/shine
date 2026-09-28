@@ -5,7 +5,21 @@ using ShineApi.Repositories.Interfaces;
 using ShineApi.Services;
 using ShineApi.Services.Interfaces;
 
+using System;
+using Serilog;
+using Serilog.Events;
+
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File(
+        "logs/ShineApi.json", 
+        rollingInterval: RollingInterval.Day,
+        restrictedToMinimumLevel: LogEventLevel.Error
+        )
+    .CreateLogger();
 
 // Add services to the container.
 
@@ -16,7 +30,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ShineDbContext>(options =>
     options.UseInMemoryDatabase("ShineDb"));
 
-// Repositories: endpoints -> controller -> iservice -> service -> irepository -> repository
+// Repository interfaces
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 builder.Services.AddScoped<IMatchRepository, MatchRepository>();
@@ -24,7 +38,7 @@ builder.Services.AddScoped<IPlayerClubRepository, PlayerClubRepository>();
 builder.Services.AddScoped<IClubMatchSquadRepository, ClubMatchSquadRepository>();
 builder.Services.AddScoped<INationalTeamMatchSquadRepository, NationalTeamMatchSquadRepository>();
 
-// Services
+// Service interfaces
 builder.Services.AddScoped<IClubService, ClubService>();
 builder.Services.AddScoped<IPlayerService, PlayerService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
