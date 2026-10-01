@@ -29,7 +29,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<ShineDbContext>(options =>
-    options.UseInMemoryDatabase("ShineDb"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Repository interfaces
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
