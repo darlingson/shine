@@ -5,23 +5,23 @@ using ShineApi.Repositories.Interfaces;
 using ShineApi.Services;
 using ShineApi.Services.Interfaces;
 
-using System;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
-    .WriteTo.File(
-        "logs/ShineApi.json", 
-        rollingInterval: RollingInterval.Day,
-        restrictedToMinimumLevel: LogEventLevel.Error
-        )
-    .CreateLogger();
-
+builder.Host.UseSerilog((_, configuration) =>
+{
+    configuration
+        .MinimumLevel.Debug()
+        .WriteTo.Console()
+        .WriteTo.File(
+            "logs/ShineApi.json",
+            rollingInterval: RollingInterval.Day,
+            restrictedToMinimumLevel: LogEventLevel.Error
+        );
+});
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -29,7 +29,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<ShineDbContext>(options =>
-    options.UseInMemoryDatabase("ShineDb"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Repository interfaces
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
@@ -48,6 +49,9 @@ builder.Services.AddScoped<IClubMatchSquadService, ClubMatchSquadService>();
 builder.Services.AddScoped<INationalTeamMatchSquadService, NationalTeamMatchSquadService>();
 
 var app = builder.Build();
+
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Starting web host");
 
 // Render terminates TLS at its proxy and forwards plain HTTP with
 // X-Forwarded-Proto. Honor those headers (first in the pipeline) so URL
