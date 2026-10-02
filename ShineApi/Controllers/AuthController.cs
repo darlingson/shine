@@ -1,84 +1,135 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using ShineApi.Authorization;
+using ShineApi.Services.Auth;
 
-namespace ShineApi.Controllers
+namespace ShineApi.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class AuthController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AuthController : ControllerBase
+    private readonly UserManager<IdentityUser> _users;
+    private readonly RoleManager<IdentityRole> _roles;
+    private readonly ITokenService _tokens;
+
+    public AuthController(
+        UserManager<IdentityUser> users,
+        RoleManager<IdentityRole> roles,
+        ITokenService tokens)
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IConfiguration _config;
+        _users = users;
+        _roles = roles;
+        _tokens = tokens;
+    }
 
-        public AuthController(UserManager<IdentityUser> userManager, IConfiguration config)
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest model)
+    {
+        var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+        var result = await _users.CreateAsync(user, model.Password);
+
+        if (!result.Succeeded)
         {
-            _userManager = userManager;
-            _config = config;
+            return BadRequest(result.Errors);
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        if (!await _roles.RoleExistsAsync(Roles.Viewer))
         {
-            var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok("User registered successfully");
+            await _roles.CreateAsync(new IdentityRole(Roles.Viewer));
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        await _users.AddToRoleAsync(user, Roles.Viewer);
+
+        return Ok(await _tokens.IssueTokensAsync(user));
+    }
+
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] LoginRequest model)
+    {
+        var user = await _users.FindByEmailAsync(model.Email);
+        if (user is null || !await _users.CheckPasswordAsync(user, model.Password))
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                };
-
-                var token = GetToken(authClaims);
-
-                return Ok(new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
-                });
-            }
             return Unauthorized();
         }
 
-        private JwtSecurityToken GetToken(List<Claim> authClaims)
+        return Ok(await _tokens.IssueTokensAsync(user));
+    }
+
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest model)
+    {
+        var tokens = await _tokens.RefreshAsync(model.RefreshToken);
+        if (tokens is null)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            return new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Issuer"],
-                expires: DateTime.Now.AddHours(3),
-                claims: authClaims,
-                signingCredentials: creds
-            );
+            return Unauthorized();
         }
+
+        return Ok(tokens);
     }
 
-    public class RegisterModel
+    [HttpPost("revoke")]
+    [Authorize]
+    public async Task<IActionResult> Revoke([FromBody] RefreshRequest model)
     {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
+        var revoked = await _tokens.RevokeAsync(model.RefreshToken);
+        return revoked ? NoContent() : NotFound();
     }
 
-    public class LoginModel
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
     {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub");
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        await _tokens.RevokeAllForUserAsync(userId);
+        return NoContent();
     }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var user = await _users.GetUserAsync(User);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new
+        {
+            user.Id,
+            user.Email,
+            user.UserName,
+            roles = await _users.GetRolesAsync(user),
+            permissions = await _tokens.GetPermissionsAsync(user),
+        });
+    }
+}
+
+public sealed class RegisterRequest
+{
+    public string Email { get; set; } = "";
+    public string Password { get; set; } = "";
+}
+
+public sealed class LoginRequest
+{
+    public string Email { get; set; } = "";
+    public string Password { get; set; } = "";
+}
+
+public sealed class RefreshRequest
+{
+    public string RefreshToken { get; set; } = "";
 }
