@@ -30,7 +30,10 @@ builder.Host.UseSerilog((_, configuration) =>
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<ShineApi.OpenApi.BearerSecuritySchemeTransformer>();
+});
 
 builder.Services.AddDbContext<ShineDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -39,8 +42,12 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ShineDbContext>()
     .AddDefaultTokenProviders();
 
-var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Missing Jwt:Key (user-secrets or Jwt__Key env var).");
+if (jwtKey.Length < 32)
+    throw new InvalidOperationException("Jwt:Key must be at least 32 characters.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? jwtIssuer;
 
 builder.Services.AddAuthentication(options =>
 {
@@ -56,8 +63,9 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
-        ValidAudience = jwtIssuer,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero
     };
 });
 
