@@ -97,6 +97,7 @@ builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<IPlayerClubService, PlayerClubService>();
 builder.Services.AddScoped<IClubMatchSquadService, ClubMatchSquadService>();
 builder.Services.AddScoped<INationalTeamMatchSquadService, NationalTeamMatchSquadService>();
+builder.Services.AddScoped<ShineApi.Services.Auth.ITokenService, ShineApi.Services.Auth.TokenService>();
 
 var app = builder.Build();
 
