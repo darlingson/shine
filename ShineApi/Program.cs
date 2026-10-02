@@ -9,9 +9,11 @@ using ShineApi.Repositories.Interfaces;
 using ShineApi.Services;
 using ShineApi.Services.Interfaces;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using Serilog.Events;
+using ShineApi.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +70,17 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
+builder.Services.AddAuthorization(options =>
+{
+    foreach (var permission in Permissions.All)
+    {
+        options.AddPolicy(
+            Permissions.PolicyFor(permission),
+            policy => policy.Requirements.Add(new PermissionRequirement(permission)));
+    }
+});
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 // Repository interfaces
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
