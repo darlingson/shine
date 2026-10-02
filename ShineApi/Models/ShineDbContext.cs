@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 namespace ShineApi.Models;
 
-public class ShineDbContext : DbContext
+public class ShineDbContext : IdentityDbContext
 {
     public ShineDbContext(DbContextOptions<ShineDbContext> options)
         : base(options)
