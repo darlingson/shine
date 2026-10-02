@@ -104,6 +104,8 @@ var app = builder.Build();
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 logger.LogInformation("Starting web host");
 
+await RoleSeeder.EnsureAsync(app.Services);
+
 // Render terminates TLS at its proxy and forwards plain HTTP with
 // X-Forwarded-Proto. Honor those headers (first in the pipeline) so URL
 // generation and the HTTPS-redirection middleware see the original
