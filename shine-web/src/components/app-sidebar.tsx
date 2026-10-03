@@ -1,9 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import {
   ArrowSquareOutIcon,
+  ClipboardTextIcon,
   HouseIcon,
   ShieldCheckIcon,
   SignOutIcon,
+  TrophyIcon,
+  UserIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -83,6 +86,56 @@ export function AppSidebar() {
                 >
                   <ArrowSquareOutIcon />
                   <span>View site</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Data</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Players"
+                  render={
+                    <Link
+                      to="/manage/players"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <UserIcon />
+                  <span>Players</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Matches"
+                  render={
+                    <Link
+                      to="/manage/matches"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <TrophyIcon />
+                  <span>Matches</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Squads"
+                  render={
+                    <Link
+                      to="/manage/squads"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <ClipboardTextIcon />
+                  <span>Squads</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

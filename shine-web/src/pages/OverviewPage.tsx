@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/auth/AuthContext";
-import { RequirePermission } from "@/auth/RequirePermission";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,17 +32,16 @@ export function OverviewPage() {
               Players, clubs, matches and squads live here.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <RequirePermission
-              permission="players:write"
-              fallback={
-                <p className="text-sm text-muted-foreground">
-                  Read-only access — editing needs permission.
-                </p>
-              }
-            >
-              <Button>Add player (permission-gated demo)</Button>
-            </RequirePermission>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button variant="outline" render={<Link to="/manage/players" />}>
+              Players
+            </Button>
+            <Button variant="outline" render={<Link to="/manage/matches" />}>
+              Matches
+            </Button>
+            <Button variant="outline" render={<Link to="/manage/squads" />}>
+              Squads
+            </Button>
           </CardContent>
         </Card>
 
