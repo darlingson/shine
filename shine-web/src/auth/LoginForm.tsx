@@ -7,54 +7,93 @@ export function LoginForm() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(False);
+  const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(True);
+    setBusy(true);
     try {
       if (mode === "login") await login(email, password);
       else await register(email, password);
     } finally {
-      setBusy(False);
+      setBusy(false);
     }
   }
 
+  const isLogin = mode === "login";
+
   return (
-    <form onSubmit={onSubmit} className="flex max-w-sm min-w-0 flex-col gap-3">
-      <h1 className="font-medium">{mode === "login" ? "Log in" : "Create account"}</h1>
-      <label className="flex flex-col gap-1 text-sm">
-        Email
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="rounded-md border border-input bg-background px-3 py-2"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Password
-        <input
-          type="password"
-          required
-          minLength={6}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="rounded-md border border-input bg-background px-3 py-2"
-        />
-      </label>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={busy}>
-        {busy ? "Please wait…" : mode === "login" ? "Log in" : "Register"}
-      </Button>
-      <button
-        type="button"
-        className="text-sm text-muted-foreground underline"
-        onClick={() => setMode(mode === "login" ? "register" : "login")}
-      >
-        {mode === "login" ? "Need an account? Register" : "Have an account? Log in"}
-      </button>
-    </form>
+    <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm">
+      {/* Logo / wordmark */}
+      <div className="mb-7 flex flex-col gap-1">
+        <span className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+          Shine
+        </span>
+        <p className="text-sm text-muted-foreground">
+          {isLogin ? "Sign in to your account" : "Create a new account"}
+        </p>
+      </div>
+
+      <form onSubmit={onSubmit} className="flex flex-col gap-5">
+        {/* Email */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className="text-sm font-medium text-foreground">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/20"
+          />
+        </div>
+
+        {/* Password */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="password" className="text-sm font-medium text-foreground">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            minLength={6}
+            autoComplete={isLogin ? "current-password" : "new-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/20"
+          />
+        </div>
+
+        {/* Error */}
+        {error && (
+          <p className="rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        {/* Submit */}
+        <Button type="submit" disabled={busy} size="lg" className="w-full">
+          {busy ? "Please wait…" : isLogin ? "Sign in" : "Create account"}
+        </Button>
+      </form>
+
+      {/* Mode toggle */}
+      <p className="mt-5 text-center text-sm text-muted-foreground">
+        {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+        <button
+          type="button"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+          onClick={() => setMode(isLogin ? "register" : "login")}
+        >
+          {isLogin ? "Register" : "Sign in"}
+        </button>
+      </p>
+    </div>
   );
 }
