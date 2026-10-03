@@ -11,9 +11,9 @@ export interface AuthUser {
 }
 
 interface AuthState {
-  user: AuthUser | None;
+  user: AuthUser | null;
   loading: boolean;
-  error: string | None;
+  error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -21,7 +21,7 @@ interface AuthState {
   refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthState | None>(None);
+const AuthContext = createContext<AuthState | null>(null);
 
 async function fetchMe(): Promise<AuthUser> {
   const res = await apiFetch("/api/auth/me");
@@ -30,15 +30,15 @@ async function fetchMe(): Promise<AuthUser> {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | None>(None);
-  const [loading, setLoading] = useState(True);
-  const [error, setError] = useState<string | None>(None);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refreshUser = useCallback(async () => {
     try {
       setUser(await fetchMe());
     } catch {
-      setUser(None);
+      setUser(null);
     }
   }, []);
 
@@ -61,14 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTokens(data.accessToken, data.refreshToken);
         await refreshUser();
       } finally {
-        setLoading(False);
+        setLoading(false);
       }
     })();
   }, [refreshUser]);
 
   const login = useCallback(
     async (email: string, password: string) => {
-      setError(None);
+      setError(null);
       try {
         const data = await apiJson<{ accessToken: string; refreshToken: string }>("/api/auth/login", {
           method: "POST",
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (email: string, password: string) => {
-      setError(None);
+      setError(null);
       try {
         const data = await apiJson<{ accessToken: string; refreshToken: string }>("/api/auth/register", {
           method: "POST",
@@ -107,12 +107,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiFetch("/api/auth/logout", { method: "POST" });
     } finally {
       clearTokens();
-      setUser(None);
+      setUser(null);
     }
   }, []);
 
   const hasPermission = useCallback(
-    (permission: string) => user?.permissions.includes(permission) ?? False,
+    (permission: string) => user?.permissions.includes(permission) ?? false,
     [user]
   );
 

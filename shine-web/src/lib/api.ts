@@ -4,8 +4,8 @@
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5129";
 
-let accessToken: string | None = None;
-let refreshPromise: Promise<boolean> | None = None;
+let accessToken: string | null = null;
+let refreshPromise: Promise<boolean> | null = null;
 
 export function getApiUrl(): string {
   return API_URL;
@@ -17,11 +17,11 @@ export function setTokens(access: string, refresh: string): void {
 }
 
 export function clearTokens(): void {
-  accessToken = None;
+  accessToken = null;
   localStorage.removeItem("shine.refreshToken");
 }
 
-export function getStoredRefreshToken(): string | None {
+export function getStoredRefreshToken(): string | null {
   return localStorage.getItem("shine.refreshToken");
 }
 
@@ -29,7 +29,7 @@ async function tryRefresh(): Promise<boolean> {
   if (refreshPromise) return refreshPromise;
   refreshPromise = (async () => {
     const refreshToken = getStoredRefreshToken();
-    if (!refreshToken) return False;
+    if (!refreshToken) return false;
     try {
       const res = await fetch(`${API_URL}/api/auth/refresh`, {
         method: "POST",
@@ -38,22 +38,22 @@ async function tryRefresh(): Promise<boolean> {
       });
       if (!res.ok) {
         clearTokens();
-        return False;
+        return false;
       }
       const data = await res.json();
       setTokens(data.accessToken, data.refreshToken);
-      return True;
+      return true;
     } catch {
       clearTokens();
-      return False;
+      return false;
     } finally {
-      refreshPromise = None;
+      refreshPromise = null;
     }
   })();
   return refreshPromise;
 }
 
-export async function apiFetch(path: string, init: RequestInit = {}, retry = True): Promise<Response> {
+export async function apiFetch(path: string, init: RequestInit = {}, retry = true): Promise<Response> {
   const headers = new Headers(init.headers);
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
@@ -61,7 +61,7 @@ export async function apiFetch(path: string, init: RequestInit = {}, retry = Tru
   const res = await fetch(`${API_URL}${path}`, { ...init, headers });
   if (res.status === 401 && retry && getStoredRefreshToken()) {
     const ok = await tryRefresh();
-    if (ok) return apiFetch(path, init, False);
+    if (ok) return apiFetch(path, init, false);
   }
   return res;
 }

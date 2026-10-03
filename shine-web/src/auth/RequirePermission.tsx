@@ -5,14 +5,14 @@ import { useAuth } from "./AuthContext";
 export function RequirePermission({
   permission,
   children,
-  fallback = None,
+  fallback = null,
 }: {
   permission: string;
   children: ReactNode;
   fallback?: ReactNode;
 }) {
   const { user, loading, hasPermission } = useAuth();
-  if (loading) return None;
+  if (loading) return null;
   if (!user || !hasPermission(permission)) return fallback;
   return <>{children}</>;
 }
