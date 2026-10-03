@@ -63,7 +63,8 @@ var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Missing Jwt:Key (user-secrets or Jwt__Key env var).");
 if (jwtKey.Length < 32)
     throw new InvalidOperationException("Jwt:Key must be at least 32 characters.");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException("Missing Jwt:Issuer (user-secrets or Jwt__Issuer env var).");
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? jwtIssuer;
 
 builder.Services.AddAuthentication(options =>
