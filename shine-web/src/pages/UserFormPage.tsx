@@ -81,11 +81,13 @@ export function NewUserPage() {
     setBusy(true);
     setError(null);
     try {
-      const created = await createUserAsAdmin(email.trim(), password);
-      if (role !== "Viewer") {
-        await assignRole(created.id, role);
-      }
-      await navigate({ to: "/manage/users" });
+      const result = await createUserAsAdmin(email.trim(), password, role);
+      // Land on the user detail page so the final roles are visible,
+      // whether the account was just created or already existed.
+      await navigate({
+        to: "/manage/users/$userId",
+        params: { userId: result.user.id },
+      });
     } catch (err) {
       setError(parseApiError(err));
     } finally {
