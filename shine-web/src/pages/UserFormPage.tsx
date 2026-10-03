@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Field, FormError } from "@/components/data-ui";
+import { refreshAccessToken } from "@/lib/api";
 import { ROLES, type RoleName } from "@/lib/roles";
 import {
   assignRole,
@@ -169,7 +170,7 @@ export function NewUserPage() {
 }
 
 export function UserDetailPage({ userId }: { userId: string }) {
-  const { hasPermission } = useAuth();
+  const { hasPermission, refreshUser } = useAuth();
   const canManage = hasPermission("users:manage");
   const [email, setEmail] = useState<string | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
@@ -214,6 +215,11 @@ export function UserDetailPage({ userId }: { userId: string }) {
         await assignRole(userId, role);
         setRoles((r) => [...r, role]);
       }
+      // Re-sync our own access-token snapshot (permissions are baked into
+      // it) so the UI and the API agree immediately — this matters most
+      // when editing your own roles.
+      await refreshAccessToken().catch(() => false);
+      await refreshUser().catch(() => undefined);
     } catch (err) {
       setError(parseApiError(err));
     } finally {

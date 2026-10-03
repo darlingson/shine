@@ -53,6 +53,16 @@ async function tryRefresh(): Promise<boolean> {
   return refreshPromise;
 }
 
+/**
+ * Force an access-token refresh from the stored refresh token.
+ * The backend re-resolves permissions on refresh, so call this after
+ * role/permission changes to keep the token snapshot in sync with the UI.
+ * Returns false when no usable refresh token exists.
+ */
+export function refreshAccessToken(): Promise<boolean> {
+  return tryRefresh();
+}
+
 export async function apiFetch(path: string, init: RequestInit = {}, retry = true): Promise<Response> {
   const headers = new Headers(init.headers);
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
