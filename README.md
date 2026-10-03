@@ -16,11 +16,12 @@ Every record carries provenance (`SourceUrl`, timestamps) so users can see what 
 
 ## Tech stack
 
-- **Runtime:** .NET 10 (ASP.NET Core Web API)
-- **Data access:** Entity Framework Core (currently the InMemory provider — `ShineDb`)
-- **API docs:** OpenAPI + NSwag Swagger UI (development)
+- **API:** .NET 10 (ASP.NET Core Web API), Controllers → Services → Repositories → `ShineDbContext`
+- **Data access:** Entity Framework Core over Postgres (Npgsql); schema via EF migrations, applied automatically at startup
+- **Auth:** ASP.NET Identity + JWT access tokens (15 min, permissions snapshotted in) + rotating SHA-256-hashed refresh tokens (14 days); roles `Admin`/`Editor`/`Viewer` with permission bundles (`users:manage`, `players:write`, …)
+- **API docs:** OpenAPI + Swagger UI (development)
 - **Logging:** Serilog (console + daily rolling file under `logs/`)
-- **Architecture:** Controllers → Services → Repositories → `ShineDbContext`
+- **Web:** React 19 + Vite + TanStack Router (file-based routes) + shadcn/ui + Tailwind CSS
 
 ## Repository layout
 
@@ -28,18 +29,30 @@ Every record carries provenance (`SourceUrl`, timestamps) so users can see what 
 shine/
 ├── README.md
 ├── LICENSE
+├── Dockerfile            # multi-stage .NET build for Render
 ├── docs/
-│   └── PRODUCT.md          # product description
-└── ShineApi/
-    ├── Program.cs          # DI wiring, EF InMemory, Serilog, Swagger UI
-    ├── Controllers/        # Clubs, Players, Matches, PlayerClubs,
-    │                       # ClubMatchSquads, NationalTeamMatchSquads
-    ├── Dtos/
-    ├── Models/             # Player, Club, Match, PlayerClub,
-    │                       # ClubMatchSquad, NationalTeamMatchSquad
-    ├── Repositories/
-    ├── Services/
-    └── ShineApi.http       # sample requests
+│   └── PRODUCT.md        # product description
+├── ShineApi/
+│   ├── Program.cs        # DI wiring, JWT, EF Npgsql, Serilog, Swagger UI
+│   ├── Authorization/    # Permissions, policies, role seeder
+│   ├── Controllers/      # Auth, Users, Clubs, Players, Matches,
+│   │                     # PlayerClubs, ClubMatchSquads, NationalTeamMatchSquads
+│   ├── Dtos/
+│   ├── Models/           # Player, Club, Match, PlayerClub,
+│   │                     # ClubMatchSquad, NationalTeamMatchSquad,
+│   │                     # RefreshToken, UserPermission
+│   ├── Migrations/       # EF migrations (applied on startup)
+│   ├── Repositories/
+│   ├── Services/         # incl. Services/Auth/TokenService
+│   └── ShineApi.http     # sample requests
+└── shine-web/
+    ├── vercel.json       # SPA rewrite for history routing
+    └── src/
+        ├── routes/       # / (landing), /manage/** (dashboard)
+        ├── pages/        # Players, Matches, Squads, Users, Roles, …
+        ├── auth/         # AuthContext, LoginForm, RequirePermission
+        ├── lib/          # API clients per entity
+        └── components/   # AppSidebar, shared form UI, shadcn ui/*
 ```
 
 ## Core data model
@@ -55,50 +68,78 @@ shine/
 
 ## Getting started
 
-Prerequisites: [.NET 10 SDK](https://dotnet.microsoft.com/download).
+Prerequisites: [.NET 10 SDK](https://dotnet.microsoft.com/download), a Postgres database, and Node 20+ with pnpm for the web app.
+
+### API
+
+The API needs configuration — user-secrets locally, environment variables in production (never committed files):
 
 ```powershell
 # from the repo root
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Database=shine;Username=...;Password=..." --project ShineApi
+dotnet user-secrets set "Jwt:Key" "<at-least-32-chars>" --project ShineApi
+dotnet user-secrets set "Jwt:Issuer" "shine-local" --project ShineApi
+dotnet user-secrets set "Seed:AdminEmail" "you@example.com" --project ShineApi
+dotnet user-secrets set "Seed:AdminPassword" "<8+ chars, letters and a number>" --project ShineApi
+
 dotnet run --project ShineApi
 ```
+
+On boot the app applies pending EF migrations, then seeds the `Admin`/`Editor`/`Viewer` roles and the admin user from `Seed:*`. Passwords need 8+ characters with letters and a number (see `Program.cs`).
 
 Then open (development):
 
 - Swagger UI: `https://localhost:<port>/swagger`
 - OpenAPI JSON: `https://localhost:<port>/openapi/v1.json`
 
-The port is assigned by ASP.NET Core (`Properties/launchSettings.json` if present, otherwise a random dev port — check console output). The database is EF InMemory (`ShineDb`), so data resets on restart — suitable for development only.
+The port is assigned by ASP.NET Core (`Properties/launchSettings.json` if present, otherwise a random dev port — check console output).
 
 Sample requests live in [`ShineApi/ShineApi.http`](ShineApi/ShineApi.http) and can be run from VS Code (REST Client) or Rider.
 
+### Web
+
+```powershell
+# from shine-web/
+pnpm install
+# point at the API (see .env.example)
+"VITE_API_URL=http://localhost:<api-port>" | Out-File -FilePath .env -Encoding utf8
+pnpm dev
+```
+
+- `/` — public landing page
+- `/manage` — staff sign-in + dashboard (overview, players, matches, squads, users, roles)
+
 ## API surface
 
-All resources follow standard REST conventions (`GET` collection + item, `POST`, `PUT`, `DELETE`):
+Reads are public; writes require the listed permission (snapshotted in the access token, refreshed on token refresh):
 
-- `/api/Clubs`
-- `/api/Players`
-- `/api/Matches`
-- `/api/PlayerClubs`
-- `/api/ClubMatchSquads`
-- `/api/NationalTeamMatchSquads`
+- `/api/Clubs`, `/api/Players`, `/api/Matches`, `/api/PlayerClubs`, `/api/ClubMatchSquads`, `/api/NationalTeamMatchSquads` — REST (`GET` collection + item, `POST`/`PUT`/`DELETE` with `players:write`, `clubs:write`, `matches:write`, `squads:write`)
+- `/api/Auth` — `register`, `login`, `refresh`, `revoke`, `logout`, `me`
+- `/api/Users` — list, role assign/remove (`users:manage`), permission grant/revoke (`permissions:grant`)
 
-## Deploying the API (Render)
+## Deploying
 
-Only the API deploys to Render; the frontend lives in this repo but deploys separately to Vercel.
+### API (Render)
 
 - **Runtime:** Render has no .NET runtime, so the service uses Docker with the `Dockerfile` at the repo root (multi-stage: .NET 10 SDK build → ASP.NET runtime image).
 - **Port:** the container listens on Render's `$PORT` (defaults to `10000`). No port configuration needed.
 - **Health check:** set Render's **Health Check Path** to `/healthz`.
 - **HTTPS:** TLS terminates at Render's proxy. The app honors `X-Forwarded-Proto` via forwarded headers (`Program.cs`), so the dev-only HTTPS redirection doesn't loop behind the proxy.
-- **Persistence:** the current EF InMemory (`ShineDb`) store resets on every restart — acceptable for the initial version. The planned Neon (Postgres) migration should take its connection string from an environment variable, never a committed file.
+- **Environment variables:** `ConnectionStrings__DefaultConnection` (Neon/Postgres), `Jwt__Key` (≥32 chars), `Jwt__Issuer`, `Seed__AdminEmail`, `Seed__AdminPassword`, optionally `Jwt__Audience`, `Cors__AllowedOrigins`, `Jwt__AccessExpiryMinutes`, `Jwt__RefreshExpiryDays`. Migrations run automatically at startup.
+- **Persistence:** Postgres. Data survives restarts.
 
 Swagger UI is only served in Development; in production use `/healthz` and the `/api/*` endpoints.
 
+### Web (Vercel)
+
+- Set `VITE_API_URL` to the deployed API origin and rebuild after changing it (Vite bakes env at build time; production builds fail fast if it is unset).
+- `vercel.json` rewrites all routes to `index.html` so `/manage/**` deep links work with history routing.
+
 ## Status and roadmap
 
-Implemented: CRUD API for the six core entities over an InMemory store, with service/repository layering and Swagger docs.
+Implemented: Postgres-backed CRUD API for the six core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, club/national squads, users, and roles.
 
-Planned (per product description, not yet built): search/filter across player/club/match/competition/date/squad role, CSV/JSON export, public API hardening, role-based editing with moderation and audit logging, bulk import/correction workflows, provenance enrichment (source type, confidence, last-verified date), and a persistent database provider.
+Planned (per product description, not yet built): search/filter across player/club/match/competition/date/squad role, CSV/JSON export, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
 
 ## Contributing
 
