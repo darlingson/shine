@@ -2,7 +2,18 @@
 // Access token lives in memory; refresh token persists in localStorage so a
 // reload can restore the session via POST /api/auth/refresh.
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5129";
+const API_URL: string = (() => {
+  const configured = import.meta.env.VITE_API_URL as string | undefined;
+  if (configured) return configured;
+  if (import.meta.env.PROD) {
+    // Vite bakes env at build time: silently pointing a deployed bundle at
+    // localhost would render a working login with failing everything-else.
+    throw new Error(
+      "Missing VITE_API_URL — set it to the API origin in the hosting environment and rebuild.",
+    );
+  }
+  return "http://localhost:5129";
+})();
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<boolean> | null = null;
