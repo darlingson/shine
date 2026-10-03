@@ -96,6 +96,7 @@ export function UsersPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Input
+            aria-label="Search users by email"
             placeholder="Search by email…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -115,7 +116,8 @@ export function UsersPage() {
               </Button>
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
@@ -176,7 +178,8 @@ export function UsersPage() {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

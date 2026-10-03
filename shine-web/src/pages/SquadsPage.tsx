@@ -187,6 +187,7 @@ export function SquadsPage() {
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-3">
             <Input
+              aria-label="Search squad entries by player"
               placeholder="Search by player…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -209,6 +210,7 @@ export function SquadsPage() {
 
           {body ?? (
             tab === "club" ? (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -244,6 +246,7 @@ export function SquadsPage() {
                               variant="ghost"
                               size="icon-sm"
                               title="Edit entry"
+                              aria-label="Edit squad entry"
                               render={
                                 <Link
                                   to="/manage/squads/club/$key"
@@ -277,7 +280,9 @@ export function SquadsPage() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -313,6 +318,7 @@ export function SquadsPage() {
                               variant="ghost"
                               size="icon-sm"
                               title="Edit entry"
+                              aria-label="Edit squad entry"
                               render={
                                 <Link
                                   to="/manage/squads/national/$key"
@@ -347,6 +353,7 @@ export function SquadsPage() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             )
           )}
         </CardContent>

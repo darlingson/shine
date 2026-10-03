@@ -94,6 +94,7 @@ export function PlayersPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Input
+            aria-label="Search players by name"
             placeholder="Search by name…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -113,7 +114,8 @@ export function PlayersPage() {
               </Button>
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
@@ -156,6 +158,7 @@ export function PlayersPage() {
                             variant="ghost"
                             size="icon-sm"
                             title={`Edit ${p.fullName}`}
+                            aria-label={`Edit ${p.fullName}`}
                             render={
                               <Link
                                 to="/manage/players/$playerId"
@@ -188,7 +191,8 @@ export function PlayersPage() {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

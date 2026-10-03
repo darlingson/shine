@@ -97,6 +97,7 @@ export function MatchesPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Input
+            aria-label="Search matches by team, competition, or venue"
             placeholder="Search by team, competition, venue…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -116,7 +117,8 @@ export function MatchesPage() {
               </Button>
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -150,6 +152,7 @@ export function MatchesPage() {
                             variant="ghost"
                             size="icon-sm"
                             title={`Edit match ${m.matchId}`}
+                            aria-label={`Edit match ${m.matchId}`}
                             render={
                               <Link
                                 to="/manage/matches/$matchId"
@@ -182,7 +185,8 @@ export function MatchesPage() {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

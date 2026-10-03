@@ -80,6 +80,7 @@ export function DeleteButton({
         variant={armed ? "destructive" : "ghost"}
         size={armed ? "sm" : "icon-sm"}
         title={armed ? `Confirm delete ${name}` : `Delete ${name}`}
+        aria-label={armed ? `Confirm delete ${name}` : `Delete ${name}`}
         disabled={busy}
         onClick={handleClick}
       >
