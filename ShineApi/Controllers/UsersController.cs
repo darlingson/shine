@@ -27,8 +27,10 @@ public class UsersController : ControllerBase
     [HasPermission(Permissions.UsersManage)]
     public async Task<IActionResult> List()
     {
+        // Email/UserName are nullable on IdentityUser — coalesce so clients
+        // never receive null for a field they treat as required.
         var users = await _users.Users
-            .Select(u => new { u.Id, u.Email, u.UserName })
+            .Select(u => new { u.Id, Email = u.Email ?? u.UserName ?? "", u.UserName })
             .ToListAsync();
 
         var result = new List<object>();

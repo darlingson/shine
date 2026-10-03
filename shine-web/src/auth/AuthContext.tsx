@@ -26,7 +26,17 @@ const AuthContext = createContext<AuthState | null>(null);
 async function fetchMe(): Promise<AuthUser> {
   const res = await apiFetch("/api/auth/me");
   if (!res.ok) throw new Error("Not authenticated");
-  return (await res.json()) as AuthUser;
+  const data = (await res.json()) as Partial<AuthUser> | null;
+  if (!data || typeof data.id !== "string" || typeof data.email !== "string") {
+    throw new Error("Not authenticated");
+  }
+  return {
+    id: data.id,
+    email: data.email,
+    userName: data.userName,
+    roles: Array.isArray(data.roles) ? data.roles : [],
+    permissions: Array.isArray(data.permissions) ? data.permissions : [],
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
