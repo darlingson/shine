@@ -59,6 +59,18 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ShineDbContext>()
     .AddDefaultTokenProviders();
 
+// Explicit password policy so the API and the UI enforce the same rule.
+// (Identity's built-in defaults would otherwise reject most human passwords.)
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredUniqueChars = 1;
+});
+
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Missing Jwt:Key (user-secrets or Jwt__Key env var).");
 if (jwtKey.Length < 32)

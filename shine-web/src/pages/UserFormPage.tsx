@@ -122,10 +122,10 @@ export function NewUserPage() {
                 id="new-password"
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                placeholder="8+ characters, letters and a number"
               />
             </Field>
             <Field label="Initial role" htmlFor="new-role">
