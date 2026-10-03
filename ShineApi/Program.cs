@@ -119,6 +119,15 @@ var app = builder.Build();
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 logger.LogInformation("Starting web host");
 
+// Apply pending EF migrations before anything touches the schema, so a
+// fresh database (e.g. an empty Neon/Render Postgres) is created on boot
+// instead of crash-looping inside the seeder below.
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ShineDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 await RoleSeeder.EnsureAsync(app.Services);
 
 // Render terminates TLS at its proxy and forwards plain HTTP with
