@@ -104,8 +104,22 @@ public sealed class TokenService : ITokenService
         var hash = Hash(refreshToken);
         var stored = await _db.RefreshToken.SingleOrDefaultAsync(x => x.TokenHash == hash);
 
-        if (stored is null || !stored.IsActive)
+        if (stored is null)
         {
+            return null;
+        }
+
+        if (!stored.IsActive)
+        {
+            // A revoked-but-unexpired token presented again signals reuse
+            // (possible theft) rather than plain expiry: kill the whole
+            // token family so a stolen chain cannot outlive the legitimate
+            // one. (Already-revoked families make this a harmless no-op.)
+            if (stored.IsRevoked && !stored.IsExpired)
+            {
+                await RevokeAllForUserAsync(stored.UserId);
+            }
+
             return null;
         }
 
