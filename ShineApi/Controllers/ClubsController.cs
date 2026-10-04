@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShineApi.Authorization;
 using ShineApi.Dtos;
 using ShineApi.Services.Interfaces;
 
@@ -16,10 +18,12 @@ public class ClubsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
         => Ok(await _service.GetAllAsync());
 
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var club = await _service.GetByIdAsync(id);
@@ -27,6 +31,7 @@ public class ClubsController : ControllerBase
     }
 
     [HttpPost]
+    [HasPermission(Permissions.ClubsWrite)]
     public async Task<IActionResult> Create([FromBody] CreateClubDto dto)
     {
         var club = await _service.CreateAsync(dto);
@@ -34,6 +39,7 @@ public class ClubsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [HasPermission(Permissions.ClubsWrite)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateClubDto dto)
     {
         var club = await _service.UpdateAsync(id, dto);
@@ -41,6 +47,7 @@ public class ClubsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [HasPermission(Permissions.ClubsWrite)]
     public async Task<IActionResult> Delete(int id)
         => await _service.DeleteAsync(id) ? NoContent() : NotFound();
 }

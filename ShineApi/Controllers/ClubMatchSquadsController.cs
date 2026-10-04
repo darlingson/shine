@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShineApi.Authorization;
 using ShineApi.Dtos;
 using ShineApi.Services.Interfaces;
 
@@ -16,10 +18,12 @@ public class ClubMatchSquadsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
         => Ok(await _service.GetAllAsync());
 
     [HttpGet("{matchId:int}/{clubId:int}/{playerId:int}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int matchId, int clubId, int playerId)
     {
         var squad = await _service.GetByIdAsync(matchId, clubId, playerId);
@@ -27,6 +31,7 @@ public class ClubMatchSquadsController : ControllerBase
     }
 
     [HttpPost]
+    [HasPermission(Permissions.SquadsWrite)]
     public async Task<IActionResult> Create([FromBody] CreateClubMatchSquadDto dto)
     {
         var squad = await _service.CreateAsync(dto);
@@ -36,6 +41,7 @@ public class ClubMatchSquadsController : ControllerBase
     }
 
     [HttpPut("{matchId:int}/{clubId:int}/{playerId:int}")]
+    [HasPermission(Permissions.SquadsWrite)]
     public async Task<IActionResult> Update(int matchId, int clubId, int playerId, [FromBody] UpdateClubMatchSquadDto dto)
     {
         var squad = await _service.UpdateAsync(matchId, clubId, playerId, dto);
@@ -43,6 +49,7 @@ public class ClubMatchSquadsController : ControllerBase
     }
 
     [HttpDelete("{matchId:int}/{clubId:int}/{playerId:int}")]
+    [HasPermission(Permissions.SquadsWrite)]
     public async Task<IActionResult> Delete(int matchId, int clubId, int playerId)
         => await _service.DeleteAsync(matchId, clubId, playerId) ? NoContent() : NotFound();
 }
