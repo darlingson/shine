@@ -33,13 +33,25 @@ export function OverviewPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" render={<Link to="/manage/players" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link to="/manage/players" />}
+            >
               Players
             </Button>
-            <Button variant="outline" render={<Link to="/manage/matches" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link to="/manage/matches" />}
+            >
               Matches
             </Button>
-            <Button variant="outline" render={<Link to="/manage/squads" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link to="/manage/squads" />}
+            >
               Squads
             </Button>
           </CardContent>
@@ -53,10 +65,18 @@ export function OverviewPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex gap-2">
-            <Button variant="outline" render={<Link to="/manage/users" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link to="/manage/users" />}
+            >
               Manage users
             </Button>
-            <Button variant="outline" render={<Link to="/manage/roles" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link to="/manage/roles" />}
+            >
               View roles
             </Button>
           </CardContent>

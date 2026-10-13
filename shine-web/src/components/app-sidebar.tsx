@@ -185,21 +185,23 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger className="w-full">
-                <SidebarMenuButton size="lg">
-                  <Avatar className="size-8">
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                  <span className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">
-                      {user?.email}
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton size="lg">
+                    <Avatar className="size-8">
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    <span className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-medium">
+                        {user?.email}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {(user?.roles ?? []).join(", ") || "no role"}
+                      </span>
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {(user?.roles ?? []).join(", ") || "no role"}
-                    </span>
-                  </span>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
+                  </SidebarMenuButton>
+                }
+              />
               <DropdownMenuContent side="top" align="start" className="w-56">
                 <DropdownMenuItem onClick={logout}>
                   <SignOutIcon />
