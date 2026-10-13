@@ -1,4 +1,11 @@
 import { Link } from "@tanstack/react-router";
+import {
+  ClipboardTextIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrophyIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,76 +16,112 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+const QUICK_ADD = [
+  { to: "/manage/players/new", label: "Add player" },
+  { to: "/manage/matches/new", label: "Add match" },
+  { to: "/manage/squads/club/new", label: "Add club squad" },
+  { to: "/manage/squads/national/new", label: "Add national squad" },
+] as const;
+
+const BROWSE = [
+  {
+    to: "/manage/players",
+    label: "Players",
+    icon: <UserIcon className="size-4 text-muted-foreground" />,
+  },
+  {
+    to: "/manage/matches",
+    label: "Matches",
+    icon: <TrophyIcon className="size-4 text-muted-foreground" />,
+  },
+  {
+    to: "/manage/squads",
+    label: "Squads",
+    icon: <ClipboardTextIcon className="size-4 text-muted-foreground" />,
+  },
+] as const;
+
 export function OverviewPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
+  const canWrite =
+    hasPermission("players:write") ||
+    hasPermission("matches:write") ||
+    hasPermission("squads:write");
 
   return (
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="font-heading text-xl font-semibold tracking-tight">
-          Welcome, {user?.email}
+          Contributor hub
         </h1>
         <p className="text-sm text-muted-foreground">
-          Roles: {(user?.roles ?? []).join(", ") || "none"} · Permissions:{" "}
-          {(user?.permissions ?? []).join(", ") || "none"}
+          Signed in as {user?.email} · Roles:{" "}
+          {(user?.roles ?? []).join(", ") || "none"}
         </p>
       </div>
+
+      {canWrite && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Add to the record</CardTitle>
+            <CardDescription>
+              One sourced fact at a time. Every entry needs a source URL.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {QUICK_ADD.map((a) => (
+              <Button
+                key={a.to}
+                nativeButton={false}
+                render={<Link to={a.to} />}
+              >
+                <PlusIcon />
+                {a.label}
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Football data</CardTitle>
+            <CardTitle>Browse the data</CardTitle>
             <CardDescription>
-              Players, clubs, matches and squads live here.
+              Review, correct, and extend existing records.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link to="/manage/players" />}
-            >
-              Players
-            </Button>
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link to="/manage/matches" />}
-            >
-              Matches
-            </Button>
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link to="/manage/squads" />}
-            >
-              Squads
-            </Button>
+            {BROWSE.map((b) => (
+              <Button
+                key={b.to}
+                variant="outline"
+                nativeButton={false}
+                render={<Link to={b.to} />}
+              >
+                {b.icon}
+                {b.label}
+              </Button>
+            ))}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Team access</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheckIcon className="size-4 text-muted-foreground" />
+              House rules
+            </CardTitle>
             <CardDescription>
-              Add teammates and assign Admin, Editor or Viewer roles.
+              What keeps the record trustworthy.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex gap-2">
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link to="/manage/users" />}
-            >
-              Manage users
-            </Button>
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link to="/manage/roles" />}
-            >
-              View roles
-            </Button>
+          <CardContent>
+            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed text-muted-foreground">
+              <li>Cite a source URL for every factual change.</li>
+              <li>Keep changes small — one entity per edit.</li>
+              <li>Correct rather than duplicate existing records.</li>
+            </ul>
           </CardContent>
         </Card>
       </div>

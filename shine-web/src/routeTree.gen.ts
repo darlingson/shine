@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as ManageRouteRouteImport } from './routes/manage/route'
 import { Route as ManageIndexRouteImport } from './routes/manage/index'
 import { Route as ManageMatchesRouteRouteImport } from './routes/manage/matches/route'
@@ -37,6 +38,11 @@ import { Route as ManageSquadsNationalNewRouteImport } from './routes/manage/squ
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManageRouteRoute = ManageRouteRouteImport.update({
@@ -159,6 +165,7 @@ const ManageSquadsNationalNewRoute = ManageSquadsNationalNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/manage': typeof ManageRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/manage/matches': typeof ManageMatchesRouteRouteWithChildren
   '/manage/players': typeof ManagePlayersRouteRouteWithChildren
   '/manage/squads': typeof ManageSquadsRouteRouteWithChildren
@@ -184,6 +191,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/manage/roles': typeof ManageRolesRoute
   '/manage': typeof ManageIndexRoute
   '/manage/squads/club': typeof ManageSquadsClubRouteRouteWithChildren
@@ -207,6 +215,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/manage': typeof ManageRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/manage/matches': typeof ManageMatchesRouteRouteWithChildren
   '/manage/players': typeof ManagePlayersRouteRouteWithChildren
   '/manage/squads': typeof ManageSquadsRouteRouteWithChildren
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/manage'
+    | '/about'
     | '/manage/matches'
     | '/manage/players'
     | '/manage/squads'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/manage/roles'
     | '/manage'
     | '/manage/squads/club'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/manage'
+    | '/about'
     | '/manage/matches'
     | '/manage/players'
     | '/manage/squads'
@@ -309,6 +321,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ManageRouteRoute: typeof ManageRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manage': {
@@ -600,6 +620,7 @@ const ManageRouteRouteWithChildren = ManageRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ManageRouteRoute: ManageRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

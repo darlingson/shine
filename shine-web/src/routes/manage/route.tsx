@@ -28,7 +28,7 @@ function ManageLayout() {
     return (
       <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6">
         <LoginForm />
-        <Button variant="link" render={<Link to="/" />}>
+        <Button variant="link" nativeButton={false} render={<Link to="/" />}>
           <ArrowLeftIcon />
           Back to home
         </Button>
