@@ -5,7 +5,10 @@ import { LogoMark } from "@/components/logo";
 
 export interface SectionLink {
   label: string;
-  href: string;
+  /** In-page anchor (e.g. "#top-scorers"). */
+  href?: string;
+  /** App route (e.g. "/data/players"). Prefer over href for routes. */
+  to?: string;
 }
 
 export function SiteNav({ sections }: { sections: SectionLink[] }) {
@@ -29,11 +32,13 @@ export function SiteNav({ sections }: { sections: SectionLink[] }) {
           >
             {sections.map((s) => (
               <Button
-                key={s.href + s.label}
+                key={(s.to ?? s.href ?? "") + s.label}
                 variant="ghost"
                 size="sm"
                 nativeButton={false}
-                render={<a href={s.href} />}
+                render={
+                  s.to ? <Link to={s.to} /> : <a href={s.href ?? "#"} />
+                }
               >
                 {s.label}
               </Button>
