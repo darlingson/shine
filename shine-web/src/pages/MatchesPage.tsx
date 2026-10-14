@@ -81,10 +81,20 @@ export function MatchesPage() {
           </p>
         </div>
         {canWrite && (
-          <Button render={<Link to="/manage/matches/new" />}>
-            <PlusIcon />
-            <span>Add match</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link to="/manage/matches/new" />}
+            >
+              <PlusIcon />
+              <span>Add match</span>
+            </Button>
+            <Button nativeButton={false} render={<Link to="/manage/matches/record" />}>
+              <PlusIcon />
+              <span>Record full match</span>
+            </Button>
+          </div>
         )}
       </div>
 

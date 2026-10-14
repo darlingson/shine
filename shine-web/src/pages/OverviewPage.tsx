@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 
 const QUICK_ADD = [
+  { to: "/manage/matches/record", label: "Record full match" },
   { to: "/manage/players/new", label: "Add player" },
   { to: "/manage/matches/new", label: "Add match" },
   { to: "/manage/squads/club/new", label: "Add club squad" },
