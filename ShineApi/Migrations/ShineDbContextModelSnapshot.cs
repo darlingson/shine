@@ -555,6 +555,47 @@ namespace ShineApi.Migrations
                     b.ToTable("RefreshToken");
                 });
 
+            modelBuilder.Entity("ShineApi.Models.ReviewFlag", b =>
+                {
+                    b.Property<int>("ReviewFlagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReviewFlagId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EntityKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("Score")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("SourceUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ReviewFlagId");
+
+                    b.ToTable("ReviewFlag");
+                });
+
             modelBuilder.Entity("ShineApi.Models.UserPermission", b =>
                 {
                     b.Property<string>("UserId")
