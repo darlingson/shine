@@ -43,4 +43,33 @@ public class MatchRecordsController : ControllerBase
             .ToListAsync();
         return Ok(flags);
     }
+
+    public sealed class ResolveFlagDto
+    {
+        public string Status { get; set; } = "resolved";
+    }
+
+    [HttpPatch("review-flags/{id:int}")]
+    [HasPermission(Permissions.MatchesWrite)]
+    public async Task<IActionResult> ResolveFlag(int id, [FromBody] ResolveFlagDto dto, [FromServices] ShineDbContext db)
+    {
+        if (dto.Status != "open" && dto.Status != "resolved") return BadRequest(new { errors = new[] { "Status must be 'open' or 'resolved'." } });
+        var flag = await db.ReviewFlag.FindAsync(id);
+        if (flag is null) return NotFound();
+        flag.Status = dto.Status;
+        flag.ResolvedAt = dto.Status == "resolved" ? DateTime.UtcNow : null;
+        await db.SaveChangesAsync();
+        return Ok(flag);
+    }
+
+    [HttpDelete("review-flags/{id:int}")]
+    [HasPermission(Permissions.MatchesWrite)]
+    public async Task<IActionResult> DeleteFlag(int id, [FromServices] ShineDbContext db)
+    {
+        var flag = await db.ReviewFlag.FindAsync(id);
+        if (flag is null) return NotFound();
+        db.ReviewFlag.Remove(flag);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
 }
