@@ -411,11 +411,10 @@ export function RecordMatchPage() {
                 </label>
               </div>
             ))}
-            <div>
+            <div className="flex flex-col gap-1.5">
               <Button
                 type="button"
                 variant="outline"
-                disabled={!homeClubId}
                 onClick={() =>
                   setRows((rs) => [...rs, emptyRow(Number(homeClubId) || 0)])
                 }
@@ -423,6 +422,11 @@ export function RecordMatchPage() {
                 <PlusIcon />
                 Add player
               </Button>
+              {!homeClubId && (
+                <p className="text-xs text-muted-foreground">
+                  Pick the clubs above first so each row gets the right side.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
