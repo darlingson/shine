@@ -59,7 +59,15 @@ function ClubPicker({
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger id={id} className="w-full">
-        <SelectValue placeholder={placeholder} />
+        {/* Resolve the label from our own list: Base UI only knows item
+            labels while the popup is mounted, and falls back to the raw id. */}
+        <SelectValue>
+          {(v: unknown) =>
+            typeof v === "string" && v !== ""
+              ? (clubs.find((c) => String(c.clubId) === v)?.name ?? placeholder)
+              : placeholder
+          }
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {clubs.map((c) => (
@@ -472,7 +480,22 @@ export function RecordMatchPage() {
                   onValueChange={(v) => updateRow(r.key, { clubId: Number(v) })}
                 >
                   <SelectTrigger aria-label="Side" className="w-full">
-                    <SelectValue placeholder="Side" />
+                    <SelectValue>
+                      {(v: unknown) => {
+                        if (typeof v !== "string" || v === "") return "Side";
+                        if (v === homeClubId)
+                          return (
+                            clubs.find((c) => c.clubId === Number(homeClubId))
+                              ?.shortName ?? "Home"
+                          );
+                        if (v === awayClubId)
+                          return (
+                            clubs.find((c) => c.clubId === Number(awayClubId))
+                              ?.shortName ?? "Away"
+                          );
+                        return "Side";
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {homeClubId && (
@@ -492,7 +515,13 @@ export function RecordMatchPage() {
                   onValueChange={(v) => updateRow(r.key, { lineupStatus: v })}
                 >
                   <SelectTrigger aria-label="Lineup status" className="w-full">
-                    <SelectValue />
+                    <SelectValue>
+                      {(v: unknown) =>
+                        typeof v === "string" && v !== ""
+                          ? (STATUS_LABELS[v] ?? v)
+                          : "Status"
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {SQUAD_STATUSES.map((s) => (
