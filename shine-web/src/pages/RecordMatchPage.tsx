@@ -12,8 +12,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Field, FormError } from "@/components/data-ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { parseOptionalInt } from "@/lib/forms";
-import { listClubs, type Club } from "@/lib/clubs";
+import { createClub, listClubs, type Club } from "@/lib/clubs";
 import {
   SQUAD_STATUSES,
   createMatchRecord,
@@ -35,6 +42,36 @@ const STATUS_LABELS: Record<string, string> = {
   injured: "Injured",
 };
 
+/** Theme-aware club picker (native selects ignore dark mode). */
+function ClubPicker({
+  id,
+  value,
+  onChange,
+  clubs,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  clubs: Club[];
+  placeholder: string;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger id={id} className="w-full">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {clubs.map((c) => (
+          <SelectItem key={c.clubId} value={String(c.clubId)}>
+            {c.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 let nextKey = 1;
 function emptyRow(homeClubId: number): Row {
   return {
@@ -53,13 +90,11 @@ function emptyRow(homeClubId: number): Row {
   };
 }
 
-const selectClass =
-  "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
-
 /** Single-shot match recording: match + both squads in one request. */
 export function RecordMatchPage() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("matches:write");
+  const canCreateClub = hasPermission("clubs:write");
   const [clubs, setClubs] = useState<Club[]>([]);
   const [matchDate, setMatchDate] = useState("");
   const [competition, setCompetition] = useState("");
@@ -74,12 +109,42 @@ export function RecordMatchPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<MatchRecordResult | null>(null);
+  const [showNewClub, setShowNewClub] = useState(false);
+  const [newClubName, setNewClubName] = useState("");
+  const [newClubCity, setNewClubCity] = useState("");
+  const [creatingClub, setCreatingClub] = useState(false);
 
   useEffect(() => {
     listClubs()
       .then(setClubs)
       .catch(() => setClubs([]));
   }, []);
+
+  async function onCreateClub(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newClubName.trim();
+    if (!name) return;
+    setCreatingClub(true);
+    try {
+      const created = await createClub({
+        name,
+        city: newClubCity.trim() || undefined,
+        country: "Malawi",
+        sourceUrl: sourceUrl.trim() || undefined,
+      });
+      const all = await listClubs();
+      setClubs(all);
+      if (!homeClubId) setHomeClubId(String(created.clubId));
+      else if (!awayClubId) setAwayClubId(String(created.clubId));
+      setNewClubName("");
+      setNewClubCity("");
+      setShowNewClub(false);
+    } catch (err) {
+      setError(parseApiError(err));
+    } finally {
+      setCreatingClub(false);
+    }
+  }
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -90,6 +155,11 @@ export function RecordMatchPage() {
     setBusy(true);
     setError(null);
     setResult(null);
+    if (!homeClubId || !awayClubId) {
+      setError("Pick both clubs first.");
+      setBusy(false);
+      return;
+    }
     try {
       const res = await createMatchRecord({
         match: {
@@ -263,37 +333,70 @@ export function RecordMatchPage() {
               />
             </Field>
             <Field label="Home club" htmlFor="rm-home">
-              <select
+              <ClubPicker
                 id="rm-home"
-                required
-                className={selectClass}
                 value={homeClubId}
-                onChange={(e) => setHomeClubId(e.target.value)}
-              >
-                <option value="">Select club…</option>
-                {clubs.map((c) => (
-                  <option key={c.clubId} value={c.clubId}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setHomeClubId}
+                clubs={clubs}
+                placeholder="Select club…"
+              />
             </Field>
             <Field label="Away club" htmlFor="rm-away">
-              <select
+              <ClubPicker
                 id="rm-away"
-                required
-                className={selectClass}
                 value={awayClubId}
-                onChange={(e) => setAwayClubId(e.target.value)}
-              >
-                <option value="">Select club…</option>
-                {clubs.map((c) => (
-                  <option key={c.clubId} value={c.clubId}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setAwayClubId}
+                clubs={clubs}
+                placeholder="Select club…"
+              />
             </Field>
+            {canCreateClub && (
+              <div className="sm:col-span-2">
+                {!showNewClub ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowNewClub(true)}
+                  >
+                    <PlusIcon />
+                    Club missing? Add it
+                  </Button>
+                ) : (
+                  <form
+                    onSubmit={onCreateClub}
+                    className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_10rem_auto]"
+                  >
+                    <Input
+                      aria-label="New club name"
+                      required
+                      value={newClubName}
+                      onChange={(e) => setNewClubName(e.target.value)}
+                      placeholder="Club name, e.g. Mighty Wanderers"
+                    />
+                    <Input
+                      aria-label="New club city"
+                      value={newClubCity}
+                      onChange={(e) => setNewClubCity(e.target.value)}
+                      placeholder="City (optional)"
+                    />
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm" disabled={creatingClub}>
+                        {creatingClub ? "Adding…" : "Add club"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowNewClub(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
             <Field label="Home score" htmlFor="rm-hs">
               <Input
                 id="rm-hs"
@@ -349,42 +452,41 @@ export function RecordMatchPage() {
                   onChange={(e) => updateRow(r.key, { name: e.target.value })}
                   placeholder="Player name"
                 />
-                <select
-                  aria-label="Side"
-                  className={selectClass}
-                  value={r.clubId}
-                  onChange={(e) =>
-                    updateRow(r.key, { clubId: Number(e.target.value) })
-                  }
+                <Select
+                  value={String(r.clubId)}
+                  onValueChange={(v) => updateRow(r.key, { clubId: Number(v) })}
                 >
-                  {homeClubId && (
-                    <option value={Number(homeClubId)}>
-                      {clubs.find((c) => c.clubId === Number(homeClubId))?.shortName ?? "Home"}
-                    </option>
-                  )}
-                  {awayClubId && (
-                    <option value={Number(awayClubId)}>
-                      {clubs.find((c) => c.clubId === Number(awayClubId))?.shortName ?? "Away"}
-                    </option>
-                  )}
-                  {!homeClubId && !awayClubId && (
-                    <option value={0}>Pick clubs first</option>
-                  )}
-                </select>
-                <select
-                  aria-label="Lineup status"
-                  className={selectClass}
+                  <SelectTrigger aria-label="Side" className="w-full">
+                    <SelectValue placeholder="Side" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {homeClubId && (
+                      <SelectItem value={homeClubId}>
+                        {clubs.find((c) => c.clubId === Number(homeClubId))?.shortName ?? "Home"}
+                      </SelectItem>
+                    )}
+                    {awayClubId && (
+                      <SelectItem value={awayClubId}>
+                        {clubs.find((c) => c.clubId === Number(awayClubId))?.shortName ?? "Away"}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <Select
                   value={r.lineupStatus}
-                  onChange={(e) =>
-                    updateRow(r.key, { lineupStatus: e.target.value })
-                  }
+                  onValueChange={(v) => updateRow(r.key, { lineupStatus: v })}
                 >
-                  {SQUAD_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger aria-label="Lineup status" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SQUAD_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {STATUS_LABELS[s]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   type="button"
                   variant="ghost"

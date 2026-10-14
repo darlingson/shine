@@ -14,3 +14,18 @@ export interface Club {
 export function listClubs(): Promise<Club[]> {
   return apiJson<Club[]>("/api/clubs");
 }
+
+export interface ClubForm {
+  name: string;
+  shortName?: string;
+  city?: string;
+  country: string;
+  sourceUrl?: string;
+}
+
+export function createClub(dto: ClubForm): Promise<Club> {
+  return apiJson<Club>("/api/clubs", {
+    method: "POST",
+    body: JSON.stringify(dto),
+  });
+}
