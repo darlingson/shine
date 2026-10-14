@@ -3,6 +3,7 @@ import {
   ClipboardTextIcon,
   PlusIcon,
   ShieldCheckIcon,
+  ShieldIcon,
   TrophyIcon,
   UserIcon,
 } from "@phosphor-icons/react";
@@ -29,6 +30,11 @@ const BROWSE = [
     to: "/manage/players",
     label: "Players",
     icon: <UserIcon className="size-4 text-muted-foreground" />,
+  },
+  {
+    to: "/manage/clubs",
+    label: "Clubs",
+    icon: <ShieldIcon className="size-4 text-muted-foreground" />,
   },
   {
     to: "/manage/matches",

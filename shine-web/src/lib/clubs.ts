@@ -20,6 +20,7 @@ export interface ClubForm {
   shortName?: string;
   city?: string;
   country: string;
+  foundedYear?: number | null;
   sourceUrl?: string;
 }
 
@@ -28,4 +29,15 @@ export function createClub(dto: ClubForm): Promise<Club> {
     method: "POST",
     body: JSON.stringify(dto),
   });
+}
+
+export function updateClub(id: number, dto: ClubForm): Promise<Club> {
+  return apiJson<Club>(`/api/clubs/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(dto),
+  });
+}
+
+export function deleteClub(id: number): Promise<void> {
+  return apiJson<void>(`/api/clubs/${id}`, { method: "DELETE" });
 }

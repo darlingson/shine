@@ -160,6 +160,15 @@ export function RecordMatchPage() {
       setBusy(false);
       return;
     }
+    const named = rows.filter((r) => r.name.trim() !== "");
+    const unsided = named.filter(
+      (r) => String(r.clubId) !== homeClubId && String(r.clubId) !== awayClubId,
+    );
+    if (unsided.length > 0) {
+      setError("Pick a side for every player row.");
+      setBusy(false);
+      return;
+    }
     try {
       const res = await createMatchRecord({
         match: {
@@ -453,7 +462,13 @@ export function RecordMatchPage() {
                   placeholder="Player name"
                 />
                 <Select
-                  value={String(r.clubId)}
+                  value={
+                    r.clubId !== 0 &&
+                    (String(r.clubId) === homeClubId ||
+                      String(r.clubId) === awayClubId)
+                      ? String(r.clubId)
+                      : ""
+                  }
                   onValueChange={(v) => updateRow(r.key, { clubId: Number(v) })}
                 >
                   <SelectTrigger aria-label="Side" className="w-full">

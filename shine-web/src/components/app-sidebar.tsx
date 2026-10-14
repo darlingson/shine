@@ -4,6 +4,7 @@ import {
   ClipboardTextIcon,
   HouseIcon,
   ShieldCheckIcon,
+  ShieldIcon,
   SignOutIcon,
   TrophyIcon,
   UserIcon,
@@ -108,6 +109,20 @@ export function AppSidebar() {
                 >
                   <UserIcon />
                   <span>Players</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Clubs"
+                  render={
+                    <Link
+                      to="/manage/clubs"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <ShieldIcon />
+                  <span>Clubs</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
