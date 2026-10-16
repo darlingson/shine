@@ -1,32 +1,31 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { fixtureLabel, listMatches, type Match } from "@/lib/matches";
+import { useMemo } from "react";
+import { useApiList } from "@/hooks/use-api-list";
+import { fixtureLabel, listMatches } from "@/lib/matches";
 
 export const Route = createFileRoute("/data/matches/")({
   component: MatchesListPage,
 });
 
 function MatchesListPage() {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    listMatches()
-      .then((m) => setMatches([...m].sort((a, b) => b.matchDate.localeCompare(a.matchDate))))
-      .catch(() => setMatches([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const { items: matches, loading, error } = useApiList(listMatches);
+  const sorted = useMemo(
+    () => [...matches].sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
+    [matches],
+  );
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Matches</h1>
-      {matches.length === 0 ? (
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : error ? (
+        <p className="text-sm text-destructive">{error}</p>
+      ) : sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No matches recorded yet.</p>
       ) : (
         <ul className="flex flex-col rounded-2xl border border-border bg-card">
-          {matches.map((m) => (
+          {sorted.map((m) => (
             <li key={m.matchId} className="border-b border-border last:border-b-0">
               <Link
                 to="/data/matches/$matchId"

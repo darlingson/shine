@@ -65,6 +65,15 @@ export const SQUAD_STATUSES = [
   "injured",
 ];
 
+export const SQUAD_STATUS_LABELS: Record<string, string> = {
+  starter: "Starter",
+  substitute: "Substitute",
+  unused_sub: "Unused sub",
+  reserve: "Reserve",
+  suspended: "Suspended",
+  injured: "Injured",
+};
+
 export function createMatchRecord(payload: MatchRecordPayload): Promise<MatchRecordResult> {
   return apiJson<MatchRecordResult>("/api/matchrecords", {
     method: "POST",

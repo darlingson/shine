@@ -1,30 +1,24 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { listPlayers, type Player } from "@/lib/players";
+import { useApiList } from "@/hooks/use-api-list";
+import { listPlayers } from "@/lib/players";
 
 export const Route = createFileRoute("/data/players/")({
   component: PlayersListPage,
 });
 
 function PlayersListPage() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    listPlayers()
-      .then(setPlayers)
-      .catch(() => setPlayers([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const { items: players, loading, error } = useApiList(listPlayers);
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Players
       </h1>
-      {players.length === 0 ? (
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : error ? (
+        <p className="text-sm text-destructive">{error}</p>
+      ) : players.length === 0 ? (
         <p className="text-sm text-muted-foreground">No players recorded yet.</p>
       ) : (
         <ul className="flex flex-col rounded-2xl border border-border bg-card">

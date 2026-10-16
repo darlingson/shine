@@ -1,18 +1,23 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { listClubs, type Club } from "@/lib/clubs";
+import { getClub, type Club } from "@/lib/clubs";
 import { listPlayers, type Player } from "@/lib/players";
 import { listPlayerClubs } from "@/lib/playerclubs";
 import { fixtureLabel, listMatches, type Match } from "@/lib/matches";
+import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/clubs/$clubId")({
   component: ClubDetailPage,
 });
 
-function involvesClub(m: Match, club: Club): boolean {
-  const names = [club.name, club.shortName].filter(Boolean) as string[];
-  const teams = [m.homeTeam, m.awayTeam].filter(Boolean) as string[];
-  return names.some((n) => teams.some((t) => t.includes(n) || n.includes(t)));
+function matchesClub(m: Match, club: Club): boolean {
+  const names = [club.name, club.shortName]
+    .filter(Boolean)
+    .map((n) => (n as string).toLowerCase());
+  const teams = [m.homeTeam, m.awayTeam]
+    .filter(Boolean)
+    .map((t) => (t as string).toLowerCase());
+  return names.some((n) => teams.includes(n));
 }
 
 function ClubDetailPage() {
@@ -20,24 +25,23 @@ function ClubDetailPage() {
   const [club, setClub] = useState<Club | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [missing, setMissing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setClub(null);
+    setPlayers([]);
+    setMatches([]);
+    setError(null);
     (async () => {
       try {
-        const [clubList, playerList, affils, matchList] = await Promise.all([
-          listClubs(),
+        const [found, playerList, affils, matchList] = await Promise.all([
+          getClub(Number(clubId)),
           listPlayers(),
           listPlayerClubs(),
           listMatches(),
         ]);
         if (cancelled) return;
-        const found = clubList.find((c) => c.clubId === Number(clubId));
-        if (!found) {
-          setMissing(true);
-          return;
-        }
         setClub(found);
         const playerIds = new Set(
           affils
@@ -47,11 +51,11 @@ function ClubDetailPage() {
         setPlayers(playerList.filter((p) => playerIds.has(p.playerId)));
         setMatches(
           matchList
-            .filter((m) => involvesClub(m, found))
+            .filter((m) => matchesClub(m, found))
             .sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
         );
-      } catch {
-        if (!cancelled) setMissing(true);
+      } catch (e) {
+        if (!cancelled) setError(parseApiError(e));
       }
     })();
     return () => {
@@ -59,7 +63,7 @@ function ClubDetailPage() {
     };
   }, [clubId]);
 
-  if (missing) return <p className="text-sm text-muted-foreground">Club not found.</p>;
+  if (error) return <p className="text-sm text-destructive">{error}</p>;
   if (!club) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   return (

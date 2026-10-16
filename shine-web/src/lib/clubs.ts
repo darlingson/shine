@@ -15,6 +15,10 @@ export function listClubs(): Promise<Club[]> {
   return apiJson<Club[]>("/api/clubs");
 }
 
+export function getClub(id: number): Promise<Club> {
+  return apiJson<Club>(`/api/clubs/${id}`);
+}
+
 export interface ClubForm {
   name: string;
   shortName?: string;

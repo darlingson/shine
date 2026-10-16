@@ -29,6 +29,10 @@ export function listMatches(): Promise<Match[]> {
   return apiJson<Match[]>("/api/matches");
 }
 
+export function getMatch(id: number): Promise<Match> {
+  return apiJson<Match>(`/api/matches/${id}`);
+}
+
 export function createMatch(dto: MatchForm): Promise<Match> {
   return apiJson<Match>("/api/matches", {
     method: "POST",

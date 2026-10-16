@@ -1,44 +1,36 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fixtureLabel, listMatches, type Match } from "@/lib/matches";
+import { fixtureLabel, getMatch, type Match } from "@/lib/matches";
 import { listPlayers, type Player } from "@/lib/players";
 import { listClubSquads, type ClubSquad } from "@/lib/squads";
+import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
+import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/matches/$matchId")({
   component: MatchDetailPage,
 });
-
-const STATUS_LABELS: Record<string, string> = {
-  starter: "Started",
-  substitute: "Substitute",
-  unused_sub: "Unused sub",
-  reserve: "Reserve",
-  suspended: "Suspended",
-  injured: "Injured",
-};
 
 function MatchDetailPage() {
   const { matchId } = Route.useParams();
   const [match, setMatch] = useState<Match | null>(null);
   const [squad, setSquad] = useState<ClubSquad[]>([]);
   const [names, setNames] = useState<Map<number, Player>>(new Map());
-  const [missing, setMissing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setMatch(null);
+    setSquad([]);
+    setNames(new Map());
+    setError(null);
     (async () => {
       try {
-        const [matchList, playerList, squads] = await Promise.all([
-          listMatches(),
+        const [found, playerList, squads] = await Promise.all([
+          getMatch(Number(matchId)),
           listPlayers(),
           listClubSquads(),
         ]);
         if (cancelled) return;
-        const found = matchList.find((m) => m.matchId === Number(matchId));
-        if (!found) {
-          setMissing(true);
-          return;
-        }
         setMatch(found);
         setNames(new Map(playerList.map((p) => [p.playerId, p])));
         const order: Record<string, number> = { starter: 0, substitute: 1 };
@@ -50,8 +42,8 @@ function MatchDetailPage() {
                 (order[a.lineupStatus] ?? 2) - (order[b.lineupStatus] ?? 2),
             ),
         );
-      } catch {
-        if (!cancelled) setMissing(true);
+      } catch (e) {
+        if (!cancelled) setError(parseApiError(e));
       }
     })();
     return () => {
@@ -59,7 +51,7 @@ function MatchDetailPage() {
     };
   }, [matchId]);
 
-  if (missing) return <p className="text-sm text-muted-foreground">Match not found.</p>;
+  if (error) return <p className="text-sm text-destructive">{error}</p>;
   if (!match) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   return (
@@ -98,7 +90,7 @@ function MatchDetailPage() {
                       {s.captain ? " (C)" : ""}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {STATUS_LABELS[s.lineupStatus] ?? s.lineupStatus}
+                      {SQUAD_STATUS_LABELS[s.lineupStatus] ?? s.lineupStatus}
                     </span>
                   </Link>
                 </li>

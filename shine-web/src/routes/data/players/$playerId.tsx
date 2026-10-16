@@ -1,8 +1,9 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { listPlayers, type Player } from "@/lib/players";
+import { getPlayer, type Player } from "@/lib/players";
 import { listClubs, type Club } from "@/lib/clubs";
 import { listPlayerClubs } from "@/lib/playerclubs";
+import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/players/$playerId")({
   component: PlayerDetailPage,
@@ -12,30 +13,28 @@ function PlayerDetailPage() {
   const { playerId } = Route.useParams();
   const [player, setPlayer] = useState<Player | null>(null);
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [missing, setMissing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setPlayer(null);
+    setClubs([]);
+    setError(null);
     (async () => {
       try {
-        const [players, clubList, affils] = await Promise.all([
-          listPlayers(),
+        const [found, clubList, affils] = await Promise.all([
+          getPlayer(Number(playerId)),
           listClubs(),
           listPlayerClubs(),
         ]);
         if (cancelled) return;
-        const found = players.find((p) => p.playerId === Number(playerId));
-        if (!found) {
-          setMissing(true);
-          return;
-        }
         setPlayer(found);
         const clubIds = new Set(
           affils.filter((a) => a.playerId === found.playerId).map((a) => a.clubId),
         );
         setClubs(clubList.filter((c) => clubIds.has(c.clubId)));
-      } catch {
-        if (!cancelled) setMissing(true);
+      } catch (e) {
+        if (!cancelled) setError(parseApiError(e));
       }
     })();
     return () => {
@@ -43,8 +42,8 @@ function PlayerDetailPage() {
     };
   }, [playerId]);
 
-  if (missing)
-    return <p className="text-sm text-muted-foreground">Player not found.</p>;
+  if (error)
+    return <p className="text-sm text-destructive">{error}</p>;
   if (!player)
     return <p className="text-sm text-muted-foreground">Loading…</p>;
 
