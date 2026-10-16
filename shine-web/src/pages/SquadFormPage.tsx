@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -22,22 +22,28 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
-import { listClubs, type Club } from "@/lib/clubs";
-import { fixtureLabel, listMatches, type Match } from "@/lib/matches";
-import { listPlayers, type Player } from "@/lib/players";
+import { fixtureLabel, type Match } from "@/lib/matches";
+import { type Club } from "@/lib/clubs";
+import { type Player } from "@/lib/players";
+import {
+  useClubSquads,
+  useClubs,
+  useMatches,
+  useNationalSquads,
+  usePlayers,
+} from "@/lib/queries";
 import {
   EMPTY_SQUAD_FIELDS,
   LINEUP_STATUSES,
   createClubSquad,
   createNationalSquad,
-  listClubSquads,
-  listNationalSquads,
   updateClubSquad,
   updateNationalSquad,
   type ClubSquad,
   type NationalSquad,
   type SquadFields,
 } from "@/lib/squads";
+import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
 import { parseApiError } from "@/lib/users";
 
 interface FieldsState {
@@ -105,12 +111,18 @@ function SquadFieldsForm({
           onValueChange={(v) => onChange({ lineupStatus: v ?? "starter" })}
         >
           <SelectTrigger id={`${idPrefix}-status`}>
-            <SelectValue />
+            <SelectValue>
+              {(v: unknown) =>
+                typeof v === "string" && v !== ""
+                  ? (SQUAD_STATUS_LABELS[v] ?? v)
+                  : "Select…"
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {LINEUP_STATUSES.map((s) => (
               <SelectItem key={s} value={s}>
-                {s}
+                {SQUAD_STATUS_LABELS[s] ?? s}
               </SelectItem>
             ))}
           </SelectContent>
@@ -235,7 +247,12 @@ function EntitySelect({
     <Field label={label} htmlFor={id}>
       <Select value={value} onValueChange={(v) => onChange(v ?? "")} disabled={disabled}>
         <SelectTrigger id={id}>
-          <SelectValue placeholder={placeholder} />
+          <SelectValue>
+            {(v: unknown) => {
+              if (typeof v !== "string" || v === "") return placeholder;
+              return options.find((o) => o.value === v)?.label ?? placeholder;
+            }}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {options.map((o) => (
@@ -272,99 +289,212 @@ export function SquadFormPage({
 }) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("squads:write");
-  const navigate = useNavigate();
   const editing = entryKey !== undefined;
 
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [clubs, setClubs] = useState<Club[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [matchId, setMatchId] = useState("");
-  const [clubId, setClubId] = useState("");
-  const [playerId, setPlayerId] = useState("");
-  const [nationalTeam, setNationalTeam] = useState(team ?? "");
-  const [fields, setFields] = useState<FieldsState>(() => fieldsFrom(null));
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const matchesQuery = useMatches();
+  const clubsQuery = useClubs();
+  const playersQuery = usePlayers();
+  const clubSquadsQuery = useClubSquads(editing && kind === "club");
+  const nationalSquadsQuery = useNationalSquads(
+    editing && kind === "national",
+  );
+
+  const matches = [...(matchesQuery.data ?? [])].sort((a, b) =>
+    b.matchDate.localeCompare(a.matchDate),
+  );
+  const clubs = clubsQuery.data ?? [];
+  const players = playersQuery.data ?? [];
+  const loading =
+    matchesQuery.isLoading ||
+    clubsQuery.isLoading ||
+    playersQuery.isLoading ||
+    clubSquadsQuery.isLoading ||
+    nationalSquadsQuery.isLoading;
+  const loadError =
+    matchesQuery.error ??
+    clubsQuery.error ??
+    playersQuery.error ??
+    clubSquadsQuery.error ??
+    nationalSquadsQuery.error;
+
+  const title = editing
+    ? "Edit squad entry"
+    : kind === "club"
+      ? "Add club squad entry"
+      : "Add national squad entry";
+
+  if (!canWrite) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>
+            You need the squads:write permission to make changes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link to="/manage/squads" />}>
+            <ArrowLeftIcon />
+            Back to squads
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Couldn't load data</CardTitle>
+          <CardDescription>{parseApiError(loadError)}</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  if (editing) {
+    const initial = findInitial(kind, entryKey, team, clubSquadsQuery.data, nationalSquadsQuery.data);
+    if (!initial) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Squad entry not found</CardTitle>
+            <CardDescription>
+              The entry you are looking for does not exist.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" render={<Link to="/manage/squads" />}>
+              <ArrowLeftIcon />
+              Back to squads
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+    return (
+      <SquadForm
+        key={entryKey}
+        kind={kind}
+        team={team}
+        entryKey={entryKey}
+        matches={matches}
+        clubs={clubs}
+        players={players}
+        initial={initial}
+      />
+    );
+  }
+
+  return (
+    <SquadForm
+      key="new"
+      kind={kind}
+      team={team}
+      matches={matches}
+      clubs={clubs}
+      players={players}
+      initial={null}
+    />
+  );
+}
+
+interface SquadInitial {
+  matchId: string;
+  clubId: string;
+  playerId: string;
+  nationalTeam: string;
+  fields: FieldsState;
+}
+
+function findInitial(
+  kind: "club" | "national",
+  entryKey: string | undefined,
+  team: string | undefined,
+  clubSquads: ClubSquad[] | undefined,
+  nationalSquads: NationalSquad[] | undefined,
+): SquadInitial | null {
+  if (!entryKey) return null;
+  if (kind === "club") {
+    const parsed = parseClubKey(entryKey);
+    const found = parsed
+      ? (clubSquads ?? []).find(
+          (s) =>
+            s.matchId === parsed[0] &&
+            s.clubId === parsed[1] &&
+            s.playerId === parsed[2],
+        )
+      : undefined;
+    if (!found) return null;
+    return {
+      matchId: String(found.matchId),
+      clubId: String(found.clubId),
+      playerId: String(found.playerId),
+      nationalTeam: "",
+      fields: fieldsFrom(found),
+    };
+  }
+  const parsed = parseNationalKey(entryKey);
+  const found =
+    parsed && team
+      ? (nationalSquads ?? []).find(
+          (s) =>
+            s.matchId === parsed[0] &&
+            s.playerId === parsed[1] &&
+            s.nationalTeam === team,
+        )
+      : undefined;
+  if (!found) return null;
+  return {
+    matchId: String(found.matchId),
+    clubId: "",
+    playerId: String(found.playerId),
+    nationalTeam: found.nationalTeam,
+    fields: fieldsFrom(found),
+  };
+}
+
+function SquadForm({
+  kind,
+  team,
+  entryKey,
+  matches,
+  clubs,
+  players,
+  initial,
+}: {
+  kind: "club" | "national";
+  team?: string;
+  entryKey?: string;
+  matches: Match[];
+  clubs: Club[];
+  players: Player[];
+  initial: SquadInitial | null;
+}) {
+  const navigate = useNavigate();
+  const editing = initial !== null;
+  const [matchId, setMatchId] = useState(initial?.matchId ?? "");
+  const [clubId, setClubId] = useState(initial?.clubId ?? "");
+  const [playerId, setPlayerId] = useState(initial?.playerId ?? "");
+  const [nationalTeam, setNationalTeam] = useState(
+    initial?.nationalTeam ?? team ?? "",
+  );
+  const [fields, setFields] = useState<FieldsState>(
+    () => initial?.fields ?? fieldsFrom(null),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        if (kind === "club") {
-          const [m, c, p, cs] = await Promise.all([
-            listMatches(),
-            listClubs(),
-            listPlayers(),
-            entryKey ? listClubSquads() : Promise.resolve(null),
-          ]);
-          if (cancelled) return;
-          setMatches([...m].sort((a, b) => b.matchDate.localeCompare(a.matchDate)));
-          setClubs(c);
-          setPlayers(p);
-          if (entryKey) {
-            const parsed = parseClubKey(entryKey);
-            const found: ClubSquad | undefined =
-              parsed
-                ? (cs ?? []).find(
-                    (s) =>
-                      s.matchId === parsed[0] &&
-                      s.clubId === parsed[1] &&
-                      s.playerId === parsed[2],
-                  )
-                : undefined;
-            if (!found) {
-              setNotFound(true);
-            } else {
-              setMatchId(String(found.matchId));
-              setClubId(String(found.clubId));
-              setPlayerId(String(found.playerId));
-              setFields(fieldsFrom(found));
-            }
-          }
-        } else {
-          const [m, p, ns] = await Promise.all([
-            listMatches(),
-            listPlayers(),
-            entryKey ? listNationalSquads() : Promise.resolve(null),
-          ]);
-          if (cancelled) return;
-          setMatches([...m].sort((a, b) => b.matchDate.localeCompare(a.matchDate)));
-          setPlayers(p);
-          if (entryKey) {
-            const parsed = parseNationalKey(entryKey);
-            const found: NationalSquad | undefined =
-              parsed && team
-                ? (ns ?? []).find(
-                    (s) =>
-                      s.matchId === parsed[0] &&
-                      s.playerId === parsed[1] &&
-                      s.nationalTeam === team,
-                  )
-                : undefined;
-            if (!found) {
-              setNotFound(true);
-            } else {
-              setMatchId(String(found.matchId));
-              setNationalTeam(found.nationalTeam);
-              setPlayerId(String(found.playerId));
-              setFields(fieldsFrom(found));
-            }
-          }
-        }
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per entry
-  }, []);
-
   function patch(p: Partial<FieldsState>) {
     setFields((f) => ({ ...f, ...p }));
   }
@@ -416,54 +546,6 @@ export function SquadFormPage({
     : kind === "club"
       ? "Add club squad entry"
       : "Add national squad entry";
-
-  if (!canWrite) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>
-            You need the squads:write permission to make changes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" render={<Link to="/manage/squads" />}>
-            <ArrowLeftIcon />
-            Back to squads
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
-
-  if (notFound) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Squad entry not found</CardTitle>
-          <CardDescription>
-            The entry you are looking for does not exist.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" render={<Link to="/manage/squads" />}>
-            <ArrowLeftIcon />
-            Back to squads
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-4">
