@@ -55,20 +55,28 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
             await db.SaveChangesAsync();
 
             var result = new MatchRecordResultDto { MatchId = match.MatchId };
-            // Same name twice in one payload resolves once — never double-create.
-            var resolvedInRequest = new Dictionary<string, (int PlayerId, double Score)>();
+            var reviews = new List<ReviewFlag>();
+            // Same (club, name) twice in one payload resolves once — never double-create.
+            var resolvedInRequest = new Dictionary<(int ClubId, string Name), (int PlayerId, double Score)>();
+            var seenNames = new HashSet<(int ClubId, string Name)>();
+            var outcomes = new List<(MatchRecordSquadRowDto Row, int Index, int PlayerId, string Decision, double Score, string? Flag, Player? Created)>();
 
             for (var i = 0; i < dto.Squads.Count; i++)
             {
                 var row = dto.Squads[i];
-                var source = row.SourceUrl ?? dto.Match.SourceUrl;
+                if (!seenNames.Add((row.ClubId, Normalize(row.Name ?? ""))))
+                {
+                    errors.Add($"Row {i}: '{row.Name}' is already listed for this club.");
+                    return null;
+                }
                 var resolution = ResolvePlayer(row, players, currentAffils);
 
                 int playerId;
                 string decision;
                 string? flag = null;
+                Player? created = null;
 
-                if (resolvedInRequest.TryGetValue(Normalize(row.Name), out var prior))
+                if (resolvedInRequest.TryGetValue((row.ClubId, Normalize(row.Name)), out var prior))
                 {
                     playerId = prior.PlayerId;
                     decision = "linked";
@@ -88,87 +96,112 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
                 }
                 else
                 {
-                    var created = new Player
+                    created = new Player
                     {
                         FullName = row.Name.Trim(),
                         PositionPrimary = row.Position,
                         Status = "active",
-                        SourceUrl = source,
+                        SourceUrl = row.SourceUrl ?? dto.Match.SourceUrl,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
                     };
                     db.Player.Add(created);
-                    await db.SaveChangesAsync();
                     players.Add(created);
 
-                    db.PlayerClub.Add(new PlayerClub
-                    {
-                        PlayerId = created.PlayerId,
-                        ClubId = row.ClubId,
-                        IsCurrent = true,
-                        PositionAtClub = row.Position,
-                        ShirtNumber = row.ShirtNumber,
-                        SourceUrl = source,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
-                    });
-                    await db.SaveChangesAsync();
-
-                    playerId = created.PlayerId;
+                    playerId = 0; // Assigned on SaveChanges below.
                     decision = "created";
-                    result.CreatedPlayerIds.Add(playerId);
                     if (resolution.SubstringCandidate)
                         flag = $"Created '{row.Name}' though similar name '{resolution.MatchedName}' exists — please verify.";
                 }
 
-                resolvedInRequest[Normalize(row.Name)] = (playerId, resolution.Score);
+                outcomes.Add((row, i, playerId, decision, resolution.Score, flag, created));
+                if (created is null)
+                    resolvedInRequest[(row.ClubId, Normalize(row.Name))] = (playerId, resolution.Score);
+            }
+
+            await db.SaveChangesAsync();
+
+            // Same player twice for one club in one payload is a data error, not two rows.
+            var used = new HashSet<(int ClubId, int PlayerId)>();
+            foreach (var o in outcomes)
+            {
+                var pid = o.Created?.PlayerId ?? o.PlayerId;
+                if (o.Created is not null)
+                    resolvedInRequest[(o.Row.ClubId, Normalize(o.Row.Name))] = (pid, o.Score);
+                if (!used.Add((o.Row.ClubId, pid)))
+                {
+                    errors.Add($"Row {o.Index}: '{o.Row.Name}' resolves to a player already listed for this club.");
+                    return null;
+                }
+            }
+
+            var source = dto.Match.SourceUrl;
+            foreach (var o in outcomes)
+            {
+                var pid = o.Created?.PlayerId ?? o.PlayerId;
+                var rowSource = o.Row.SourceUrl ?? source;
+                if (o.Created is not null)
+                {
+                    db.PlayerClub.Add(new PlayerClub
+                    {
+                        PlayerId = pid,
+                        ClubId = o.Row.ClubId,
+                        IsCurrent = true,
+                        PositionAtClub = o.Row.Position,
+                        ShirtNumber = o.Row.ShirtNumber,
+                        SourceUrl = rowSource,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                    });
+                    result.CreatedPlayerIds.Add(pid);
+                }
 
                 db.ClubMatchSquad.Add(new ClubMatchSquad
                 {
                     MatchId = match.MatchId,
-                    ClubId = row.ClubId,
-                    PlayerId = playerId,
-                    LineupStatus = row.LineupStatus,
-                    ShirtNumber = row.ShirtNumber,
-                    Position = row.Position,
-                    MinutesPlayed = row.MinutesPlayed,
-                    Goals = row.Goals,
-                    Assists = row.Assists,
-                    YellowCards = row.YellowCards,
-                    RedCards = row.RedCards,
-                    Captain = row.Captain,
-                    SourceUrl = source,
-                    Notes = row.Notes,
+                    ClubId = o.Row.ClubId,
+                    PlayerId = pid,
+                    LineupStatus = o.Row.LineupStatus,
+                    ShirtNumber = o.Row.ShirtNumber,
+                    Position = o.Row.Position,
+                    MinutesPlayed = o.Row.MinutesPlayed,
+                    Goals = o.Row.Goals,
+                    Assists = o.Row.Assists,
+                    YellowCards = o.Row.YellowCards,
+                    RedCards = o.Row.RedCards,
+                    Captain = o.Row.Captain,
+                    SourceUrl = rowSource,
+                    Notes = o.Row.Notes,
                 });
 
                 var entry = new MatchRecordEntryDto
                 {
-                    Row = i,
-                    PlayerId = playerId,
-                    Decision = decision,
-                    Score = Math.Round(resolution.Score, 2),
-                    Flag = flag,
+                    Row = o.Index,
+                    PlayerId = pid,
+                    Decision = o.Decision,
+                    Score = Math.Round(o.Score, 2),
+                    Flag = o.Flag,
                 };
                 result.Entries.Add(entry);
 
-                if (flag is not null)
+                if (o.Flag is not null)
                 {
                     var review = new ReviewFlag
                     {
                         EntityType = "club-match-squad",
-                        EntityKey = $"match/{match.MatchId}/club/{row.ClubId}/player/{playerId}",
-                        Reason = flag,
+                        EntityKey = $"match/{match.MatchId}/club/{o.Row.ClubId}/player/{pid}",
+                        Reason = o.Flag,
                         Score = entry.Score,
                         Status = "open",
-                        SourceUrl = source,
+                        SourceUrl = rowSource,
                     };
                     db.ReviewFlag.Add(review);
-                    await db.SaveChangesAsync();
-                    result.ReviewFlags.Add(review);
+                    reviews.Add(review);
                 }
             }
 
             await db.SaveChangesAsync();
+            result.ReviewFlags = reviews.Select(ReviewFlagDto.From).ToList();
             await tx.CommitAsync();
             return result;
         }
@@ -177,6 +210,43 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
             await tx.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task<List<ReviewFlagDto>> GetFlagsAsync(string? status, int page, int pageSize)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var query = db.ReviewFlag.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(status))
+            query = query.Where(f => f.Status == status);
+        var flags = await query
+            .OrderByDescending(f => f.ReviewFlagId)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return flags.Select(ReviewFlagDto.From).ToList();
+    }
+
+    public async Task<ReviewFlagDto?> ResolveFlagAsync(int id, string status)
+    {
+        if (!string.Equals(status, "open", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(status, "resolved", StringComparison.OrdinalIgnoreCase))
+            return null;
+        var flag = await db.ReviewFlag.FindAsync(id);
+        if (flag is null) return null;
+        flag.Status = status.ToLowerInvariant();
+        flag.ResolvedAt = flag.Status == "resolved" ? DateTime.UtcNow : null;
+        await db.SaveChangesAsync();
+        return ReviewFlagDto.From(flag);
+    }
+
+    public async Task<bool> DeleteFlagAsync(int id)
+    {
+        var flag = await db.ReviewFlag.FindAsync(id);
+        if (flag is null) return false;
+        db.ReviewFlag.Remove(flag);
+        await db.SaveChangesAsync();
+        return true;
     }
 
     private static bool Validate(CreateMatchRecordDto dto, List<string> errors)

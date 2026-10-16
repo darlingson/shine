@@ -11,4 +11,8 @@ public interface IMatchRecordService
     /// carries per-row reasons.
     /// </summary>
     Task<MatchRecordResultDto?> CreateAsync(CreateMatchRecordDto dto, List<string> errors);
+
+    Task<List<ReviewFlagDto>> GetFlagsAsync(string? status, int page, int pageSize);
+    Task<ReviewFlagDto?> ResolveFlagAsync(int id, string status);
+    Task<bool> DeleteFlagAsync(int id);
 }

@@ -1,9 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using ShineApi.Authorization;
 using ShineApi.Dtos;
-using ShineApi.Models;
 using ShineApi.Services.Interfaces;
 
 namespace ShineApi.Controllers;
@@ -31,45 +28,37 @@ public class MatchRecordsController : ControllerBase
         var errors = new List<string>();
         var result = await _service.CreateAsync(dto, errors);
         if (result is null) return BadRequest(new { errors });
-        return Ok(result);
+        return CreatedAtAction("GetById", "Matches", new { id = result.MatchId }, result);
     }
 
     [HttpGet("review-flags")]
     [HasPermission(Permissions.MatchesWrite)]
-    public async Task<IActionResult> ReviewFlags([FromServices] ShineDbContext db)
+    public async Task<IActionResult> ReviewFlags(
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var flags = await db.ReviewFlag
-            .OrderByDescending(f => f.ReviewFlagId)
-            .ToListAsync();
-        return Ok(flags);
-    }
-
-    public sealed class ResolveFlagDto
-    {
-        public string Status { get; set; } = "resolved";
+        if (status is not null &&
+            !string.Equals(status, "open", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(status, "resolved", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { errors = new[] { "status must be 'open' or 'resolved'." } });
+        return Ok(await _service.GetFlagsAsync(status, page, pageSize));
     }
 
     [HttpPatch("review-flags/{id:int}")]
     [HasPermission(Permissions.MatchesWrite)]
-    public async Task<IActionResult> ResolveFlag(int id, [FromBody] ResolveFlagDto dto, [FromServices] ShineDbContext db)
+    public async Task<IActionResult> ResolveFlag(int id, [FromBody] ResolveFlagDto dto)
     {
-        if (dto.Status != "open" && dto.Status != "resolved") return BadRequest(new { errors = new[] { "Status must be 'open' or 'resolved'." } });
-        var flag = await db.ReviewFlag.FindAsync(id);
+        if (!string.Equals(dto.Status, "open", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(dto.Status, "resolved", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { errors = new[] { "Status must be 'open' or 'resolved'." } });
+        var flag = await _service.ResolveFlagAsync(id, dto.Status);
         if (flag is null) return NotFound();
-        flag.Status = dto.Status;
-        flag.ResolvedAt = dto.Status == "resolved" ? DateTime.UtcNow : null;
-        await db.SaveChangesAsync();
         return Ok(flag);
     }
 
     [HttpDelete("review-flags/{id:int}")]
     [HasPermission(Permissions.MatchesWrite)]
-    public async Task<IActionResult> DeleteFlag(int id, [FromServices] ShineDbContext db)
-    {
-        var flag = await db.ReviewFlag.FindAsync(id);
-        if (flag is null) return NotFound();
-        db.ReviewFlag.Remove(flag);
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    public async Task<IActionResult> DeleteFlag(int id)
+        => await _service.DeleteFlagAsync(id) ? NoContent() : NotFound();
 }
