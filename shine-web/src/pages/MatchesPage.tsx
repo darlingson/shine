@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -21,41 +21,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import {
-  deleteMatch,
-  fixtureLabel,
-  listMatches,
-  type Match,
-} from "@/lib/matches";
+import { deleteMatch, fixtureLabel } from "@/lib/matches";
+import { useMatches } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export function MatchesPage() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("matches:write");
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: allMatches = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useMatches();
+  const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const all = await listMatches();
-      setMatches(
-        [...all].sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
-      );
-    } catch (e) {
-      setError(parseApiError(e));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch on mount
-    void refresh();
-  }, [refresh]);
+  const matches = useMemo(
+    () => [...allMatches].sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
+    [allMatches],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -122,7 +107,7 @@ export function MatchesPage() {
           ) : error ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2">
               <p className="text-sm text-destructive">{error}</p>
-              <Button size="sm" variant="outline" onClick={refresh}>
+              <Button size="sm" variant="outline" onClick={() => void refetch()}>
                 Retry
               </Button>
             </div>
@@ -177,7 +162,7 @@ export function MatchesPage() {
                             name={`match on ${m.matchDate}`}
                             onConfirm={async () => {
                               await deleteMatch(m.matchId);
-                              await refresh();
+                              await refetch();
                             }}
                           />
                         </div>

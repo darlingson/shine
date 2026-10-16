@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +16,8 @@ import {
   ROLE_PERMISSIONS,
   type RoleName,
 } from "@/lib/roles";
-import { listUsers, parseApiError, type ManagedUser } from "@/lib/users";
+import { parseApiError } from "@/lib/users";
+import { useUsers } from "@/lib/queries";
 
 function permissionVariant(p: string): "default" | "secondary" | "outline" {
   if (p === "users:manage" || p === "permissions:grant") return "default";
@@ -28,22 +28,9 @@ function permissionVariant(p: string): "default" | "secondary" | "outline" {
 export function RolesPage() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("users:manage");
-  const [users, setUsers] = useState<ManagedUser[]>([]);
-  const [loading, setLoading] = useState(canManage);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!canManage) return;
-    (async () => {
-      try {
-        setUsers(await listUsers());
-      } catch (e) {
-        setError(parseApiError(e));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [canManage]);
+  const { data: users = [], isLoading: loading, error: queryError } =
+    useUsers(canManage);
+  const error = queryError ? parseApiError(queryError) : null;
 
   const membersOf = (role: RoleName) =>
     users.filter((u) => u.roles.includes(role));
