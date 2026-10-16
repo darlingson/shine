@@ -52,6 +52,7 @@ export function OverviewPage() {
   const { user, logout, hasPermission } = useAuth();
   const canWrite =
     hasPermission("players:write") ||
+    hasPermission("clubs:write") ||
     hasPermission("matches:write") ||
     hasPermission("squads:write");
 

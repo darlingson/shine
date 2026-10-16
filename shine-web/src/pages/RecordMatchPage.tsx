@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -23,6 +23,7 @@ import { parseOptionalInt } from "@/lib/forms";
 import { createClub, listClubs, type Club } from "@/lib/clubs";
 import {
   SQUAD_STATUSES,
+  SQUAD_STATUS_LABELS,
   createMatchRecord,
   type MatchRecordResult,
   type MatchRecordSquadRow,
@@ -33,14 +34,42 @@ interface Row extends MatchRecordSquadRow {
   key: number;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  starter: "Starter",
-  substitute: "Substitute",
-  unused_sub: "Unused sub",
-  reserve: "Reserve",
-  suspended: "Suspended",
-  injured: "Injured",
-};
+/** Label-resolved select: never shows raw ids, whatever the popup state. */
+function LabeledSelect({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  id?: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+  placeholder: string;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger id={id} aria-label={label} className="w-full">
+        <SelectValue>
+          {(v: unknown) => {
+            if (typeof v !== "string" || v === "") return placeholder;
+            return options.find((o) => o.value === v)?.label ?? placeholder;
+          }}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 /** Theme-aware club picker (native selects ignore dark mode). */
 function ClubPicker({
@@ -57,33 +86,20 @@ function ClubPicker({
   placeholder: string;
 }) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger id={id} className="w-full">
-        {/* Resolve the label from our own list: Base UI only knows item
-            labels while the popup is mounted, and falls back to the raw id. */}
-        <SelectValue>
-          {(v: unknown) =>
-            typeof v === "string" && v !== ""
-              ? (clubs.find((c) => String(c.clubId) === v)?.name ?? placeholder)
-              : placeholder
-          }
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {clubs.map((c) => (
-          <SelectItem key={c.clubId} value={String(c.clubId)}>
-            {c.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <LabeledSelect
+      id={id}
+      label="Club"
+      value={value}
+      onChange={onChange}
+      options={clubs.map((c) => ({ value: String(c.clubId), label: c.name }))}
+      placeholder={placeholder}
+    />
   );
 }
 
-let nextKey = 1;
-function emptyRow(homeClubId: number): Row {
+function emptyRow(key: number, homeClubId: number): Row {
   return {
-    key: nextKey++,
+    key,
     clubId: homeClubId,
     name: "",
     position: "",
@@ -121,6 +137,12 @@ export function RecordMatchPage() {
   const [newClubName, setNewClubName] = useState("");
   const [newClubCity, setNewClubCity] = useState("");
   const [creatingClub, setCreatingClub] = useState(false);
+  const keyRef = useRef(1);
+
+  function addRow() {
+    const key = keyRef.current++;
+    setRows((rs) => [...rs, emptyRow(key, Number(homeClubId) || 0)]);
+  }
 
   useEffect(() => {
     listClubs()
@@ -128,10 +150,9 @@ export function RecordMatchPage() {
       .catch(() => setClubs([]));
   }, []);
 
-  async function onCreateClub(e: React.FormEvent) {
-    e.preventDefault();
+  async function onCreateClub() {
     const name = newClubName.trim();
-    if (!name) return;
+    if (!name || creatingClub) return;
     setCreatingClub(true);
     try {
       const created = await createClub({
@@ -380,10 +401,7 @@ export function RecordMatchPage() {
                     Club missing? Add it
                   </Button>
                 ) : (
-                  <form
-                    onSubmit={onCreateClub}
-                    className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_10rem_auto]"
-                  >
+                  <div className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_10rem_auto]">
                     <Input
                       aria-label="New club name"
                       required
@@ -398,7 +416,12 @@ export function RecordMatchPage() {
                       placeholder="City (optional)"
                     />
                     <div className="flex gap-2">
-                      <Button type="submit" size="sm" disabled={creatingClub}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={creatingClub || newClubName.trim() === ""}
+                        onClick={() => void onCreateClub()}
+                      >
                         {creatingClub ? "Adding…" : "Add club"}
                       </Button>
                       <Button
@@ -410,7 +433,7 @@ export function RecordMatchPage() {
                         Cancel
                       </Button>
                     </div>
-                  </form>
+                  </div>
                 )}
               </div>
             )}
@@ -469,7 +492,8 @@ export function RecordMatchPage() {
                   onChange={(e) => updateRow(r.key, { name: e.target.value })}
                   placeholder="Player name"
                 />
-                <Select
+                <LabeledSelect
+                  label="Side"
                   value={
                     r.clubId !== 0 &&
                     (String(r.clubId) === homeClubId ||
@@ -477,60 +501,41 @@ export function RecordMatchPage() {
                       ? String(r.clubId)
                       : ""
                   }
-                  onValueChange={(v) => updateRow(r.key, { clubId: Number(v) })}
-                >
-                  <SelectTrigger aria-label="Side" className="w-full">
-                    <SelectValue>
-                      {(v: unknown) => {
-                        if (typeof v !== "string" || v === "") return "Side";
-                        if (v === homeClubId)
-                          return (
-                            clubs.find((c) => c.clubId === Number(homeClubId))
-                              ?.shortName ?? "Home"
-                          );
-                        if (v === awayClubId)
-                          return (
-                            clubs.find((c) => c.clubId === Number(awayClubId))
-                              ?.shortName ?? "Away"
-                          );
-                        return "Side";
-                      }}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {homeClubId && (
-                      <SelectItem value={homeClubId}>
-                        {clubs.find((c) => c.clubId === Number(homeClubId))?.shortName ?? "Home"}
-                      </SelectItem>
-                    )}
-                    {awayClubId && (
-                      <SelectItem value={awayClubId}>
-                        {clubs.find((c) => c.clubId === Number(awayClubId))?.shortName ?? "Away"}
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <Select
+                  onChange={(v) => updateRow(r.key, { clubId: Number(v) })}
+                  options={[
+                    ...(homeClubId
+                      ? [
+                          {
+                            value: homeClubId,
+                            label:
+                              clubs.find((c) => c.clubId === Number(homeClubId))
+                                ?.shortName ?? "Home",
+                          },
+                        ]
+                      : []),
+                    ...(awayClubId
+                      ? [
+                          {
+                            value: awayClubId,
+                            label:
+                              clubs.find((c) => c.clubId === Number(awayClubId))
+                                ?.shortName ?? "Away",
+                          },
+                        ]
+                      : []),
+                  ]}
+                  placeholder="Side"
+                />
+                <LabeledSelect
+                  label="Lineup status"
                   value={r.lineupStatus}
-                  onValueChange={(v) => updateRow(r.key, { lineupStatus: v })}
-                >
-                  <SelectTrigger aria-label="Lineup status" className="w-full">
-                    <SelectValue>
-                      {(v: unknown) =>
-                        typeof v === "string" && v !== ""
-                          ? (STATUS_LABELS[v] ?? v)
-                          : "Status"
-                      }
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SQUAD_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {STATUS_LABELS[s]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(v) => updateRow(r.key, { lineupStatus: v })}
+                  options={SQUAD_STATUSES.map((s) => ({
+                    value: s,
+                    label: SQUAD_STATUS_LABELS[s],
+                  }))}
+                  placeholder="Status"
+                />
                 <Button
                   type="button"
                   variant="ghost"
@@ -547,8 +552,12 @@ export function RecordMatchPage() {
                   placeholder="Position (optional)"
                   className="sm:col-span-2"
                 />
-                <label className="flex items-center gap-2 text-sm">
+                <label
+                  htmlFor={`cap-${r.key}`}
+                  className="flex cursor-pointer items-center gap-2 text-sm"
+                >
                   <input
+                    id={`cap-${r.key}`}
                     type="checkbox"
                     checked={r.captain}
                     onChange={(e) => updateRow(r.key, { captain: e.target.checked })}
@@ -558,20 +567,26 @@ export function RecordMatchPage() {
               </div>
             ))}
             <div className="flex flex-col gap-1.5">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setRows((rs) => [...rs, emptyRow(Number(homeClubId) || 0)])
-                }
-              >
+              <Button type="button" variant="outline" onClick={addRow}>
                 <PlusIcon />
                 Add player
               </Button>
-              {!homeClubId && (
+              {!homeClubId ? (
                 <p className="text-xs text-muted-foreground">
                   Pick the clubs above first so each row gets the right side.
                 </p>
+              ) : (
+                rows.some(
+                  (r) =>
+                    r.name.trim() !== "" &&
+                    String(r.clubId) !== homeClubId &&
+                    String(r.clubId) !== awayClubId,
+                ) && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    Some rows have no side yet — pick one per row before
+                    submitting.
+                  </p>
+                )
               )}
             </div>
           </CardContent>

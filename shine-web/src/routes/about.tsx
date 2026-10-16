@@ -88,15 +88,13 @@ function AboutPage() {
                 <PencilLineIcon />
                 Contribute a record
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                nativeButton={false}
-                render={<a href="#questions" />}
+              <a
+                href="#questions"
+                className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <MagnifyingGlassIcon />
                 What you can find
-              </Button>
+              </a>
             </div>
           </div>
 

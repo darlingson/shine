@@ -3,12 +3,20 @@ import { ArrowRightIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { LogoMark } from "@/components/logo";
 
+type SectionRoute =
+  | "/"
+  | "/about"
+  | "/data"
+  | "/data/players"
+  | "/data/clubs"
+  | "/data/matches";
+
 export interface SectionLink {
   label: string;
   /** In-page anchor (e.g. "#top-scorers"). */
   href?: string;
-  /** App route (e.g. "/data/players"). Prefer over href for routes. */
-  to?: string;
+  /** App route. Prefer over href for routes. */
+  to?: SectionRoute;
 }
 
 export function SiteNav({ sections }: { sections: SectionLink[] }) {
@@ -31,17 +39,7 @@ export function SiteNav({ sections }: { sections: SectionLink[] }) {
             className="hidden items-center gap-1 lg:flex"
           >
             {sections.map((s) => (
-              <Button
-                key={(s.to ?? s.href ?? "") + s.label}
-                variant="ghost"
-                size="sm"
-                nativeButton={false}
-                render={
-                  s.to ? <Link to={s.to} /> : <a href={s.href ?? "#"} />
-                }
-              >
-                {s.label}
-              </Button>
+              <SectionButton key={(s.to ?? s.href ?? "") + s.label} link={s} />
             ))}
           </nav>
         </div>
@@ -59,6 +57,32 @@ export function SiteNav({ sections }: { sections: SectionLink[] }) {
           </Button>
         </div>
       </div>
+      {sections.length > 0 && (
+        <nav
+          aria-label="Sections"
+          className="overflow-x-auto border-t border-border lg:hidden"
+        >
+          <div className="mx-auto flex w-full max-w-5xl items-center gap-1 px-6 py-2">
+            {sections.map((s) => (
+              <SectionButton key={(s.to ?? s.href ?? "") + s.label} link={s} />
+            ))}
+          </div>
+        </nav>
+      )}
     </header>
+  );
+}
+
+function SectionButton({ link }: { link: SectionLink }) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="shrink-0"
+      nativeButton={false}
+      render={link.to ? <Link to={link.to} /> : <a href={link.href ?? "#"} />}
+    >
+      {link.label}
+    </Button>
   );
 }

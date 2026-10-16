@@ -116,7 +116,14 @@ function LandingPage() {
   );
 
   const latestPlayers = useMemo(
-    () => [...players].sort((a, b) => b.playerId - a.playerId).slice(0, 10),
+    () =>
+      [...players]
+        .sort(
+          (a, b) =>
+            (b.createdAt ?? "").localeCompare(a.createdAt ?? "") ||
+            b.playerId - a.playerId,
+        )
+        .slice(0, 10),
     [players],
   );
 
@@ -182,13 +189,22 @@ function LandingPage() {
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setQuery("");
+                }}
                 placeholder="Search for a player"
                 aria-label="Search for a player"
+                aria-expanded={results.length > 0}
+                role="combobox"
+                aria-controls="player-search-results"
                 className="pl-9"
               />
               {results.length > 0 && (
-                <ul className="absolute z-10 mt-2 w-full rounded-xl border border-border bg-card p-1 shadow-md">
-                  {results.map((p) => (
+                <ul
+                  id="player-search-results"
+                  role="listbox"
+                  className="absolute z-10 mt-2 w-full rounded-xl border border-border bg-card p-1 shadow-md"
+                >  {results.map((p) => (
                     <li key={p.playerId}>
                       <Link
                         to="/data/players/$playerId"

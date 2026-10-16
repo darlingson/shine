@@ -163,6 +163,7 @@ export function MatchesPage() {
                             size="icon-sm"
                             title={`Edit match ${m.matchId}`}
                             aria-label={`Edit match ${m.matchId}`}
+                            nativeButton={false}
                             render={
                               <Link
                                 to="/manage/matches/$matchId"
