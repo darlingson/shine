@@ -51,7 +51,7 @@ function LabeledSelect({
   placeholder: string;
 }) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={(v) => onChange(v ?? "")}>
       <SelectTrigger id={id} aria-label={label} className="w-full">
         <SelectValue>
           {(v: unknown) => {
