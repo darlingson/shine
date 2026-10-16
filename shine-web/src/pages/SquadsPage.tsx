@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -29,63 +29,68 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import { listClubs, type Club } from "@/lib/clubs";
-import { fixtureLabel, listMatches, type Match } from "@/lib/matches";
-import { listPlayers, type Player } from "@/lib/players";
+import { fixtureLabel } from "@/lib/matches";
 import {
   clubEntryKey,
   deleteClubSquad,
   deleteNationalSquad,
-  listClubSquads,
-  listNationalSquads,
   nationalEntryKey,
   statLine,
-  type ClubSquad,
-  type NationalSquad,
 } from "@/lib/squads";
+import {
+  useClubSquads,
+  useClubs,
+  useMatches,
+  useNationalSquads,
+  usePlayers,
+} from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export function SquadsPage() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("squads:write");
   const [tab, setTab] = useState<"club" | "national">("club");
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [clubs, setClubs] = useState<Club[]>([]);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [clubEntries, setClubEntries] = useState<ClubSquad[]>([]);
-  const [nationalEntries, setNationalEntries] = useState<NationalSquad[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const playersQuery = usePlayers();
+  const clubsQuery = useClubs();
+  const matchesQuery = useMatches();
+  const clubEntriesQuery = useClubSquads();
+  const nationalEntriesQuery = useNationalSquads();
+
+  const players = playersQuery.data ?? [];
+  const clubs = clubsQuery.data ?? [];
+  const clubEntries = clubEntriesQuery.data ?? [];
+  const nationalEntries = nationalEntriesQuery.data ?? [];
+  const matches = useMemo(
+    () =>
+      [...(matchesQuery.data ?? [])].sort((a, b) =>
+        b.matchDate.localeCompare(a.matchDate),
+      ),
+    [matchesQuery.data],
+  );
+  const loading =
+    playersQuery.isLoading ||
+    clubsQuery.isLoading ||
+    matchesQuery.isLoading ||
+    clubEntriesQuery.isLoading ||
+    nationalEntriesQuery.isLoading;
+  const queryError =
+    playersQuery.error ??
+    clubsQuery.error ??
+    matchesQuery.error ??
+    clubEntriesQuery.error ??
+    nationalEntriesQuery.error;
+  const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
   const [matchFilter, setMatchFilter] = useState<string>("all");
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [p, c, m, cs, ns] = await Promise.all([
-        listPlayers(),
-        listClubs(),
-        listMatches(),
-        listClubSquads(),
-        listNationalSquads(),
-      ]);
-      setPlayers(p);
-      setClubs(c);
-      setMatches([...m].sort((a, b) => b.matchDate.localeCompare(a.matchDate)));
-      setClubEntries(cs);
-      setNationalEntries(ns);
-    } catch (e) {
-      setError(parseApiError(e));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch on mount
-    void refresh();
-  }, [refresh]);
+  const refresh = () =>
+    Promise.all([
+      playersQuery.refetch(),
+      clubsQuery.refetch(),
+      matchesQuery.refetch(),
+      clubEntriesQuery.refetch(),
+      nationalEntriesQuery.refetch(),
+    ]);
 
   const playerNames = useMemo(() => new Map(players.map((p) => [p.playerId, p.fullName])), [players]);
   const clubNames = useMemo(() => new Map(clubs.map((c) => [c.clubId, c.name])), [clubs]);

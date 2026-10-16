@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRightIcon,
@@ -11,13 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SiteNav } from "@/components/site-nav";
-import { listPlayers, type Player } from "@/lib/players";
-import { listClubs } from "@/lib/clubs";
-import { listMatches } from "@/lib/matches";
+import { type Player } from "@/lib/players";
 import {
-  listClubSquads,
-  listNationalSquads,
-} from "@/lib/squads";
+  useClubSquads,
+  useClubs,
+  useMatches,
+  useNationalSquads,
+  usePlayers,
+} from "@/lib/queries";
 
 export const Route = createFileRoute("/")({ component: LandingPage });
 
@@ -33,58 +34,45 @@ function displayName(p: Player): string {
 }
 
 function LandingPage() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [clubCount, setClubCount] = useState(0);
-  const [matchCount, setMatchCount] = useState(0);
-  const [scorers, setScorers] = useState<Scorer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
+  const playersQuery = usePlayers();
+  const clubsQuery = useClubs();
+  const matchesQuery = useMatches();
+  const clubSquadsQuery = useClubSquads();
+  const nationalSquadsQuery = useNationalSquads();
   const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [p, c, m, cs, ns] = await Promise.allSettled([
-        listPlayers(),
-        listClubs(),
-        listMatches(),
-        listClubSquads(),
-        listNationalSquads(),
-      ]);
-      if (cancelled) return;
-      if (p.status === "fulfilled") setPlayers(p.value);
-      else setFailed(true);
-      if (c.status === "fulfilled") setClubCount(c.value.length);
-      if (m.status === "fulfilled") setMatchCount(m.value.length);
-      const table = new Map<number, Scorer>();
-      const add = (
-        playerId: number,
-        goals: number,
-        assists: number,
-        national: boolean,
-      ) => {
-        const row = table.get(playerId) ?? {
-          playerId,
-          goals: 0,
-          assists: 0,
-          caps: 0,
-        };
-        row.goals += goals;
-        row.assists += assists;
-        if (national) row.caps += 1;
-        table.set(playerId, row);
+  const players = playersQuery.data ?? [];
+  const loading = playersQuery.isLoading;
+  const failed = playersQuery.isError;
+
+  const scorers = useMemo(() => {
+    const table = new Map<number, Scorer>();
+    const add = (
+      playerId: number,
+      goals: number,
+      assists: number,
+      national: boolean,
+    ) => {
+      const row = table.get(playerId) ?? {
+        playerId,
+        goals: 0,
+        assists: 0,
+        caps: 0,
       };
-      if (cs.status === "fulfilled")
-        for (const s of cs.value) add(s.playerId, s.goals, s.assists, false);
-      if (ns.status === "fulfilled")
-        for (const s of ns.value) add(s.playerId, s.goals, s.assists, true);
-      setScorers([...table.values()]);
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
+      row.goals += goals;
+      row.assists += assists;
+      if (national) row.caps += 1;
+      table.set(playerId, row);
     };
-  }, []);
+    for (const s of clubSquadsQuery.data ?? [])
+      add(s.playerId, s.goals, s.assists, false);
+    for (const s of nationalSquadsQuery.data ?? [])
+      add(s.playerId, s.goals, s.assists, true);
+    return [...table.values()];
+  }, [clubSquadsQuery.data, nationalSquadsQuery.data]);
+
+  const clubCount = clubsQuery.data?.length ?? 0;
+  const matchCount = matchesQuery.data?.length ?? 0;
 
   const names = useMemo(() => new Map(players.map((p) => [p.playerId, p])), [players]);
 

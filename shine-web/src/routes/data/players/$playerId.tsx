@@ -1,8 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { getPlayer, type Player } from "@/lib/players";
-import { listClubs, type Club } from "@/lib/clubs";
-import { listPlayerClubs } from "@/lib/playerclubs";
+import { useMemo } from "react";
+import { useClubs, usePlayer, usePlayerClubs } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/players/$playerId")({
@@ -11,61 +9,45 @@ export const Route = createFileRoute("/data/players/$playerId")({
 
 function PlayerDetailPage() {
   const { playerId } = Route.useParams();
-  const [player, setPlayer] = useState<Player | null>(null);
-  const [clubs, setClubs] = useState<Club[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const player = usePlayer(playerId);
+  const clubs = useClubs();
+  const affils = usePlayerClubs();
 
-  useEffect(() => {
-    let cancelled = false;
-    setPlayer(null);
-    setClubs([]);
-    setError(null);
-    (async () => {
-      try {
-        const [found, clubList, affils] = await Promise.all([
-          getPlayer(Number(playerId)),
-          listClubs(),
-          listPlayerClubs(),
-        ]);
-        if (cancelled) return;
-        setPlayer(found);
-        const clubIds = new Set(
-          affils.filter((a) => a.playerId === found.playerId).map((a) => a.clubId),
-        );
-        setClubs(clubList.filter((c) => clubIds.has(c.clubId)));
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [playerId]);
+  const playerClubs = useMemo(() => {
+    if (!player.data || !clubs.data || !affils.data) return [];
+    const clubIds = new Set(
+      affils.data
+        .filter((a) => a.playerId === player.data.playerId)
+        .map((a) => a.clubId),
+    );
+    return clubs.data.filter((c) => clubIds.has(c.clubId));
+  }, [player.data, clubs.data, affils.data]);
 
-  if (error)
-    return <p className="text-sm text-destructive">{error}</p>;
-  if (!player)
+  const error = player.error ?? clubs.error ?? affils.error;
+  if (error) return <p className="text-sm text-destructive">{parseApiError(error)}</p>;
+  if (!player.data)
     return <p className="text-sm text-muted-foreground">Loading…</p>;
 
+  const p = player.data;
   const facts: Array<[string, string | undefined | null]> = [
-    ["Known as", player.knownAs],
-    ["Date of birth", player.dateOfBirth],
-    ["Position", [player.positionPrimary, player.positionSecondary].filter(Boolean).join(" / ") || null],
-    ["Height", player.heightCm ? `${player.heightCm} cm` : null],
-    ["Foot", player.foot],
-    ["Status", player.status],
-    ["Nationality", player.nationality],
+    ["Known as", p.knownAs],
+    ["Date of birth", p.dateOfBirth],
+    ["Position", [p.positionPrimary, p.positionSecondary].filter(Boolean).join(" / ") || null],
+    ["Height", p.heightCm ? `${p.heightCm} cm` : null],
+    ["Foot", p.foot],
+    ["Status", p.status],
+    ["Nationality", p.nationality],
   ];
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {player.fullName}
+          {p.fullName}
         </h1>
-        {player.sourceUrl && (
+        {p.sourceUrl && (
           <a
-            href={player.sourceUrl}
+            href={p.sourceUrl}
             target="_blank"
             rel="noreferrer"
             className="text-sm text-primary underline-offset-4 hover:underline"
@@ -89,13 +71,13 @@ function PlayerDetailPage() {
 
       <section className="flex flex-col gap-2">
         <h2 className="font-heading text-lg font-semibold tracking-tight">Clubs</h2>
-        {clubs.length === 0 ? (
+        {playerClubs.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No club affiliations recorded.
           </p>
         ) : (
           <ul className="flex flex-col rounded-2xl border border-border bg-card">
-            {clubs.map((c) => (
+            {playerClubs.map((c) => (
               <li key={c.clubId} className="border-b border-border last:border-b-0">
                 <Link
                   to="/data/clubs/$clubId"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -16,65 +16,96 @@ import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
 import {
   createMatch,
-  listMatches,
   updateMatch,
   type Match,
   type MatchForm,
 } from "@/lib/matches";
+import { useMatch } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 /** Shared add/edit form. Pass matchId to edit, omit to create. */
 export function MatchFormPage({ matchId }: { matchId?: string }) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("matches:write");
+  const editing = matchId !== undefined;
+  const matchQuery = useMatch(matchId ?? "", editing);
+
+  if (!canWrite) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{editing ? "Edit match" : "Add match"}</CardTitle>
+          <CardDescription>
+            You need the matches:write permission to make changes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link to="/manage/matches" />}>
+            <ArrowLeftIcon />
+            Back to matches
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (editing && matchQuery.isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (editing && (matchQuery.isError || !matchQuery.data)) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Match not found</CardTitle>
+          <CardDescription>
+            No match with id “{matchId}” exists.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link to="/manage/matches" />}>
+            <ArrowLeftIcon />
+            Back to matches
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <MatchForm
+      key={matchId ?? "new"}
+      matchId={matchId}
+      initial={editing ? (matchQuery.data as Match) : undefined}
+    />
+  );
+}
+
+function MatchForm({
+  matchId,
+  initial,
+}: {
+  matchId?: string;
+  initial?: Match;
+}) {
   const navigate = useNavigate();
-  const [matchDate, setMatchDate] = useState("");
-  const [competition, setCompetition] = useState("");
-  const [season, setSeason] = useState("");
-  const [homeTeam, setHomeTeam] = useState("");
-  const [awayTeam, setAwayTeam] = useState("");
-  const [homeScore, setHomeScore] = useState("");
-  const [awayScore, setAwayScore] = useState("");
-  const [venue, setVenue] = useState("");
-  const [sourceUrl, setSourceUrl] = useState("");
-  const [loading, setLoading] = useState(matchId !== undefined);
-  const [notFound, setNotFound] = useState(false);
+  const [matchDate, setMatchDate] = useState(initial?.matchDate ?? "");
+  const [competition, setCompetition] = useState(initial?.competition ?? "");
+  const [season, setSeason] = useState(initial?.season ?? "");
+  const [homeTeam, setHomeTeam] = useState(initial?.homeTeam ?? "");
+  const [awayTeam, setAwayTeam] = useState(initial?.awayTeam ?? "");
+  const [homeScore, setHomeScore] = useState(initial?.homeScore?.toString() ?? "");
+  const [awayScore, setAwayScore] = useState(initial?.awayScore?.toString() ?? "");
+  const [venue, setVenue] = useState(initial?.venue ?? "");
+  const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (matchId === undefined) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const all = await listMatches();
-        const found: Match | undefined = all.find(
-          (m) => m.matchId === Number(matchId),
-        );
-        if (cancelled) return;
-        if (!found) {
-          setNotFound(true);
-        } else {
-          setMatchDate(found.matchDate);
-          setCompetition(found.competition ?? "");
-          setSeason(found.season ?? "");
-          setHomeTeam(found.homeTeam ?? "");
-          setAwayTeam(found.awayTeam ?? "");
-          setHomeScore(found.homeScore?.toString() ?? "");
-          setAwayScore(found.awayScore?.toString() ?? "");
-          setVenue(found.venue ?? "");
-          setSourceUrl(found.sourceUrl ?? "");
-        }
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [matchId]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,54 +134,6 @@ export function MatchFormPage({ matchId }: { matchId?: string }) {
   }
 
   const editing = matchId !== undefined;
-
-  if (!canWrite) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{editing ? "Edit match" : "Add match"}</CardTitle>
-          <CardDescription>
-            You need the matches:write permission to make changes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" render={<Link to="/manage/matches" />}>
-            <ArrowLeftIcon />
-            Back to matches
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
-
-  if (notFound) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Match not found</CardTitle>
-          <CardDescription>
-            No match with id “{matchId}” exists.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" render={<Link to="/manage/matches" />}>
-            <ArrowLeftIcon />
-            Back to matches
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-4">

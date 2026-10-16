@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { parseOptionalInt } from "@/lib/forms";
-import { createClub, listClubs, type Club } from "@/lib/clubs";
+import { createClub, type Club } from "@/lib/clubs";
+import { useClubs } from "@/lib/queries";
 import {
   SQUAD_STATUSES,
   SQUAD_STATUS_LABELS,
@@ -119,7 +120,7 @@ export function RecordMatchPage() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("matches:write");
   const canCreateClub = hasPermission("clubs:write");
-  const [clubs, setClubs] = useState<Club[]>([]);
+  const { data: clubs = [], refetch: refetchClubs } = useClubs();
   const [matchDate, setMatchDate] = useState("");
   const [competition, setCompetition] = useState("");
   const [season, setSeason] = useState("");
@@ -144,12 +145,6 @@ export function RecordMatchPage() {
     setRows((rs) => [...rs, emptyRow(key, Number(homeClubId) || 0)]);
   }
 
-  useEffect(() => {
-    listClubs()
-      .then(setClubs)
-      .catch(() => setClubs([]));
-  }, []);
-
   async function onCreateClub() {
     const name = newClubName.trim();
     if (!name || creatingClub) return;
@@ -161,8 +156,7 @@ export function RecordMatchPage() {
         country: "Malawi",
         sourceUrl: sourceUrl.trim() || undefined,
       });
-      const all = await listClubs();
-      setClubs(all);
+      await refetchClubs();
       if (!homeClubId) setHomeClubId(String(created.clubId));
       else if (!awayClubId) setAwayClubId(String(created.clubId));
       setNewClubName("");

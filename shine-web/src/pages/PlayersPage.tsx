@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -24,35 +24,21 @@ import {
 import { DeleteButton } from "@/components/data-ui";
 import {
   deletePlayer,
-  listPlayers,
-  type Player,
 } from "@/lib/players";
+import { usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export function PlayersPage() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("players:write");
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: players = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = usePlayers();
+  const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setPlayers(await listPlayers());
-    } catch (e) {
-      setError(parseApiError(e));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch on mount
-    void refresh();
-  }, [refresh]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -109,7 +95,7 @@ export function PlayersPage() {
           ) : error ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2">
               <p className="text-sm text-destructive">{error}</p>
-              <Button size="sm" variant="outline" onClick={refresh}>
+              <Button size="sm" variant="outline" onClick={() => void refetch()}>
                 Retry
               </Button>
             </div>
@@ -172,7 +158,7 @@ export function PlayersPage() {
                             name={p.fullName}
                             onConfirm={async () => {
                               await deletePlayer(p.playerId);
-                              await refresh();
+                              await refetch();
                             }}
                           />
                         </div>

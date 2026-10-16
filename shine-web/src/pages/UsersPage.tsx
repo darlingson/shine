@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -21,34 +21,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { listUsers, parseApiError, type ManagedUser } from "@/lib/users";
+import { parseApiError } from "@/lib/users";
+import { useUsers } from "@/lib/queries";
 
 export function UsersPage() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("users:manage");
-  const [users, setUsers] = useState<ManagedUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: users = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useUsers(canManage);
+  const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setUsers(await listUsers());
-    } catch (e) {
-      setError(parseApiError(e));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (canManage) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch on mount
-      void refresh();
-    }
-  }, [canManage, refresh]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -111,7 +97,7 @@ export function UsersPage() {
           ) : error ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2">
               <p className="text-sm text-destructive">{error}</p>
-              <Button size="sm" variant="outline" onClick={refresh}>
+              <Button size="sm" variant="outline" onClick={() => void refetch()}>
                 Retry
               </Button>
             </div>

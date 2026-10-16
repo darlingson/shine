@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -21,33 +21,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import { deleteClub, listClubs, type Club } from "@/lib/clubs";
+import { deleteClub } from "@/lib/clubs";
+import { useClubs } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export function ClubsPage() {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("clubs:write");
-  const [clubs, setClubs] = useState<Club[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: clubs = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useClubs();
+  const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setClubs(await listClubs());
-    } catch (e) {
-      setError(parseApiError(e));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch on mount
-    void refresh();
-  }, [refresh]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -105,7 +93,7 @@ export function ClubsPage() {
           ) : error ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2">
               <p className="text-sm text-destructive">{error}</p>
-              <Button size="sm" variant="outline" onClick={refresh}>
+              <Button size="sm" variant="outline" onClick={() => void refetch()}>
                 Retry
               </Button>
             </div>
@@ -156,8 +144,8 @@ export function ClubsPage() {
                             <DeleteButton
                               name={c.name}
                               onConfirm={async () => {
-                                await deleteClub(c.clubId);
-                                await refresh();
+                              await deleteClub(c.clubId);
+                              await refetch();
                               }}
                             />
                           </div>

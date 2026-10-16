@@ -1,23 +1,23 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useApiList } from "@/hooks/use-api-list";
-import { listPlayers } from "@/lib/players";
+import { usePlayers } from "@/lib/queries";
+import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/players/")({
   component: PlayersListPage,
 });
 
 function PlayersListPage() {
-  const { items: players, loading, error } = useApiList(listPlayers);
+  const { data: players = [], isLoading, error } = usePlayers();
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Players
       </h1>
-      {loading ? (
+      {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-destructive">{parseApiError(error)}</p>
       ) : players.length === 0 ? (
         <p className="text-sm text-muted-foreground">No players recorded yet.</p>
       ) : (

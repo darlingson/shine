@@ -1,9 +1,8 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { getClub, type Club } from "@/lib/clubs";
-import { listPlayers, type Player } from "@/lib/players";
-import { listPlayerClubs } from "@/lib/playerclubs";
-import { fixtureLabel, listMatches, type Match } from "@/lib/matches";
+import { useMemo } from "react";
+import { fixtureLabel, type Match } from "@/lib/matches";
+import { type Club } from "@/lib/clubs";
+import { useClub, useMatches, usePlayerClubs, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/clubs/$clubId")({
@@ -22,69 +21,52 @@ function matchesClub(m: Match, club: Club): boolean {
 
 function ClubDetailPage() {
   const { clubId } = Route.useParams();
-  const [club, setClub] = useState<Club | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const club = useClub(clubId);
+  const players = usePlayers();
+  const affils = usePlayerClubs();
+  const matches = useMatches();
 
-  useEffect(() => {
-    let cancelled = false;
-    setClub(null);
-    setPlayers([]);
-    setMatches([]);
-    setError(null);
-    (async () => {
-      try {
-        const [found, playerList, affils, matchList] = await Promise.all([
-          getClub(Number(clubId)),
-          listPlayers(),
-          listPlayerClubs(),
-          listMatches(),
-        ]);
-        if (cancelled) return;
-        setClub(found);
-        const playerIds = new Set(
-          affils
-            .filter((a) => a.clubId === found.clubId && a.isCurrent)
-            .map((a) => a.playerId),
-        );
-        setPlayers(playerList.filter((p) => playerIds.has(p.playerId)));
-        setMatches(
-          matchList
-            .filter((m) => matchesClub(m, found))
-            .sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
-        );
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [clubId]);
+  const clubPlayers = useMemo(() => {
+    if (!club.data || !players.data || !affils.data) return [];
+    const playerIds = new Set(
+      affils.data
+        .filter((a) => a.clubId === club.data.clubId && a.isCurrent)
+        .map((a) => a.playerId),
+    );
+    return players.data.filter((p) => playerIds.has(p.playerId));
+  }, [club.data, players.data, affils.data]);
 
-  if (error) return <p className="text-sm text-destructive">{error}</p>;
-  if (!club) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const clubMatches = useMemo(() => {
+    if (!club.data || !matches.data) return [];
+    return matches.data
+      .filter((m) => matchesClub(m, club.data))
+      .sort((a, b) => b.matchDate.localeCompare(a.matchDate));
+  }, [club.data, matches.data]);
 
+  const error = club.error ?? players.error ?? affils.error ?? matches.error;
+  if (error) return <p className="text-sm text-destructive">{parseApiError(error)}</p>;
+  if (!club.data) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  const c = club.data;
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {club.name}
+          {c.name}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {[club.city, club.country].filter(Boolean).join(", ")}
-          {club.foundedYear ? ` · Founded ${club.foundedYear}` : ""}
+          {[c.city, c.country].filter(Boolean).join(", ")}
+          {c.foundedYear ? ` · Founded ${c.foundedYear}` : ""}
         </p>
       </div>
 
       <section className="flex flex-col gap-2">
         <h2 className="font-heading text-lg font-semibold tracking-tight">Players</h2>
-        {players.length === 0 ? (
+        {clubPlayers.length === 0 ? (
           <p className="text-sm text-muted-foreground">No players recorded.</p>
         ) : (
           <ul className="flex flex-col rounded-2xl border border-border bg-card">
-            {players.map((p) => (
+            {clubPlayers.map((p) => (
               <li key={p.playerId} className="border-b border-border last:border-b-0">
                 <Link
                   to="/data/players/$playerId"
@@ -104,11 +86,11 @@ function ClubDetailPage() {
 
       <section className="flex flex-col gap-2">
         <h2 className="font-heading text-lg font-semibold tracking-tight">Matches</h2>
-        {matches.length === 0 ? (
+        {clubMatches.length === 0 ? (
           <p className="text-sm text-muted-foreground">No matches recorded.</p>
         ) : (
           <ul className="flex flex-col rounded-2xl border border-border bg-card">
-            {matches.map((m) => (
+            {clubMatches.map((m) => (
               <li key={m.matchId} className="border-b border-border last:border-b-0">
                 <Link
                   to="/data/matches/$matchId"

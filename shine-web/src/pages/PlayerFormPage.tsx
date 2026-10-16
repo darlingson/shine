@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -25,11 +25,11 @@ import {
   PLAYER_FEET,
   PLAYER_STATUSES,
   createPlayer,
-  listPlayers,
   updatePlayer,
   type Player,
   type PlayerForm,
 } from "@/lib/players";
+import { usePlayer } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 interface FormState extends Omit<PlayerForm, "heightCm"> {
@@ -56,39 +56,82 @@ function stateFrom(player: Player | null): FormState {
 export function PlayerFormPage({ playerId }: { playerId?: string }) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("players:write");
+  const editing = playerId !== undefined;
+  const playerQuery = usePlayer(playerId ?? "", editing);
+
+  if (!canWrite) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{editing ? "Edit player" : "Add player"}</CardTitle>
+          <CardDescription>
+            You need the players:write permission to make changes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link to="/manage/players" />}>
+            <ArrowLeftIcon />
+            Back to players
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (editing && playerQuery.isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (editing && (playerQuery.isError || !playerQuery.data)) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Player not found</CardTitle>
+          <CardDescription>
+            No player with id “{playerId}” exists.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link to="/manage/players" />}>
+            <ArrowLeftIcon />
+            Back to players
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <PlayerForm
+      key={playerId ?? "new"}
+      playerId={playerId}
+      initial={editing ? playerQuery.data : undefined}
+    />
+  );
+}
+
+function PlayerForm({
+  playerId,
+  initial,
+}: {
+  playerId?: string;
+  initial?: Player;
+}) {
   const navigate = useNavigate();
-  const [form, setForm] = useState<FormState>(() => stateFrom(null));
-  const [loading, setLoading] = useState(playerId !== undefined);
-  const [notFound, setNotFound] = useState(false);
+  const [form, setFormState] = useState<FormState>(() =>
+    stateFrom(initial ?? null),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (playerId === undefined) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const all = await listPlayers();
-        const found = all.find((p) => p.playerId === Number(playerId));
-        if (cancelled) return;
-        if (!found) {
-          setNotFound(true);
-        } else {
-          setForm(stateFrom(found));
-        }
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [playerId]);
-
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
+    setFormState((f) => ({ ...f, [key]: value }));
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -120,54 +163,6 @@ export function PlayerFormPage({ playerId }: { playerId?: string }) {
   }
 
   const editing = playerId !== undefined;
-
-  if (!canWrite) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{editing ? "Edit player" : "Add player"}</CardTitle>
-          <CardDescription>
-            You need the players:write permission to make changes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" render={<Link to="/manage/players" />}>
-            <ArrowLeftIcon />
-            Back to players
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
-
-  if (notFound) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Player not found</CardTitle>
-          <CardDescription>
-            No player with id “{playerId}” exists.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" render={<Link to="/manage/players" />}>
-            <ArrowLeftIcon />
-            Back to players
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-4">
