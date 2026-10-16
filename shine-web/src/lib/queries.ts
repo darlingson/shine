@@ -77,7 +77,9 @@ export function usePlayerClubs(): UseQueryResult<PlayerClub[], Error> {
   return useQuery({ queryKey: queryKeys.playerClubs, queryFn: listPlayerClubs });
 }
 
-export function useClubSquads(enabled = true) {
+export function useClubSquads(
+  enabled = true,
+): UseQueryResult<ClubSquad[], Error> {
   return useQuery({
     queryKey: queryKeys.clubSquads,
     queryFn: listClubSquads,
@@ -85,7 +87,9 @@ export function useClubSquads(enabled = true) {
   });
 }
 
-export function useNationalSquads(enabled = true) {
+export function useNationalSquads(
+  enabled = true,
+): UseQueryResult<NationalSquad[], Error> {
   return useQuery({
     queryKey: queryKeys.nationalSquads,
     queryFn: listNationalSquads,
@@ -93,7 +97,7 @@ export function useNationalSquads(enabled = true) {
   });
 }
 
-export function useUsers(enabled = true) {
+export function useUsers(enabled = true): UseQueryResult<ManagedUser[], Error> {
   return useQuery({
     queryKey: queryKeys.users,
     queryFn: listUsers,

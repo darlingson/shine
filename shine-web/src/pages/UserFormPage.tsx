@@ -170,12 +170,10 @@ export function NewUserPage() {
 }
 
 export function UserDetailPage({ userId }: { userId: string }) {
-  const { hasPermission, refreshUser } = useAuth();
+  const { hasPermission } = useAuth();
   const canManage = hasPermission("users:manage");
   const usersQuery = useUsers(canManage);
   const found = (usersQuery.data ?? []).find((u) => u.id === userId);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   if (!canManage) return <NoPermissionCard title="User" />;
   if (usersQuery.isLoading) {

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { parseOptionalInt } from "@/lib/forms";
-import { createClub } from "@/lib/clubs";
+import { createClub, type Club } from "@/lib/clubs";
 import { useClubs } from "@/lib/queries";
 import {
   SQUAD_STATUSES,
