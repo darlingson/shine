@@ -32,10 +32,14 @@ export function usePlayers(): UseQueryResult<Player[], Error> {
   return useQuery({ queryKey: queryKeys.players, queryFn: listPlayers });
 }
 
-export function usePlayer(id: number | string): UseQueryResult<Player, Error> {
+export function usePlayer(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<Player, Error> {
   return useQuery({
     queryKey: queryKeys.player(id),
     queryFn: () => getPlayer(Number(id)),
+    enabled,
   });
 }
 
@@ -43,10 +47,14 @@ export function useClubs(): UseQueryResult<Club[], Error> {
   return useQuery({ queryKey: queryKeys.clubs, queryFn: listClubs });
 }
 
-export function useClub(id: number | string): UseQueryResult<Club, Error> {
+export function useClub(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<Club, Error> {
   return useQuery({
     queryKey: queryKeys.club(id),
     queryFn: () => getClub(Number(id)),
+    enabled,
   });
 }
 
@@ -54,10 +62,14 @@ export function useMatches(): UseQueryResult<Match[], Error> {
   return useQuery({ queryKey: queryKeys.matches, queryFn: listMatches });
 }
 
-export function useMatch(id: number | string): UseQueryResult<Match, Error> {
+export function useMatch(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<Match, Error> {
   return useQuery({
     queryKey: queryKeys.match(id),
     queryFn: () => getMatch(Number(id)),
+    enabled,
   });
 }
 
@@ -76,8 +88,12 @@ export function useNationalSquads(): UseQueryResult<NationalSquad[], Error> {
   });
 }
 
-export function useUsers(): UseQueryResult<ManagedUser[], Error> {
-  return useQuery({ queryKey: queryKeys.users, queryFn: listUsers });
+export function useUsers(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.users,
+    queryFn: listUsers,
+    enabled,
+  });
 }
 
 /** Invalidate list queries after a write; detail queries refetch on mount. */
