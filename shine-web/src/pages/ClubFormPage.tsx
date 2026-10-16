@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -16,59 +16,97 @@ import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
 import {
   createClub,
-  listClubs,
   updateClub,
   type Club,
   type ClubForm,
 } from "@/lib/clubs";
+import { useClub } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 /** Shared add/edit form. Pass clubId to edit, omit to create. */
 export function ClubFormPage({ clubId }: { clubId?: string }) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("clubs:write");
+  const editing = clubId !== undefined;
+  const clubQuery = useClub(clubId ?? "", editing);
+
+  if (!canWrite) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{editing ? "Edit club" : "Add club"}</CardTitle>
+          <CardDescription>
+            You need the clubs:write permission to make changes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link to="/manage/clubs" />}
+          >
+            <ArrowLeftIcon />
+            Back to clubs
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (editing && clubQuery.isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (editing && (clubQuery.isError || !clubQuery.data)) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Club not found</CardTitle>
+          <CardDescription>
+            No club with id “{clubId}” exists.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link to="/manage/clubs" />}
+          >
+            <ArrowLeftIcon />
+            Back to clubs
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <ClubForm
+      key={clubId ?? "new"}
+      clubId={clubId}
+      initial={editing ? (clubQuery.data as Club) : undefined}
+    />
+  );
+}
+
+function ClubForm({ clubId, initial }: { clubId?: string; initial?: Club }) {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [shortName, setShortName] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("Malawi");
-  const [foundedYear, setFoundedYear] = useState("");
-  const [sourceUrl, setSourceUrl] = useState("");
-  const [loading, setLoading] = useState(clubId !== undefined);
-  const [notFound, setNotFound] = useState(false);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [shortName, setShortName] = useState(initial?.shortName ?? "");
+  const [city, setCity] = useState(initial?.city ?? "");
+  const [country, setCountry] = useState(initial?.country ?? "Malawi");
+  const [foundedYear, setFoundedYear] = useState(
+    initial?.foundedYear?.toString() ?? "",
+  );
+  const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (clubId === undefined) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const all = await listClubs();
-        const found: Club | undefined = all.find(
-          (c) => c.clubId === Number(clubId),
-        );
-        if (cancelled) return;
-        if (!found) {
-          setNotFound(true);
-        } else {
-          setName(found.name);
-          setShortName(found.shortName ?? "");
-          setCity(found.city ?? "");
-          setCountry(found.country);
-          setFoundedYear(found.foundedYear?.toString() ?? "");
-          setSourceUrl(found.sourceUrl ?? "");
-        }
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [clubId]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,62 +132,6 @@ export function ClubFormPage({ clubId }: { clubId?: string }) {
   }
 
   const editing = clubId !== undefined;
-
-  if (!canWrite) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{editing ? "Edit club" : "Add club"}</CardTitle>
-          <CardDescription>
-            You need the clubs:write permission to make changes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link to="/manage/clubs" />}
-          >
-            <ArrowLeftIcon />
-            Back to clubs
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
-
-  if (notFound) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Club not found</CardTitle>
-          <CardDescription>
-            No club with id “{clubId}” exists.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link to="/manage/clubs" />}
-          >
-            <ArrowLeftIcon />
-            Back to clubs
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-4">
