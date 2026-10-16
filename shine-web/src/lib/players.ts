@@ -13,6 +13,8 @@ export interface Player {
   foot?: string | null;
   status: string;
   sourceUrl?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PlayerForm {
@@ -34,6 +36,10 @@ export const PLAYER_FEET = ["left", "right", "both"];
 
 export function listPlayers(): Promise<Player[]> {
   return apiJson<Player[]>("/api/players");
+}
+
+export function getPlayer(id: number): Promise<Player> {
+  return apiJson<Player>(`/api/players/${id}`);
 }
 
 export function createPlayer(dto: PlayerForm): Promise<Player> {

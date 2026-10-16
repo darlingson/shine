@@ -17,6 +17,7 @@ public class ShineDbContext : IdentityDbContext
     public DbSet<PlayerClub> PlayerClub { get; set; } = null!;
     public DbSet<RefreshToken> RefreshToken { get; set; } = null!;
     public DbSet<UserPermission> UserPermission { get; set; } = null!;
+    public DbSet<ReviewFlag> ReviewFlag { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
