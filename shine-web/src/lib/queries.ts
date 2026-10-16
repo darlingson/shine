@@ -77,14 +77,19 @@ export function usePlayerClubs(): UseQueryResult<PlayerClub[], Error> {
   return useQuery({ queryKey: queryKeys.playerClubs, queryFn: listPlayerClubs });
 }
 
-export function useClubSquads(): UseQueryResult<ClubSquad[], Error> {
-  return useQuery({ queryKey: queryKeys.clubSquads, queryFn: listClubSquads });
+export function useClubSquads(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.clubSquads,
+    queryFn: listClubSquads,
+    enabled,
+  });
 }
 
-export function useNationalSquads(): UseQueryResult<NationalSquad[], Error> {
+export function useNationalSquads(enabled = true) {
   return useQuery({
     queryKey: queryKeys.nationalSquads,
     queryFn: listNationalSquads,
+    enabled,
   });
 }
 
