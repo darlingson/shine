@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
@@ -25,10 +25,10 @@ import { ROLES, type RoleName } from "@/lib/roles";
 import {
   assignRole,
   createUserAsAdmin,
-  listUsers,
   parseApiError,
   removeRole,
 } from "@/lib/users";
+import { useUsers } from "@/lib/queries";
 
 function NoPermissionCard({ title }: { title: string }) {
   return (
@@ -172,37 +172,54 @@ export function NewUserPage() {
 export function UserDetailPage({ userId }: { userId: string }) {
   const { hasPermission, refreshUser } = useAuth();
   const canManage = hasPermission("users:manage");
-  const [email, setEmail] = useState<string | null>(null);
-  const [roles, setRoles] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const usersQuery = useUsers(canManage);
+  const found = (usersQuery.data ?? []).find((u) => u.id === userId);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!canManage) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const all = await listUsers();
-        const found = all.find((u) => u.id === userId);
-        if (cancelled) return;
-        if (!found) {
-          setNotFound(true);
-        } else {
-          setEmail(found.email);
-          setRoles(found.roles);
-        }
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [canManage, userId]);
+  if (!canManage) return <NoPermissionCard title="User" />;
+  if (usersQuery.isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (usersQuery.isError || !found) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User not found</CardTitle>
+          <CardDescription>No user with this id exists.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link to="/manage/users" />}>
+            <ArrowLeftIcon />
+            Back to users
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return <UserRoles key={userId} userId={userId} email={found.email} roles={found.roles} />;
+}
+
+function UserRoles({
+  userId,
+  email,
+  roles: initialRoles,
+}: {
+  userId: string;
+  email: string;
+  roles: string[];
+}) {
+  const { refreshUser } = useAuth();
+  const [roles, setRoles] = useState<string[]>(initialRoles);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function toggle(role: RoleName) {
     setBusy(role);
@@ -225,36 +242,6 @@ export function UserDetailPage({ userId }: { userId: string }) {
     } finally {
       setBusy(null);
     }
-  }
-
-  if (!canManage) return <NoPermissionCard title="Manage user" />;
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
-
-  if (notFound) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>User not found</CardTitle>
-          <CardDescription>
-            No user with this id exists.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" render={<Link to="/manage/users" />}>
-            <ArrowLeftIcon />
-            Back to users
-          </Button>
-        </CardContent>
-      </Card>
-    );
   }
 
   return (
