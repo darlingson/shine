@@ -1,9 +1,8 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { fixtureLabel, getMatch, type Match } from "@/lib/matches";
-import { listPlayers, type Player } from "@/lib/players";
-import { listClubSquads, type ClubSquad } from "@/lib/squads";
+import { useMemo } from "react";
+import { fixtureLabel } from "@/lib/matches";
 import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
+import { useClubSquads, useMatch, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/matches/$matchId")({
@@ -12,56 +11,38 @@ export const Route = createFileRoute("/data/matches/$matchId")({
 
 function MatchDetailPage() {
   const { matchId } = Route.useParams();
-  const [match, setMatch] = useState<Match | null>(null);
-  const [squad, setSquad] = useState<ClubSquad[]>([]);
-  const [names, setNames] = useState<Map<number, Player>>(new Map());
-  const [error, setError] = useState<string | null>(null);
+  const match = useMatch(matchId);
+  const players = usePlayers();
+  const squads = useClubSquads();
 
-  useEffect(() => {
-    let cancelled = false;
-    setMatch(null);
-    setSquad([]);
-    setNames(new Map());
-    setError(null);
-    (async () => {
-      try {
-        const [found, playerList, squads] = await Promise.all([
-          getMatch(Number(matchId)),
-          listPlayers(),
-          listClubSquads(),
-        ]);
-        if (cancelled) return;
-        setMatch(found);
-        setNames(new Map(playerList.map((p) => [p.playerId, p])));
-        const order: Record<string, number> = { starter: 0, substitute: 1 };
-        setSquad(
-          squads
-            .filter((s) => s.matchId === found.matchId)
-            .sort(
-              (a, b) =>
-                (order[a.lineupStatus] ?? 2) - (order[b.lineupStatus] ?? 2),
-            ),
-        );
-      } catch (e) {
-        if (!cancelled) setError(parseApiError(e));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [matchId]);
+  const names = useMemo(
+    () => new Map((players.data ?? []).map((p) => [p.playerId, p])),
+    [players.data],
+  );
 
-  if (error) return <p className="text-sm text-destructive">{error}</p>;
-  if (!match) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const squad = useMemo(() => {
+    if (!match.data || !squads.data) return [];
+    const order: Record<string, number> = { starter: 0, substitute: 1 };
+    return squads.data
+      .filter((s) => s.matchId === match.data.matchId)
+      .sort(
+        (a, b) => (order[a.lineupStatus] ?? 2) - (order[b.lineupStatus] ?? 2),
+      );
+  }, [match.data, squads.data]);
 
+  const error = match.error ?? players.error ?? squads.error;
+  if (error) return <p className="text-sm text-destructive">{parseApiError(error)}</p>;
+  if (!match.data) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  const m = match.data;
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {fixtureLabel(match)}
+          {fixtureLabel(m)}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {[match.matchDate, match.competition, match.season, match.venue]
+          {[m.matchDate, m.competition, m.season, m.venue]
             .filter(Boolean)
             .join(" · ")}
         </p>
