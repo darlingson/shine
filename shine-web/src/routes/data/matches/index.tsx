@@ -1,14 +1,15 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useApiList } from "@/hooks/use-api-list";
-import { fixtureLabel, listMatches } from "@/lib/matches";
+import { fixtureLabel } from "@/lib/matches";
+import { useMatches } from "@/lib/queries";
+import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/matches/")({
   component: MatchesListPage,
 });
 
 function MatchesListPage() {
-  const { items: matches, loading, error } = useApiList(listMatches);
+  const { data: matches = [], isLoading, error } = useMatches();
   const sorted = useMemo(
     () => [...matches].sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
     [matches],
@@ -17,10 +18,10 @@ function MatchesListPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Matches</h1>
-      {loading ? (
+      {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-destructive">{parseApiError(error)}</p>
       ) : sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No matches recorded yet.</p>
       ) : (
