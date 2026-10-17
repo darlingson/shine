@@ -7,7 +7,16 @@ export const Route = createFileRoute("/data/")({
 const SECTIONS = [
   { to: "/data/players", title: "Players", blurb: "Find a player, see their clubs." },
   { to: "/data/clubs", title: "Clubs", blurb: "Find a club, see players and matches." },
-  { to: "/data/matches", title: "Matches", blurb: "Find a match, see the squad." },
+  {
+    to: "/data/matches/club",
+    title: "Club matches",
+    blurb: "Find a club match, see the squad.",
+  },
+  {
+    to: "/data/matches/national",
+    title: "National matches",
+    blurb: "Find a national team match, see the squad.",
+  },
 ] as const;
 
 function DataHubPage() {
@@ -16,7 +25,7 @@ function DataHubPage() {
       <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Browse the record
       </h1>
-      <ul className="grid gap-4 md:grid-cols-3">
+      <ul className="grid gap-4 md:grid-cols-2">
         {SECTIONS.map((s) => (
           <li key={s.to}>
             <Link

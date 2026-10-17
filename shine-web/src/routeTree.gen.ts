@@ -25,7 +25,6 @@ import { Route as ManageUsersRouteRouteImport } from './routes/manage/users/rout
 import { Route as DataClubsIndexRouteImport } from './routes/data/clubs/index'
 import { Route as DataClubsClubIdRouteImport } from './routes/data/clubs/$clubId'
 import { Route as DataMatchesIndexRouteImport } from './routes/data/matches/index'
-import { Route as DataMatchesMatchIdRouteImport } from './routes/data/matches/$matchId'
 import { Route as DataPlayersIndexRouteImport } from './routes/data/players/index'
 import { Route as DataPlayersPlayerIdRouteImport } from './routes/data/players/$playerId'
 import { Route as ManageClubsIndexRouteImport } from './routes/manage/clubs/index'
@@ -44,6 +43,10 @@ import { Route as ManageSquadsNationalRouteRouteImport } from './routes/manage/s
 import { Route as ManageUsersIndexRouteImport } from './routes/manage/users/index'
 import { Route as ManageUsersUserIdRouteImport } from './routes/manage/users/$userId'
 import { Route as ManageUsersNewRouteImport } from './routes/manage/users/new'
+import { Route as DataMatchesClubIndexRouteImport } from './routes/data/matches/club/index'
+import { Route as DataMatchesClubMatchIdRouteImport } from './routes/data/matches/club/$matchId'
+import { Route as DataMatchesNationalIndexRouteImport } from './routes/data/matches/national/index'
+import { Route as DataMatchesNationalMatchIdRouteImport } from './routes/data/matches/national/$matchId'
 import { Route as ManageMatchesClubIndexRouteImport } from './routes/manage/matches/club/index'
 import { Route as ManageMatchesClubMatchIdRouteImport } from './routes/manage/matches/club/$matchId'
 import { Route as ManageMatchesClubNewRouteImport } from './routes/manage/matches/club/new'
@@ -135,11 +138,6 @@ const DataClubsClubIdRoute = DataClubsClubIdRouteImport.update({
 const DataMatchesIndexRoute = DataMatchesIndexRouteImport.update({
   id: '/matches/',
   path: '/matches/',
-  getParentRoute: () => DataRouteRoute,
-} as any)
-const DataMatchesMatchIdRoute = DataMatchesMatchIdRouteImport.update({
-  id: '/matches/$matchId',
-  path: '/matches/$matchId',
   getParentRoute: () => DataRouteRoute,
 } as any)
 const DataPlayersIndexRoute = DataPlayersIndexRouteImport.update({
@@ -235,6 +233,28 @@ const ManageUsersNewRoute = ManageUsersNewRouteImport.update({
   path: '/new',
   getParentRoute: () => ManageUsersRouteRoute,
 } as any)
+const DataMatchesClubIndexRoute = DataMatchesClubIndexRouteImport.update({
+  id: '/matches/club/',
+  path: '/matches/club/',
+  getParentRoute: () => DataRouteRoute,
+} as any)
+const DataMatchesClubMatchIdRoute = DataMatchesClubMatchIdRouteImport.update({
+  id: '/matches/club/$matchId',
+  path: '/matches/club/$matchId',
+  getParentRoute: () => DataRouteRoute,
+} as any)
+const DataMatchesNationalIndexRoute =
+  DataMatchesNationalIndexRouteImport.update({
+    id: '/matches/national/',
+    path: '/matches/national/',
+    getParentRoute: () => DataRouteRoute,
+  } as any)
+const DataMatchesNationalMatchIdRoute =
+  DataMatchesNationalMatchIdRouteImport.update({
+    id: '/matches/national/$matchId',
+    path: '/matches/national/$matchId',
+    getParentRoute: () => DataRouteRoute,
+  } as any)
 const ManageMatchesClubIndexRoute = ManageMatchesClubIndexRouteImport.update({
   id: '/club/',
   path: '/club/',
@@ -312,7 +332,6 @@ export interface FileRoutesByFullPath {
   '/manage/squads/club': typeof ManageSquadsClubRouteRouteWithChildren
   '/manage/squads/national': typeof ManageSquadsNationalRouteRouteWithChildren
   '/data/clubs/$clubId': typeof DataClubsClubIdRoute
-  '/data/matches/$matchId': typeof DataMatchesMatchIdRoute
   '/data/players/$playerId': typeof DataPlayersPlayerIdRoute
   '/manage/clubs/$clubId': typeof ManageClubsClubIdRoute
   '/manage/clubs/new': typeof ManageClubsNewRoute
@@ -331,6 +350,8 @@ export interface FileRoutesByFullPath {
   '/manage/players/': typeof ManagePlayersIndexRoute
   '/manage/squads/': typeof ManageSquadsIndexRoute
   '/manage/users/': typeof ManageUsersIndexRoute
+  '/data/matches/club/$matchId': typeof DataMatchesClubMatchIdRoute
+  '/data/matches/national/$matchId': typeof DataMatchesNationalMatchIdRoute
   '/manage/matches/club/$matchId': typeof ManageMatchesClubMatchIdRoute
   '/manage/matches/club/new': typeof ManageMatchesClubNewRoute
   '/manage/matches/club/record': typeof ManageMatchesClubRecordRoute
@@ -340,6 +361,8 @@ export interface FileRoutesByFullPath {
   '/manage/squads/club/new': typeof ManageSquadsClubNewRoute
   '/manage/squads/national/$key': typeof ManageSquadsNationalKeyRoute
   '/manage/squads/national/new': typeof ManageSquadsNationalNewRoute
+  '/data/matches/club/': typeof DataMatchesClubIndexRoute
+  '/data/matches/national/': typeof DataMatchesNationalIndexRoute
   '/manage/matches/club/': typeof ManageMatchesClubIndexRoute
   '/manage/matches/national/': typeof ManageMatchesNationalIndexRoute
 }
@@ -352,7 +375,6 @@ export interface FileRoutesByTo {
   '/manage/squads/club': typeof ManageSquadsClubRouteRouteWithChildren
   '/manage/squads/national': typeof ManageSquadsNationalRouteRouteWithChildren
   '/data/clubs/$clubId': typeof DataClubsClubIdRoute
-  '/data/matches/$matchId': typeof DataMatchesMatchIdRoute
   '/data/players/$playerId': typeof DataPlayersPlayerIdRoute
   '/manage/clubs/$clubId': typeof ManageClubsClubIdRoute
   '/manage/clubs/new': typeof ManageClubsNewRoute
@@ -371,6 +393,8 @@ export interface FileRoutesByTo {
   '/manage/players': typeof ManagePlayersIndexRoute
   '/manage/squads': typeof ManageSquadsIndexRoute
   '/manage/users': typeof ManageUsersIndexRoute
+  '/data/matches/club/$matchId': typeof DataMatchesClubMatchIdRoute
+  '/data/matches/national/$matchId': typeof DataMatchesNationalMatchIdRoute
   '/manage/matches/club/$matchId': typeof ManageMatchesClubMatchIdRoute
   '/manage/matches/club/new': typeof ManageMatchesClubNewRoute
   '/manage/matches/club/record': typeof ManageMatchesClubRecordRoute
@@ -380,6 +404,8 @@ export interface FileRoutesByTo {
   '/manage/squads/club/new': typeof ManageSquadsClubNewRoute
   '/manage/squads/national/$key': typeof ManageSquadsNationalKeyRoute
   '/manage/squads/national/new': typeof ManageSquadsNationalNewRoute
+  '/data/matches/club': typeof DataMatchesClubIndexRoute
+  '/data/matches/national': typeof DataMatchesNationalIndexRoute
   '/manage/matches/club': typeof ManageMatchesClubIndexRoute
   '/manage/matches/national': typeof ManageMatchesNationalIndexRoute
 }
@@ -401,7 +427,6 @@ export interface FileRoutesById {
   '/manage/squads/club': typeof ManageSquadsClubRouteRouteWithChildren
   '/manage/squads/national': typeof ManageSquadsNationalRouteRouteWithChildren
   '/data/clubs/$clubId': typeof DataClubsClubIdRoute
-  '/data/matches/$matchId': typeof DataMatchesMatchIdRoute
   '/data/players/$playerId': typeof DataPlayersPlayerIdRoute
   '/manage/clubs/$clubId': typeof ManageClubsClubIdRoute
   '/manage/clubs/new': typeof ManageClubsNewRoute
@@ -420,6 +445,8 @@ export interface FileRoutesById {
   '/manage/players/': typeof ManagePlayersIndexRoute
   '/manage/squads/': typeof ManageSquadsIndexRoute
   '/manage/users/': typeof ManageUsersIndexRoute
+  '/data/matches/club/$matchId': typeof DataMatchesClubMatchIdRoute
+  '/data/matches/national/$matchId': typeof DataMatchesNationalMatchIdRoute
   '/manage/matches/club/$matchId': typeof ManageMatchesClubMatchIdRoute
   '/manage/matches/club/new': typeof ManageMatchesClubNewRoute
   '/manage/matches/club/record': typeof ManageMatchesClubRecordRoute
@@ -429,6 +456,8 @@ export interface FileRoutesById {
   '/manage/squads/club/new': typeof ManageSquadsClubNewRoute
   '/manage/squads/national/$key': typeof ManageSquadsNationalKeyRoute
   '/manage/squads/national/new': typeof ManageSquadsNationalNewRoute
+  '/data/matches/club/': typeof DataMatchesClubIndexRoute
+  '/data/matches/national/': typeof DataMatchesNationalIndexRoute
   '/manage/matches/club/': typeof ManageMatchesClubIndexRoute
   '/manage/matches/national/': typeof ManageMatchesNationalIndexRoute
 }
@@ -451,7 +480,6 @@ export interface FileRouteTypes {
     | '/manage/squads/club'
     | '/manage/squads/national'
     | '/data/clubs/$clubId'
-    | '/data/matches/$matchId'
     | '/data/players/$playerId'
     | '/manage/clubs/$clubId'
     | '/manage/clubs/new'
@@ -470,6 +498,8 @@ export interface FileRouteTypes {
     | '/manage/players/'
     | '/manage/squads/'
     | '/manage/users/'
+    | '/data/matches/club/$matchId'
+    | '/data/matches/national/$matchId'
     | '/manage/matches/club/$matchId'
     | '/manage/matches/club/new'
     | '/manage/matches/club/record'
@@ -479,6 +509,8 @@ export interface FileRouteTypes {
     | '/manage/squads/club/new'
     | '/manage/squads/national/$key'
     | '/manage/squads/national/new'
+    | '/data/matches/club/'
+    | '/data/matches/national/'
     | '/manage/matches/club/'
     | '/manage/matches/national/'
   fileRoutesByTo: FileRoutesByTo
@@ -491,7 +523,6 @@ export interface FileRouteTypes {
     | '/manage/squads/club'
     | '/manage/squads/national'
     | '/data/clubs/$clubId'
-    | '/data/matches/$matchId'
     | '/data/players/$playerId'
     | '/manage/clubs/$clubId'
     | '/manage/clubs/new'
@@ -510,6 +541,8 @@ export interface FileRouteTypes {
     | '/manage/players'
     | '/manage/squads'
     | '/manage/users'
+    | '/data/matches/club/$matchId'
+    | '/data/matches/national/$matchId'
     | '/manage/matches/club/$matchId'
     | '/manage/matches/club/new'
     | '/manage/matches/club/record'
@@ -519,6 +552,8 @@ export interface FileRouteTypes {
     | '/manage/squads/club/new'
     | '/manage/squads/national/$key'
     | '/manage/squads/national/new'
+    | '/data/matches/club'
+    | '/data/matches/national'
     | '/manage/matches/club'
     | '/manage/matches/national'
   id:
@@ -539,7 +574,6 @@ export interface FileRouteTypes {
     | '/manage/squads/club'
     | '/manage/squads/national'
     | '/data/clubs/$clubId'
-    | '/data/matches/$matchId'
     | '/data/players/$playerId'
     | '/manage/clubs/$clubId'
     | '/manage/clubs/new'
@@ -558,6 +592,8 @@ export interface FileRouteTypes {
     | '/manage/players/'
     | '/manage/squads/'
     | '/manage/users/'
+    | '/data/matches/club/$matchId'
+    | '/data/matches/national/$matchId'
     | '/manage/matches/club/$matchId'
     | '/manage/matches/club/new'
     | '/manage/matches/club/record'
@@ -567,6 +603,8 @@ export interface FileRouteTypes {
     | '/manage/squads/club/new'
     | '/manage/squads/national/$key'
     | '/manage/squads/national/new'
+    | '/data/matches/club/'
+    | '/data/matches/national/'
     | '/manage/matches/club/'
     | '/manage/matches/national/'
   fileRoutesById: FileRoutesById
@@ -690,13 +728,6 @@ declare module '@tanstack/react-router' {
       path: '/matches'
       fullPath: '/data/matches/'
       preLoaderRoute: typeof DataMatchesIndexRouteImport
-      parentRoute: typeof DataRouteRoute
-    }
-    '/data/matches/$matchId': {
-      id: '/data/matches/$matchId'
-      path: '/matches/$matchId'
-      fullPath: '/data/matches/$matchId'
-      preLoaderRoute: typeof DataMatchesMatchIdRouteImport
       parentRoute: typeof DataRouteRoute
     }
     '/data/players/': {
@@ -825,6 +856,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManageUsersNewRouteImport
       parentRoute: typeof ManageUsersRouteRoute
     }
+    '/data/matches/club/': {
+      id: '/data/matches/club/'
+      path: '/matches/club'
+      fullPath: '/data/matches/club/'
+      preLoaderRoute: typeof DataMatchesClubIndexRouteImport
+      parentRoute: typeof DataRouteRoute
+    }
+    '/data/matches/club/$matchId': {
+      id: '/data/matches/club/$matchId'
+      path: '/matches/club/$matchId'
+      fullPath: '/data/matches/club/$matchId'
+      preLoaderRoute: typeof DataMatchesClubMatchIdRouteImport
+      parentRoute: typeof DataRouteRoute
+    }
+    '/data/matches/national/': {
+      id: '/data/matches/national/'
+      path: '/matches/national'
+      fullPath: '/data/matches/national/'
+      preLoaderRoute: typeof DataMatchesNationalIndexRouteImport
+      parentRoute: typeof DataRouteRoute
+    }
+    '/data/matches/national/$matchId': {
+      id: '/data/matches/national/$matchId'
+      path: '/matches/national/$matchId'
+      fullPath: '/data/matches/national/$matchId'
+      preLoaderRoute: typeof DataMatchesNationalMatchIdRouteImport
+      parentRoute: typeof DataRouteRoute
+    }
     '/manage/matches/club/': {
       id: '/manage/matches/club/'
       path: '/club'
@@ -908,21 +967,27 @@ declare module '@tanstack/react-router' {
 interface DataRouteRouteChildren {
   DataIndexRoute: typeof DataIndexRoute
   DataClubsClubIdRoute: typeof DataClubsClubIdRoute
-  DataMatchesMatchIdRoute: typeof DataMatchesMatchIdRoute
   DataPlayersPlayerIdRoute: typeof DataPlayersPlayerIdRoute
   DataClubsIndexRoute: typeof DataClubsIndexRoute
   DataMatchesIndexRoute: typeof DataMatchesIndexRoute
   DataPlayersIndexRoute: typeof DataPlayersIndexRoute
+  DataMatchesClubMatchIdRoute: typeof DataMatchesClubMatchIdRoute
+  DataMatchesNationalMatchIdRoute: typeof DataMatchesNationalMatchIdRoute
+  DataMatchesClubIndexRoute: typeof DataMatchesClubIndexRoute
+  DataMatchesNationalIndexRoute: typeof DataMatchesNationalIndexRoute
 }
 
 const DataRouteRouteChildren: DataRouteRouteChildren = {
   DataIndexRoute: DataIndexRoute,
   DataClubsClubIdRoute: DataClubsClubIdRoute,
-  DataMatchesMatchIdRoute: DataMatchesMatchIdRoute,
   DataPlayersPlayerIdRoute: DataPlayersPlayerIdRoute,
   DataClubsIndexRoute: DataClubsIndexRoute,
   DataMatchesIndexRoute: DataMatchesIndexRoute,
   DataPlayersIndexRoute: DataPlayersIndexRoute,
+  DataMatchesClubMatchIdRoute: DataMatchesClubMatchIdRoute,
+  DataMatchesNationalMatchIdRoute: DataMatchesNationalMatchIdRoute,
+  DataMatchesClubIndexRoute: DataMatchesClubIndexRoute,
+  DataMatchesNationalIndexRoute: DataMatchesNationalIndexRoute,
 }
 
 const DataRouteRouteWithChildren = DataRouteRoute._addFileChildren(

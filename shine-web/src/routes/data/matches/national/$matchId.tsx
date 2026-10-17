@@ -1,19 +1,19 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { fixtureLabel } from "@/lib/matches";
+import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
-import { useClubSquads, useMatch, usePlayers } from "@/lib/queries";
+import { useNationalSquads, useNationalTeamMatch, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
-export const Route = createFileRoute("/data/matches/$matchId")({
-  component: MatchDetailPage,
+export const Route = createFileRoute("/data/matches/national/$matchId")({
+  component: NationalTeamMatchDetailPage,
 });
 
-function MatchDetailPage() {
+function NationalTeamMatchDetailPage() {
   const { matchId } = Route.useParams();
-  const match = useMatch(matchId);
+  const match = useNationalTeamMatch(matchId);
   const players = usePlayers();
-  const squads = useClubSquads();
+  const squads = useNationalSquads();
 
   const names = useMemo(
     () => new Map((players.data ?? []).map((p) => [p.playerId, p])),
@@ -39,7 +39,7 @@ function MatchDetailPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {fixtureLabel(m)}
+          {nationalTeamMatchLabel(m)}
         </h1>
         <p className="text-sm text-muted-foreground">
           {[m.matchDate, m.competition, m.season, m.venue]
@@ -58,7 +58,7 @@ function MatchDetailPage() {
               const p = names.get(s.playerId);
               return (
                 <li
-                  key={`${s.clubId}-${s.playerId}`}
+                  key={`${s.nationalTeamId}-${s.playerId}`}
                   className="border-b border-border last:border-b-0"
                 >
                   <Link

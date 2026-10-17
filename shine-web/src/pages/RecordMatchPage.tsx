@@ -251,7 +251,7 @@ export function RecordMatchPage() {
                 <dt className="text-muted-foreground">Match</dt>
                 <dd>
                   <Link
-                    to="/data/matches/$matchId"
+                    to="/data/matches/club/$matchId"
                     params={{ matchId: String(result.matchId) }}
                     className="font-medium text-primary underline-offset-4 hover:underline"
                   >

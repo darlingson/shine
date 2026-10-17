@@ -13,10 +13,11 @@ import { Separator } from "@/components/ui/separator";
 import { SiteNav } from "@/components/site-nav";
 import { type Player } from "@/lib/players";
 import {
+  useClubMatches,
   useClubSquads,
   useClubs,
-  useMatches,
   useNationalSquads,
+  useNationalTeamMatches,
   usePlayers,
 } from "@/lib/queries";
 
@@ -36,7 +37,8 @@ function displayName(p: Player): string {
 function LandingPage() {
   const playersQuery = usePlayers();
   const clubsQuery = useClubs();
-  const matchesQuery = useMatches();
+  const clubMatchesQuery = useClubMatches();
+  const nationalMatchesQuery = useNationalTeamMatches();
   const clubSquadsQuery = useClubSquads();
   const nationalSquadsQuery = useNationalSquads();
   const [query, setQuery] = useState("");
@@ -72,7 +74,9 @@ function LandingPage() {
   }, [clubSquadsQuery.data, nationalSquadsQuery.data]);
 
   const clubCount = clubsQuery.data?.length ?? 0;
-  const matchCount = matchesQuery.data?.length ?? 0;
+  const matchCount =
+    (clubMatchesQuery.data?.length ?? 0) +
+    (nationalMatchesQuery.data?.length ?? 0);
 
   const names = useMemo(() => new Map(players.map((p) => [p.playerId, p])), [players]);
 

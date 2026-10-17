@@ -9,7 +9,9 @@ type SectionRoute =
   | "/data"
   | "/data/players"
   | "/data/clubs"
-  | "/data/matches";
+  | "/data/matches"
+  | "/data/matches/club"
+  | "/data/matches/national";
 
 export interface SectionLink {
   label: string;

@@ -1,30 +1,19 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { fixtureLabel, type Match } from "@/lib/matches";
-import { type Club } from "@/lib/clubs";
-import { useClub, useMatches, usePlayerClubs, usePlayers } from "@/lib/queries";
+import { clubMatchLabel } from "@/lib/clubMatches";
+import { useClub, useClubMatches, usePlayerClubs, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/clubs/$clubId")({
   component: ClubDetailPage,
 });
 
-function matchesClub(m: Match, club: Club): boolean {
-  const names = [club.name, club.shortName]
-    .filter(Boolean)
-    .map((n) => (n as string).toLowerCase());
-  const teams = [m.homeTeam, m.awayTeam]
-    .filter(Boolean)
-    .map((t) => (t as string).toLowerCase());
-  return names.some((n) => teams.includes(n));
-}
-
 function ClubDetailPage() {
   const { clubId } = Route.useParams();
   const club = useClub(clubId);
   const players = usePlayers();
   const affils = usePlayerClubs();
-  const matches = useMatches();
+  const matches = useClubMatches();
 
   const clubPlayers = useMemo(() => {
     if (!club.data || !players.data || !affils.data) return [];
@@ -39,7 +28,11 @@ function ClubDetailPage() {
   const clubMatches = useMemo(() => {
     if (!club.data || !matches.data) return [];
     return matches.data
-      .filter((m) => matchesClub(m, club.data))
+      .filter(
+        (m) =>
+          m.homeClubId === club.data.clubId ||
+          m.awayClubId === club.data.clubId,
+      )
       .sort((a, b) => b.matchDate.localeCompare(a.matchDate));
   }, [club.data, matches.data]);
 
@@ -93,11 +86,11 @@ function ClubDetailPage() {
             {clubMatches.map((m) => (
               <li key={m.matchId} className="border-b border-border last:border-b-0">
                 <Link
-                  to="/data/matches/$matchId"
+                  to="/data/matches/club/$matchId"
                   params={{ matchId: String(m.matchId) }}
                   className="flex items-center justify-between gap-2 px-4 py-3 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <span className="text-sm font-medium">{fixtureLabel(m)}</span>
+                  <span className="text-sm font-medium">{clubMatchLabel(m)}</span>
                   <span className="text-xs text-muted-foreground">
                     {[m.matchDate, m.competition].filter(Boolean).join(" · ")}
                   </span>

@@ -1,0 +1,52 @@
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { clubMatchLabel } from "@/lib/clubMatches";
+import { useClubMatches } from "@/lib/queries";
+import { parseApiError } from "@/lib/users";
+
+export const Route = createFileRoute("/data/matches/club/")({
+  component: ClubMatchesListPage,
+});
+
+function ClubMatchesListPage() {
+  const { data: matches = [], isLoading, error } = useClubMatches();
+  const sorted = useMemo(
+    () => [...matches].sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
+    [matches],
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          Club matches
+        </h1>
+        <p className="text-sm text-muted-foreground">Matches between two clubs.</p>
+      </div>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : error ? (
+        <p className="text-sm text-destructive">{parseApiError(error)}</p>
+      ) : sorted.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No matches recorded yet.</p>
+      ) : (
+        <ul className="flex flex-col rounded-2xl border border-border bg-card">
+          {sorted.map((m) => (
+            <li key={m.matchId} className="border-b border-border last:border-b-0">
+              <Link
+                to="/data/matches/club/$matchId"
+                params={{ matchId: String(m.matchId) }}
+                className="flex items-center justify-between gap-2 px-4 py-3 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span className="text-sm font-medium">{clubMatchLabel(m)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {[m.matchDate, m.competition].filter(Boolean).join(" · ")}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
