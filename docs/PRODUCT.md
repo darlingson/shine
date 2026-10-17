@@ -22,7 +22,7 @@ A relational database with a small core set of entities and a clear path to exte
 - **Player** — identity and basic biographical details.
 - **Club** — team or club entity.
 - **Player–Club affiliation** — who played for which club, when, and in what capacity.
-- **Match** — the event that squads attach to.
+- **Club match** and **national team match** — the events that squads attach to.
 - **Club match squad** — player participation in a club match.
 - **National team match squad** — player participation in a national team match.
 

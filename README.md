@@ -36,12 +36,12 @@ shine/
 │   ├── Program.cs        # DI wiring, JWT, EF Npgsql, Serilog, Swagger UI
 │   ├── Authorization/    # Permissions, policies, role seeder
 │   ├── Controllers/      # Auth, Users, Clubs, NationalTeams, Players,
-│   │                     # Matches, PlayerClubs, ClubMatchSquads,
-│   │                     # NationalTeamMatchSquads
+│   │                     # ClubMatches, NationalTeamMatches, PlayerClubs,
+│   │                     # ClubMatchSquads, NationalTeamMatchSquads
 │   ├── Dtos/
-│   ├── Models/           # Player, Club, NationalTeam, Match, PlayerClub,
-│   │                     # ClubMatchSquad, NationalTeamMatchSquad,
-│   │                     # RefreshToken, UserPermission
+│   ├── Models/           # Player, Club, NationalTeam, ClubMatch,
+│   │                     # NationalTeamMatch, PlayerClub, ClubMatchSquad,
+│   │                     # NationalTeamMatchSquad, RefreshToken, UserPermission
 │   ├── Migrations/       # EF migrations (applied on startup)
 │   ├── Repositories/
 │   ├── Services/         # incl. Services/Auth/TokenService
@@ -64,9 +64,10 @@ shine/
 | `Club` | Name, short name, city, country (default `Malawi`), founded year, `SourceUrl` |
 | `NationalTeam` | Canonical national side: name, short name, gender (`men`/`women`/`mixed`), level (`senior`/`U23`/`U20`/`U17`), country, `SourceUrl`. Squad entries reference this instead of free text |
 | `PlayerClub` | Player ↔ Club affiliation: start/end dates, `IsCurrent`, contract type (`permanent`/`loan`/`youth`/`trial`), shirt number, position at club |
-| `Match` | Date, competition (e.g. Super League, AFCON qualifier), season, home/away teams + scores, venue, `SourceUrl` |
+| `ClubMatch` | Club fixture: date, competition (e.g. Super League), season, optional home/away `Club` links (+ scores), venue, `SourceUrl`. Teams can be linked after the fact |
+| `NationalTeamMatch` | National-team fixture: same fields, with optional home/away `NationalTeam` links |
 | `ClubMatchSquad` | Player participation in a club match: lineup status (`starter`/`substitute`/`unused_sub`/`reserve`/`suspended`/`injured`), minutes, goals, assists, cards, captaincy, notes |
-| `NationalTeamMatchSquad` | Same participation detail for national sides, keyed by `{MatchId, NationalTeamId, PlayerId}` |
+| `NationalTeamMatchSquad` | Same participation detail for national-team matches, keyed by `{MatchId, NationalTeamId, PlayerId}` |
 
 ## Getting started
 
@@ -115,7 +116,8 @@ pnpm dev
 
 Reads are public; writes require the listed permission (snapshotted in the access token, refreshed on token refresh):
 
-- `/api/Clubs`, `/api/NationalTeams`, `/api/Players`, `/api/Matches`, `/api/PlayerClubs`, `/api/ClubMatchSquads`, `/api/NationalTeamMatchSquads` — REST (`GET` collection + item, `POST`/`PUT`/`DELETE` with `clubs:write`, `nationalteams:write`, `players:write`, `matches:write`, `squads:write`)
+- `/api/Clubs`, `/api/NationalTeams`, `/api/Players`, `/api/ClubMatches`, `/api/NationalTeamMatches`, `/api/PlayerClubs`, `/api/ClubMatchSquads`, `/api/NationalTeamMatchSquads` — REST (`GET` collection + item, `POST`/`PUT`/`DELETE` with `clubs:write`, `nationalteams:write`, `players:write`, `matches:write`, `squads:write`)
+- `/api/ClubMatches/{id}/teams`, `/api/NationalTeamMatches/{id}/teams` — `PATCH` (`matches:write`) to link or correct a match's two teams
 - `/api/Auth` — `register`, `login`, `refresh`, `revoke`, `logout`, `me`
 - `/api/Users` — list, role assign/remove (`users:manage`), permission grant/revoke (`permissions:grant`)
 
