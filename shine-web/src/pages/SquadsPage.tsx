@@ -42,8 +42,10 @@ import {
   useClubs,
   useMatches,
   useNationalSquads,
+  useNationalTeams,
   usePlayers,
 } from "@/lib/queries";
+import { nationalTeamLabel } from "@/lib/nationalTeams";
 import { parseApiError } from "@/lib/users";
 
 export function SquadsPage() {
@@ -55,11 +57,13 @@ export function SquadsPage() {
   const matchesQuery = useMatches();
   const clubEntriesQuery = useClubSquads();
   const nationalEntriesQuery = useNationalSquads();
+  const nationalTeamsQuery = useNationalTeams();
 
   const players = playersQuery.data ?? [];
   const clubs = clubsQuery.data ?? [];
   const clubEntries = clubEntriesQuery.data ?? [];
   const nationalEntries = nationalEntriesQuery.data ?? [];
+  const nationalTeams = nationalTeamsQuery.data ?? [];
   const matches = useMemo(
     () =>
       [...(matchesQuery.data ?? [])].sort((a, b) =>
@@ -72,13 +76,15 @@ export function SquadsPage() {
     clubsQuery.isLoading ||
     matchesQuery.isLoading ||
     clubEntriesQuery.isLoading ||
-    nationalEntriesQuery.isLoading;
+    nationalEntriesQuery.isLoading ||
+    nationalTeamsQuery.isLoading;
   const queryError =
     playersQuery.error ??
     clubsQuery.error ??
     matchesQuery.error ??
     clubEntriesQuery.error ??
-    nationalEntriesQuery.error;
+    nationalEntriesQuery.error ??
+    nationalTeamsQuery.error;
   const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
   const [matchFilter, setMatchFilter] = useState<string>("all");
@@ -90,10 +96,15 @@ export function SquadsPage() {
       matchesQuery.refetch(),
       clubEntriesQuery.refetch(),
       nationalEntriesQuery.refetch(),
+      nationalTeamsQuery.refetch(),
     ]);
 
   const playerNames = useMemo(() => new Map(players.map((p) => [p.playerId, p.fullName])), [players]);
   const clubNames = useMemo(() => new Map(clubs.map((c) => [c.clubId, c.name])), [clubs]);
+  const nationalTeamNames = useMemo(
+    () => new Map(nationalTeams.map((t) => [t.nationalTeamId, nationalTeamLabel(t)])),
+    [nationalTeams],
+  );
   const matchLabels = useMemo(
     () => new Map(matches.map((m) => [m.matchId, `${m.matchDate} — ${fixtureLabel(m)}`])),
     [matches],
@@ -301,11 +312,14 @@ export function SquadsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredNational.map((s) => (
-                    <TableRow key={`${s.matchId}-${s.nationalTeam}-${s.playerId}`}>
+                    <TableRow key={`${s.matchId}-${s.nationalTeamId}-${s.playerId}`}>
                       <TableCell className="whitespace-nowrap">
                         {matchLabels.get(s.matchId) ?? `#${s.matchId}`}
                       </TableCell>
-                      <TableCell>{s.nationalTeam}</TableCell>
+                      <TableCell>
+                        {nationalTeamNames.get(s.nationalTeamId) ??
+                          `#${s.nationalTeamId}`}
+                      </TableCell>
                       <TableCell className="font-medium">
                         {playerNames.get(s.playerId) ?? `#${s.playerId}`}
                         {s.captain && <Badge className="ml-2">C</Badge>}
@@ -328,7 +342,6 @@ export function SquadsPage() {
                                 <Link
                                   to="/manage/squads/national/$key"
                                   params={{ key: nationalEntryKey(s) }}
-                                  search={{ team: s.nationalTeam }}
                                 />
                               }
                             >
@@ -337,7 +350,7 @@ export function SquadsPage() {
                             <DeleteButton
                               name="squad entry"
                               onConfirm={async () => {
-                                await deleteNationalSquad(s.matchId, s.nationalTeam, s.playerId);
+                                await deleteNationalSquad(s.matchId, s.nationalTeamId, s.playerId);
                                 await refresh();
                               }}
                             />

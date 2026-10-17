@@ -31,7 +31,7 @@ export interface ClubSquad extends SquadFields {
 
 export interface NationalSquad extends SquadFields {
   matchId: number;
-  nationalTeam: string;
+  nationalTeamId: number;
   playerId: number;
 }
 
@@ -94,18 +94,14 @@ export function createNationalSquad(dto: NationalSquad): Promise<NationalSquad> 
   });
 }
 
-function nationalTeamQuery(nationalTeam: string): string {
-  return `?nationalTeam=${encodeURIComponent(nationalTeam)}`;
-}
-
 export function updateNationalSquad(
   matchId: number,
-  nationalTeam: string,
+  nationalTeamId: number,
   playerId: number,
   dto: SquadFields,
 ): Promise<NationalSquad> {
   return apiJson<NationalSquad>(
-    `/api/nationalteammatchsquads/${matchId}/${playerId}${nationalTeamQuery(nationalTeam)}`,
+    `/api/nationalteammatchsquads/${matchId}/${nationalTeamId}/${playerId}`,
     { method: "PUT", body: JSON.stringify(dto) },
   );
 }
@@ -129,18 +125,18 @@ export function clubEntryKey(s: ClubSquad): string {
   return `${s.matchId}-${s.clubId}-${s.playerId}`;
 }
 
-/** URL key encoding a national entry's composite id (team travels in ?team=). */
+/** URL key encoding a national entry's composite id. */
 export function nationalEntryKey(s: NationalSquad): string {
-  return `${s.matchId}-${s.playerId}`;
+  return `${s.matchId}-${s.nationalTeamId}-${s.playerId}`;
 }
 
 export function deleteNationalSquad(
   matchId: number,
-  nationalTeam: string,
+  nationalTeamId: number,
   playerId: number,
 ): Promise<void> {
   return apiJson<void>(
-    `/api/nationalteammatchsquads/${matchId}/${playerId}${nationalTeamQuery(nationalTeam)}`,
+    `/api/nationalteammatchsquads/${matchId}/${nationalTeamId}/${playerId}`,
     { method: "DELETE" },
   );
 }
