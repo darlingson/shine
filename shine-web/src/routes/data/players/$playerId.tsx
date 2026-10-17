@@ -1,6 +1,17 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useClubs, usePlayer, usePlayerClubs } from "@/lib/queries";
+import { nationalTeamMatchLabel, type NationalTeamMatch } from "@/lib/nationalTeamMatches";
+import { nationalTeamLabel } from "@/lib/nationalTeams";
+import {
+  useClubs,
+  useNationalSquads,
+  useNationalTeamMatches,
+  useNationalTeams,
+  usePlayer,
+  usePlayerClubs,
+} from "@/lib/queries";
+import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
+import { nationalEntryKey, statLine, type NationalSquad } from "@/lib/squads";
 import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/players/$playerId")({
@@ -12,6 +23,9 @@ function PlayerDetailPage() {
   const player = usePlayer(playerId);
   const clubs = useClubs();
   const affils = usePlayerClubs();
+  const nationalSquads = useNationalSquads();
+  const nationalMatches = useNationalTeamMatches();
+  const nationalTeams = useNationalTeams();
 
   const playerClubs = useMemo(() => {
     if (!player.data || !clubs.data || !affils.data) return [];
@@ -23,7 +37,30 @@ function PlayerDetailPage() {
     return clubs.data.filter((c) => clubIds.has(c.clubId));
   }, [player.data, clubs.data, affils.data]);
 
-  const error = player.error ?? clubs.error ?? affils.error;
+  const teamNames = useMemo(
+    () => new Map((nationalTeams.data ?? []).map((t) => [t.nationalTeamId, t])),
+    [nationalTeams.data],
+  );
+
+  const appearances = useMemo(() => {
+    if (!player.data || !nationalSquads.data || !nationalMatches.data) return [];
+    const matches = new Map(nationalMatches.data.map((m) => [m.matchId, m]));
+    const rows: Array<{ squad: NationalSquad; match: NationalTeamMatch }> = [];
+    for (const s of nationalSquads.data) {
+      if (s.playerId !== player.data.playerId) continue;
+      const match = matches.get(s.matchId);
+      if (match) rows.push({ squad: s, match });
+    }
+    return rows.sort((a, b) => b.match.matchDate.localeCompare(a.match.matchDate));
+  }, [player.data, nationalSquads.data, nationalMatches.data]);
+
+  const error =
+    player.error ??
+    clubs.error ??
+    affils.error ??
+    nationalSquads.error ??
+    nationalMatches.error ??
+    nationalTeams.error;
   if (error) return <p className="text-sm text-destructive">{parseApiError(error)}</p>;
   if (!player.data)
     return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -88,6 +125,58 @@ function PlayerDetailPage() {
                 </Link>
               </li>
             ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-heading text-lg font-semibold tracking-tight">
+          National team
+        </h2>
+        {appearances.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No national team appearances recorded.
+          </p>
+        ) : (
+          <ul className="flex flex-col rounded-2xl border border-border bg-card">
+            {appearances.map(({ squad, match }) => {
+              const team = teamNames.get(squad.nationalTeamId);
+              return (
+                <li
+                  key={nationalEntryKey(squad)}
+                  className="border-b border-border last:border-b-0"
+                >
+                  <Link
+                    to="/data/matches/national/$matchId"
+                    params={{ matchId: String(match.matchId) }}
+                    className="flex items-start justify-between gap-2 px-4 py-3 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        {nationalTeamMatchLabel(match)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {[
+                          team ? nationalTeamLabel(team) : null,
+                          match.matchDate,
+                          match.competition,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </span>
+                    <span className="flex flex-col items-end text-xs text-muted-foreground">
+                      <span>
+                        {SQUAD_STATUS_LABELS[squad.lineupStatus] ??
+                          squad.lineupStatus}
+                        {squad.captain ? " (C)" : ""}
+                      </span>
+                      <span>{statLine(squad)}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
