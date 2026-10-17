@@ -9,7 +9,6 @@ import {
   listClubMatches,
   type ClubMatch,
 } from "@/lib/clubMatches";
-import { getMatch, listMatches, type Match } from "@/lib/matches";
 import {
   getNationalTeamMatch,
   listNationalTeamMatches,
@@ -37,8 +36,6 @@ export const queryKeys = {
   club: (id: number | string) => ["clubs", String(id)] as const,
   nationalTeams: ["nationalTeams"] as const,
   nationalTeam: (id: number | string) => ["nationalTeams", String(id)] as const,
-  matches: ["matches"] as const,
-  match: (id: number | string) => ["matches", String(id)] as const,
   clubMatches: ["clubMatches"] as const,
   clubMatch: (id: number | string) => ["clubMatches", String(id)] as const,
   nationalTeamMatches: ["nationalTeamMatches"] as const,
@@ -94,21 +91,6 @@ export function useNationalTeam(
   return useQuery({
     queryKey: queryKeys.nationalTeam(id),
     queryFn: () => getNationalTeam(Number(id)),
-    enabled,
-  });
-}
-
-export function useMatches(): UseQueryResult<Match[], Error> {
-  return useQuery({ queryKey: queryKeys.matches, queryFn: listMatches });
-}
-
-export function useMatch(
-  id: number | string,
-  enabled = true,
-): UseQueryResult<Match, Error> {
-  return useQuery({
-    queryKey: queryKeys.match(id),
-    queryFn: () => getMatch(Number(id)),
     enabled,
   });
 }

@@ -23,14 +23,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Combobox } from "@/components/ui/combobox";
 import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
-import { fixtureLabel, type Match } from "@/lib/matches";
+import { clubMatchLabel } from "@/lib/clubMatches";
+import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import { type Club } from "@/lib/clubs";
 import { type Player } from "@/lib/players";
 import {
+  useClubMatches,
   useClubSquads,
   useClubs,
-  useMatches,
   useNationalSquads,
+  useNationalTeamMatches,
   useNationalTeams,
   usePlayers,
 } from "@/lib/queries";
@@ -287,7 +289,8 @@ export function SquadFormPage({
   const canWrite = hasPermission("squads:write");
   const editing = entryKey !== undefined;
 
-  const matchesQuery = useMatches();
+  const clubMatchesQuery = useClubMatches();
+  const nationalMatchesQuery = useNationalTeamMatches();
   const clubsQuery = useClubs();
   const playersQuery = usePlayers();
   const nationalTeamsQuery = useNationalTeams();
@@ -296,21 +299,34 @@ export function SquadFormPage({
     editing && kind === "national",
   );
 
-  const matches = [...(matchesQuery.data ?? [])].sort((a, b) =>
-    b.matchDate.localeCompare(a.matchDate),
-  );
+  const matchOptions =
+    kind === "club"
+      ? [...(clubMatchesQuery.data ?? [])]
+          .sort((a, b) => b.matchDate.localeCompare(a.matchDate))
+          .map((m) => ({
+            value: m.matchId.toString(),
+            label: `${m.matchDate} — ${clubMatchLabel(m)}`,
+          }))
+      : [...(nationalMatchesQuery.data ?? [])]
+          .sort((a, b) => b.matchDate.localeCompare(a.matchDate))
+          .map((m) => ({
+            value: m.matchId.toString(),
+            label: `${m.matchDate} — ${nationalTeamMatchLabel(m)}`,
+          }));
   const clubs = clubsQuery.data ?? [];
   const players = playersQuery.data ?? [];
   const nationalTeams = nationalTeamsQuery.data ?? [];
   const loading =
-    matchesQuery.isLoading ||
+    clubMatchesQuery.isLoading ||
+    nationalMatchesQuery.isLoading ||
     clubsQuery.isLoading ||
     playersQuery.isLoading ||
     nationalTeamsQuery.isLoading ||
     clubSquadsQuery.isLoading ||
     nationalSquadsQuery.isLoading;
   const loadError =
-    matchesQuery.error ??
+    clubMatchesQuery.error ??
+    nationalMatchesQuery.error ??
     clubsQuery.error ??
     playersQuery.error ??
     nationalTeamsQuery.error ??
@@ -388,7 +404,7 @@ export function SquadFormPage({
         key={entryKey}
         kind={kind}
         entryKey={entryKey}
-        matches={matches}
+        matchOptions={matchOptions}
         clubs={clubs}
         players={players}
         nationalTeams={nationalTeams}
@@ -401,7 +417,7 @@ export function SquadFormPage({
     <SquadForm
       key="new"
       kind={kind}
-      matches={matches}
+      matchOptions={matchOptions}
       clubs={clubs}
       players={players}
       nationalTeams={nationalTeams}
@@ -466,7 +482,7 @@ function findInitial(
 function SquadForm({
   kind,
   entryKey,
-  matches,
+  matchOptions,
   clubs,
   players,
   nationalTeams,
@@ -474,7 +490,7 @@ function SquadForm({
 }: {
   kind: "club" | "national";
   entryKey?: string;
-  matches: Match[];
+  matchOptions: Array<{ value: string; label: string }>;
   clubs: Club[];
   players: Player[];
   nationalTeams: NationalTeam[];
@@ -574,10 +590,7 @@ function SquadForm({
               value={matchId}
               disabled={editing}
               placeholder="Select match…"
-              options={matches.map((m) => ({
-                value: m.matchId.toString(),
-                label: `${m.matchDate} — ${fixtureLabel(m)}`,
-              }))}
+              options={matchOptions}
               onChange={setMatchId}
             />
             {kind === "club" ? (

@@ -23,7 +23,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import { fixtureLabel } from "@/lib/matches";
+import { clubMatchLabel } from "@/lib/clubMatches";
+import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import {
   clubEntryKey,
   deleteClubSquad,
@@ -32,10 +33,11 @@ import {
   statLine,
 } from "@/lib/squads";
 import {
+  useClubMatches,
   useClubSquads,
   useClubs,
-  useMatches,
   useNationalSquads,
+  useNationalTeamMatches,
   useNationalTeams,
   usePlayers,
 } from "@/lib/queries";
@@ -48,7 +50,8 @@ export function SquadsPage() {
   const [tab, setTab] = useState<"club" | "national">("club");
   const playersQuery = usePlayers();
   const clubsQuery = useClubs();
-  const matchesQuery = useMatches();
+  const clubMatchesQuery = useClubMatches();
+  const nationalMatchesQuery = useNationalTeamMatches();
   const clubEntriesQuery = useClubSquads();
   const nationalEntriesQuery = useNationalSquads();
   const nationalTeamsQuery = useNationalTeams();
@@ -58,24 +61,33 @@ export function SquadsPage() {
   const clubEntries = clubEntriesQuery.data ?? [];
   const nationalEntries = nationalEntriesQuery.data ?? [];
   const nationalTeams = nationalTeamsQuery.data ?? [];
-  const matches = useMemo(
+  const clubMatches = useMemo(
     () =>
-      [...(matchesQuery.data ?? [])].sort((a, b) =>
+      [...(clubMatchesQuery.data ?? [])].sort((a, b) =>
         b.matchDate.localeCompare(a.matchDate),
       ),
-    [matchesQuery.data],
+    [clubMatchesQuery.data],
+  );
+  const nationalMatches = useMemo(
+    () =>
+      [...(nationalMatchesQuery.data ?? [])].sort((a, b) =>
+        b.matchDate.localeCompare(a.matchDate),
+      ),
+    [nationalMatchesQuery.data],
   );
   const loading =
     playersQuery.isLoading ||
     clubsQuery.isLoading ||
-    matchesQuery.isLoading ||
+    clubMatchesQuery.isLoading ||
+    nationalMatchesQuery.isLoading ||
     clubEntriesQuery.isLoading ||
     nationalEntriesQuery.isLoading ||
     nationalTeamsQuery.isLoading;
   const queryError =
     playersQuery.error ??
     clubsQuery.error ??
-    matchesQuery.error ??
+    clubMatchesQuery.error ??
+    nationalMatchesQuery.error ??
     clubEntriesQuery.error ??
     nationalEntriesQuery.error ??
     nationalTeamsQuery.error;
@@ -87,7 +99,8 @@ export function SquadsPage() {
     Promise.all([
       playersQuery.refetch(),
       clubsQuery.refetch(),
-      matchesQuery.refetch(),
+      clubMatchesQuery.refetch(),
+      nationalMatchesQuery.refetch(),
       clubEntriesQuery.refetch(),
       nationalEntriesQuery.refetch(),
       nationalTeamsQuery.refetch(),
@@ -99,10 +112,36 @@ export function SquadsPage() {
     () => new Map(nationalTeams.map((t) => [t.nationalTeamId, nationalTeamLabel(t)])),
     [nationalTeams],
   );
-  const matchLabels = useMemo(
-    () => new Map(matches.map((m) => [m.matchId, `${m.matchDate} — ${fixtureLabel(m)}`])),
-    [matches],
+  const clubMatchLabels = useMemo(
+    () =>
+      new Map(
+        clubMatches.map((m) => [
+          m.matchId,
+          `${m.matchDate} — ${clubMatchLabel(m)}`,
+        ]),
+      ),
+    [clubMatches],
   );
+  const nationalMatchLabels = useMemo(
+    () =>
+      new Map(
+        nationalMatches.map((m) => [
+          m.matchId,
+          `${m.matchDate} — ${nationalTeamMatchLabel(m)}`,
+        ]),
+      ),
+    [nationalMatches],
+  );
+  const matchOptions =
+    tab === "club"
+      ? clubMatches.map((m) => ({
+          value: m.matchId.toString(),
+          label: `${m.matchDate} — ${clubMatchLabel(m)}`,
+        }))
+      : nationalMatches.map((m) => ({
+          value: m.matchId.toString(),
+          label: `${m.matchDate} — ${nationalTeamMatchLabel(m)}`,
+        }));
 
   const filteredClub = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -173,13 +212,19 @@ export function SquadsPage() {
       <div className="flex gap-2">
         <Button
           variant={tab === "club" ? "default" : "outline"}
-          onClick={() => setTab("club")}
+          onClick={() => {
+            setTab("club");
+            setMatchFilter("all");
+          }}
         >
           Club ({clubEntries.length})
         </Button>
         <Button
           variant={tab === "national" ? "default" : "outline"}
-          onClick={() => setTab("national")}
+          onClick={() => {
+            setTab("national");
+            setMatchFilter("all");
+          }}
         >
           National team ({nationalEntries.length})
         </Button>
@@ -210,10 +255,7 @@ export function SquadsPage() {
               onValueChange={(v) => setMatchFilter(v || "all")}
               options={[
                 { value: "all", label: "All matches" },
-                ...matches.map((m) => ({
-                  value: m.matchId.toString(),
-                  label: `${m.matchDate} — ${fixtureLabel(m)}`,
-                })),
+                ...matchOptions,
               ]}
               placeholder="All matches"
               searchPlaceholder="Search matches…"
@@ -238,7 +280,7 @@ export function SquadsPage() {
                   {filteredClub.map((s) => (
                     <TableRow key={clubEntryKey(s)}>
                       <TableCell className="whitespace-nowrap">
-                        {matchLabels.get(s.matchId) ?? `#${s.matchId}`}
+                        {clubMatchLabels.get(s.matchId) ?? `#${s.matchId}`}
                       </TableCell>
                       <TableCell>{clubNames.get(s.clubId) ?? `#${s.clubId}`}</TableCell>
                       <TableCell className="font-medium">
@@ -310,7 +352,7 @@ export function SquadsPage() {
                   {filteredNational.map((s) => (
                     <TableRow key={`${s.matchId}-${s.nationalTeamId}-${s.playerId}`}>
                       <TableCell className="whitespace-nowrap">
-                        {matchLabels.get(s.matchId) ?? `#${s.matchId}`}
+                        {nationalMatchLabels.get(s.matchId) ?? `#${s.matchId}`}
                       </TableCell>
                       <TableCell>
                         {nationalTeamNames.get(s.nationalTeamId) ??
