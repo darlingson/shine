@@ -17,18 +17,18 @@ public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
     public async Task<IEnumerable<NationalTeamMatchSquad>> GetAllAsync()
         => await _repository.GetAllAsync();
 
-    public async Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, string nationalTeam, int playerId)
-        => await _repository.GetByIdAsync(matchId, nationalTeam, playerId);
+    public async Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, int nationalTeamId, int playerId)
+        => await _repository.GetByIdAsync(matchId, nationalTeamId, playerId);
 
     public async Task<NationalTeamMatchSquad?> CreateAsync(CreateNationalTeamMatchSquadDto dto)
     {
-        if (await _repository.ExistsAsync(dto.MatchId, dto.NationalTeam, dto.PlayerId))
+        if (await _repository.ExistsAsync(dto.MatchId, dto.NationalTeamId, dto.PlayerId))
             return null;
 
         var squad = new NationalTeamMatchSquad
         {
             MatchId = dto.MatchId,
-            NationalTeam = dto.NationalTeam,
+            NationalTeamId = dto.NationalTeamId,
             PlayerId = dto.PlayerId,
             LineupStatus = dto.LineupStatus,
             ShirtNumber = dto.ShirtNumber,
@@ -48,9 +48,9 @@ public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
         return squad;
     }
 
-    public async Task<NationalTeamMatchSquad?> UpdateAsync(int matchId, string nationalTeam, int playerId, UpdateNationalTeamMatchSquadDto dto)
+    public async Task<NationalTeamMatchSquad?> UpdateAsync(int matchId, int nationalTeamId, int playerId, UpdateNationalTeamMatchSquadDto dto)
     {
-        var squad = await _repository.GetByIdAsync(matchId, nationalTeam, playerId);
+        var squad = await _repository.GetByIdAsync(matchId, nationalTeamId, playerId);
         if (squad is null) return null;
 
         squad.LineupStatus = dto.LineupStatus;
@@ -70,9 +70,9 @@ public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
         return squad;
     }
 
-    public async Task<bool> DeleteAsync(int matchId, string nationalTeam, int playerId)
+    public async Task<bool> DeleteAsync(int matchId, int nationalTeamId, int playerId)
     {
-        var squad = await _repository.GetByIdAsync(matchId, nationalTeam, playerId);
+        var squad = await _repository.GetByIdAsync(matchId, nationalTeamId, playerId);
         if (squad is null) return false;
 
         _repository.Delete(squad);

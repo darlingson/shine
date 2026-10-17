@@ -6,8 +6,8 @@ public class CreateNationalTeamMatchSquadDto
 {
     public int MatchId { get; set; }
 
-    [Required]
-    public string NationalTeam { get; set; } = string.Empty;
+    [Range(1, int.MaxValue)]
+    public int NationalTeamId { get; set; }
     public int PlayerId { get; set; }
 
     [Required]

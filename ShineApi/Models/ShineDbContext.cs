@@ -33,7 +33,7 @@ public class ShineDbContext : IdentityDbContext
         });
 
         modelBuilder.Entity<NationalTeamMatchSquad>()
-            .HasKey(x => new { x.MatchId, x.NationalTeam, x.PlayerId });
+            .HasKey(x => new { x.MatchId, x.NationalTeamId, x.PlayerId });
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {

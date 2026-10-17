@@ -4,8 +4,8 @@ public class NationalTeamMatchSquad
 {
     public int MatchId { get; set; }
 
-    /// <summary>e.g. Malawi, Malawi U20, Malawi Women</summary>
-    public string NationalTeam { get; set; } = string.Empty;
+    /// <summary>FK to the managed national team (e.g. Malawi, Malawi U20, Malawi Women).</summary>
+    public int NationalTeamId { get; set; }
 
     public int PlayerId { get; set; }
     public string LineupStatus { get; set; } = string.Empty;
@@ -22,5 +22,6 @@ public class NationalTeamMatchSquad
 
     // Navigation properties
     public Match? Match { get; set; }
+    public NationalTeam? NationalTeam { get; set; }
     public Player? Player { get; set; }
 }
