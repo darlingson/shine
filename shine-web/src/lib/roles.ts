@@ -8,6 +8,8 @@ export const PERMISSIONS = [
   "players:write",
   "clubs:read",
   "clubs:write",
+  "nationalteams:read",
+  "nationalteams:write",
   "matches:read",
   "matches:write",
   "squads:read",
@@ -24,16 +26,25 @@ export const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
     "players:write",
     "clubs:read",
     "clubs:write",
+    "nationalteams:read",
+    "nationalteams:write",
     "matches:read",
     "matches:write",
     "squads:read",
     "squads:write",
   ],
-  Viewer: ["players:read", "clubs:read", "matches:read", "squads:read"],
+  Viewer: [
+    "players:read",
+    "clubs:read",
+    "nationalteams:read",
+    "matches:read",
+    "squads:read",
+  ],
 };
 
 export const ROLE_DESCRIPTIONS: Record<RoleName, string> = {
   Admin: "Full access — manage data, users and permissions.",
   Editor: "Can create and edit football data. Cannot manage users.",
-  Viewer: "Read-only access to players, clubs, matches and squads.",
+  Viewer:
+    "Read-only access to players, clubs, national teams, matches and squads.",
 };

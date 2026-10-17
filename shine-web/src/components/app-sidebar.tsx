@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowSquareOutIcon,
   ClipboardTextIcon,
+  FlagIcon,
   HouseIcon,
   ShieldCheckIcon,
   ShieldIcon,
@@ -123,6 +124,20 @@ export function AppSidebar() {
                 >
                   <ShieldIcon />
                   <span>Clubs</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="National teams"
+                  render={
+                    <Link
+                      to="/manage/national-teams"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <FlagIcon />
+                  <span>National teams</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

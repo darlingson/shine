@@ -5,6 +5,11 @@ import {
 } from "@tanstack/react-query";
 import { getClub, listClubs, type Club } from "@/lib/clubs";
 import { getMatch, listMatches, type Match } from "@/lib/matches";
+import {
+  getNationalTeam,
+  listNationalTeams,
+  type NationalTeam,
+} from "@/lib/nationalTeams";
 import { getPlayer, listPlayers, type Player } from "@/lib/players";
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
 import {
@@ -20,6 +25,8 @@ export const queryKeys = {
   player: (id: number | string) => ["players", String(id)] as const,
   clubs: ["clubs"] as const,
   club: (id: number | string) => ["clubs", String(id)] as const,
+  nationalTeams: ["nationalTeams"] as const,
+  nationalTeam: (id: number | string) => ["nationalTeams", String(id)] as const,
   matches: ["matches"] as const,
   match: (id: number | string) => ["matches", String(id)] as const,
   playerClubs: ["playerClubs"] as const,
@@ -54,6 +61,24 @@ export function useClub(
   return useQuery({
     queryKey: queryKeys.club(id),
     queryFn: () => getClub(Number(id)),
+    enabled,
+  });
+}
+
+export function useNationalTeams(): UseQueryResult<NationalTeam[], Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeams,
+    queryFn: listNationalTeams,
+  });
+}
+
+export function useNationalTeam(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<NationalTeam, Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeam(id),
+    queryFn: () => getNationalTeam(Number(id)),
     enabled,
   });
 }
