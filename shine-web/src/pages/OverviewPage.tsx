@@ -18,9 +18,10 @@ import {
 } from "@/components/ui/card";
 
 const QUICK_ADD = [
-  { to: "/manage/matches/record", label: "Record full match" },
+  { to: "/manage/matches/club/record", label: "Record full match" },
   { to: "/manage/players/new", label: "Add player" },
-  { to: "/manage/matches/new", label: "Add match" },
+  { to: "/manage/matches/club/new", label: "Add club match" },
+  { to: "/manage/matches/national/new", label: "Add national match" },
   { to: "/manage/squads/club/new", label: "Add club squad" },
   { to: "/manage/squads/national/new", label: "Add national squad" },
 ] as const;
@@ -37,8 +38,13 @@ const BROWSE = [
     icon: <ShieldIcon className="size-4 text-muted-foreground" />,
   },
   {
-    to: "/manage/matches",
-    label: "Matches",
+    to: "/manage/matches/club",
+    label: "Club matches",
+    icon: <TrophyIcon className="size-4 text-muted-foreground" />,
+  },
+  {
+    to: "/manage/matches/national",
+    label: "National matches",
     icon: <TrophyIcon className="size-4 text-muted-foreground" />,
   },
   {

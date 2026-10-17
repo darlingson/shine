@@ -142,16 +142,30 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip="Matches"
+                  tooltip="Club matches"
                   render={
                     <Link
-                      to="/manage/matches"
+                      to="/manage/matches/club"
                       activeProps={{ "data-active": true }}
                     />
                   }
                 >
                   <TrophyIcon />
-                  <span>Matches</span>
+                  <span>Club matches</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="National matches"
+                  render={
+                    <Link
+                      to="/manage/matches/national"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <FlagIcon />
+                  <span>National matches</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
