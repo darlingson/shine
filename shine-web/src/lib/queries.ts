@@ -4,7 +4,17 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 import { getClub, listClubs, type Club } from "@/lib/clubs";
+import {
+  getClubMatch,
+  listClubMatches,
+  type ClubMatch,
+} from "@/lib/clubMatches";
 import { getMatch, listMatches, type Match } from "@/lib/matches";
+import {
+  getNationalTeamMatch,
+  listNationalTeamMatches,
+  type NationalTeamMatch,
+} from "@/lib/nationalTeamMatches";
 import {
   getNationalTeam,
   listNationalTeams,
@@ -29,6 +39,11 @@ export const queryKeys = {
   nationalTeam: (id: number | string) => ["nationalTeams", String(id)] as const,
   matches: ["matches"] as const,
   match: (id: number | string) => ["matches", String(id)] as const,
+  clubMatches: ["clubMatches"] as const,
+  clubMatch: (id: number | string) => ["clubMatches", String(id)] as const,
+  nationalTeamMatches: ["nationalTeamMatches"] as const,
+  nationalTeamMatch: (id: number | string) =>
+    ["nationalTeamMatches", String(id)] as const,
   playerClubs: ["playerClubs"] as const,
   clubSquads: ["clubSquads"] as const,
   nationalSquads: ["nationalSquads"] as const,
@@ -94,6 +109,45 @@ export function useMatch(
   return useQuery({
     queryKey: queryKeys.match(id),
     queryFn: () => getMatch(Number(id)),
+    enabled,
+  });
+}
+
+export function useClubMatches(): UseQueryResult<ClubMatch[], Error> {
+  return useQuery({
+    queryKey: queryKeys.clubMatches,
+    queryFn: listClubMatches,
+  });
+}
+
+export function useClubMatch(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<ClubMatch, Error> {
+  return useQuery({
+    queryKey: queryKeys.clubMatch(id),
+    queryFn: () => getClubMatch(Number(id)),
+    enabled,
+  });
+}
+
+export function useNationalTeamMatches(): UseQueryResult<
+  NationalTeamMatch[],
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamMatches,
+    queryFn: listNationalTeamMatches,
+  });
+}
+
+export function useNationalTeamMatch(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<NationalTeamMatch, Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamMatch(id),
+    queryFn: () => getNationalTeamMatch(Number(id)),
     enabled,
   });
 }
