@@ -8,10 +8,14 @@ namespace ShineApi.Services;
 public class NationalTeamMatchService : INationalTeamMatchService
 {
     private readonly INationalTeamMatchRepository _repository;
+    private readonly INationalTeamRepository _nationalTeamRepository;
 
-    public NationalTeamMatchService(INationalTeamMatchRepository repository)
+    public NationalTeamMatchService(
+        INationalTeamMatchRepository repository,
+        INationalTeamRepository nationalTeamRepository)
     {
         _repository = repository;
+        _nationalTeamRepository = nationalTeamRepository;
     }
 
     public async Task<IEnumerable<NationalTeamMatchDto>> GetAllAsync()
@@ -23,8 +27,11 @@ public class NationalTeamMatchService : INationalTeamMatchService
         return match is null ? null : ToDto(match);
     }
 
-    public async Task<NationalTeamMatchDto> CreateAsync(CreateNationalTeamMatchDto dto)
+    public async Task<NationalTeamMatchDto?> CreateAsync(CreateNationalTeamMatchDto dto, List<string> errors)
     {
+        if (!await TeamsExistAsync(dto.HomeNationalTeamId, dto.AwayNationalTeamId, errors))
+            return null;
+
         var match = new NationalTeamMatch
         {
             MatchDate = dto.MatchDate,
@@ -45,10 +52,13 @@ public class NationalTeamMatchService : INationalTeamMatchService
         return (await GetByIdAsync(match.MatchId))!;
     }
 
-    public async Task<NationalTeamMatchDto?> UpdateAsync(int id, UpdateNationalTeamMatchDto dto)
+    public async Task<NationalTeamMatchDto?> UpdateAsync(int id, UpdateNationalTeamMatchDto dto, List<string> errors)
     {
         var match = await _repository.GetByIdAsync(id);
         if (match is null) return null;
+
+        if (!await TeamsExistAsync(dto.HomeNationalTeamId, dto.AwayNationalTeamId, errors))
+            return null;
 
         match.MatchDate = dto.MatchDate;
         match.Competition = dto.Competition;
@@ -66,10 +76,13 @@ public class NationalTeamMatchService : INationalTeamMatchService
         return (await GetByIdAsync(id))!;
     }
 
-    public async Task<NationalTeamMatchDto?> LinkTeamsAsync(int id, LinkNationalTeamMatchTeamsDto dto)
+    public async Task<NationalTeamMatchDto?> LinkTeamsAsync(int id, LinkNationalTeamMatchTeamsDto dto, List<string> errors)
     {
         var match = await _repository.GetByIdAsync(id);
         if (match is null) return null;
+
+        if (!await TeamsExistAsync(dto.HomeNationalTeamId, dto.AwayNationalTeamId, errors))
+            return null;
 
         match.HomeNationalTeamId = dto.HomeNationalTeamId;
         match.AwayNationalTeamId = dto.AwayNationalTeamId;
@@ -88,6 +101,16 @@ public class NationalTeamMatchService : INationalTeamMatchService
         _repository.Delete(match);
         await _repository.SaveChangesAsync();
         return true;
+    }
+
+    private async Task<bool> TeamsExistAsync(int? homeId, int? awayId, List<string> errors)
+    {
+        var before = errors.Count;
+        if (homeId is int h && !await _nationalTeamRepository.ExistsAsync(h))
+            errors.Add($"Unknown homeNationalTeamId {h}.");
+        if (awayId is int a && !await _nationalTeamRepository.ExistsAsync(a))
+            errors.Add($"Unknown awayNationalTeamId {a}.");
+        return errors.Count == before;
     }
 
     private static NationalTeamMatchDto ToDto(NationalTeamMatch m) => new()

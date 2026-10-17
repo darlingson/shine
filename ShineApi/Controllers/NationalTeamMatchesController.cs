@@ -34,7 +34,9 @@ public class NationalTeamMatchesController : ControllerBase
     [HasPermission(Permissions.MatchesWrite)]
     public async Task<IActionResult> Create([FromBody] CreateNationalTeamMatchDto dto)
     {
-        var match = await _service.CreateAsync(dto);
+        var errors = new List<string>();
+        var match = await _service.CreateAsync(dto, errors);
+        if (match is null) return BadRequest(new { errors });
         return CreatedAtAction(nameof(GetById), new { id = match.MatchId }, match);
     }
 
@@ -42,7 +44,9 @@ public class NationalTeamMatchesController : ControllerBase
     [HasPermission(Permissions.MatchesWrite)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateNationalTeamMatchDto dto)
     {
-        var match = await _service.UpdateAsync(id, dto);
+        var errors = new List<string>();
+        var match = await _service.UpdateAsync(id, dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
         return match is null ? NotFound() : Ok(match);
     }
 
@@ -51,7 +55,9 @@ public class NationalTeamMatchesController : ControllerBase
     [HasPermission(Permissions.MatchesWrite)]
     public async Task<IActionResult> LinkTeams(int id, [FromBody] LinkNationalTeamMatchTeamsDto dto)
     {
-        var match = await _service.LinkTeamsAsync(id, dto);
+        var errors = new List<string>();
+        var match = await _service.LinkTeamsAsync(id, dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
         return match is null ? NotFound() : Ok(match);
     }
 

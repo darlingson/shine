@@ -8,10 +8,12 @@ namespace ShineApi.Services;
 public class ClubMatchService : IClubMatchService
 {
     private readonly IClubMatchRepository _repository;
+    private readonly IClubRepository _clubRepository;
 
-    public ClubMatchService(IClubMatchRepository repository)
+    public ClubMatchService(IClubMatchRepository repository, IClubRepository clubRepository)
     {
         _repository = repository;
+        _clubRepository = clubRepository;
     }
 
     public async Task<IEnumerable<ClubMatchDto>> GetAllAsync()
@@ -23,8 +25,11 @@ public class ClubMatchService : IClubMatchService
         return match is null ? null : ToDto(match);
     }
 
-    public async Task<ClubMatchDto> CreateAsync(CreateClubMatchDto dto)
+    public async Task<ClubMatchDto?> CreateAsync(CreateClubMatchDto dto, List<string> errors)
     {
+        if (!await ClubsExistAsync(dto.HomeClubId, dto.AwayClubId, errors))
+            return null;
+
         var match = new ClubMatch
         {
             MatchDate = dto.MatchDate,
@@ -45,10 +50,13 @@ public class ClubMatchService : IClubMatchService
         return (await GetByIdAsync(match.MatchId))!;
     }
 
-    public async Task<ClubMatchDto?> UpdateAsync(int id, UpdateClubMatchDto dto)
+    public async Task<ClubMatchDto?> UpdateAsync(int id, UpdateClubMatchDto dto, List<string> errors)
     {
         var match = await _repository.GetByIdAsync(id);
         if (match is null) return null;
+
+        if (!await ClubsExistAsync(dto.HomeClubId, dto.AwayClubId, errors))
+            return null;
 
         match.MatchDate = dto.MatchDate;
         match.Competition = dto.Competition;
@@ -66,10 +74,13 @@ public class ClubMatchService : IClubMatchService
         return (await GetByIdAsync(id))!;
     }
 
-    public async Task<ClubMatchDto?> LinkTeamsAsync(int id, LinkClubMatchTeamsDto dto)
+    public async Task<ClubMatchDto?> LinkTeamsAsync(int id, LinkClubMatchTeamsDto dto, List<string> errors)
     {
         var match = await _repository.GetByIdAsync(id);
         if (match is null) return null;
+
+        if (!await ClubsExistAsync(dto.HomeClubId, dto.AwayClubId, errors))
+            return null;
 
         match.HomeClubId = dto.HomeClubId;
         match.AwayClubId = dto.AwayClubId;
@@ -88,6 +99,16 @@ public class ClubMatchService : IClubMatchService
         _repository.Delete(match);
         await _repository.SaveChangesAsync();
         return true;
+    }
+
+    private async Task<bool> ClubsExistAsync(int? homeId, int? awayId, List<string> errors)
+    {
+        var before = errors.Count;
+        if (homeId is int h && !await _clubRepository.ExistsAsync(h))
+            errors.Add($"Unknown homeClubId {h}.");
+        if (awayId is int a && !await _clubRepository.ExistsAsync(a))
+            errors.Add($"Unknown awayClubId {a}.");
+        return errors.Count == before;
     }
 
     private static ClubMatchDto ToDto(ClubMatch m) => new()

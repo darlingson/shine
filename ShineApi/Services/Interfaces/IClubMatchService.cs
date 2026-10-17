@@ -6,8 +6,8 @@ public interface IClubMatchService
 {
     Task<IEnumerable<ClubMatchDto>> GetAllAsync();
     Task<ClubMatchDto?> GetByIdAsync(int id);
-    Task<ClubMatchDto> CreateAsync(CreateClubMatchDto dto);
-    Task<ClubMatchDto?> UpdateAsync(int id, UpdateClubMatchDto dto);
-    Task<ClubMatchDto?> LinkTeamsAsync(int id, LinkClubMatchTeamsDto dto);
+    Task<ClubMatchDto?> CreateAsync(CreateClubMatchDto dto, List<string> errors);
+    Task<ClubMatchDto?> UpdateAsync(int id, UpdateClubMatchDto dto, List<string> errors);
+    Task<ClubMatchDto?> LinkTeamsAsync(int id, LinkClubMatchTeamsDto dto, List<string> errors);
     Task<bool> DeleteAsync(int id);
 }
