@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ShineApi.Dtos;
 using ShineApi.Models;
 using ShineApi.Services.Interfaces;
-using ApiMatch = ShineApi.Models.Match;
+using ApiMatch = ShineApi.Models.ClubMatch;
 
 namespace ShineApi.Services;
 
@@ -42,8 +42,8 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
                 MatchDate = dto.Match.MatchDate,
                 Competition = dto.Match.Competition,
                 Season = dto.Match.Season,
-                HomeTeam = home.Name,
-                AwayTeam = away.Name,
+                HomeClubId = home.ClubId,
+                AwayClubId = away.ClubId,
                 HomeScore = dto.Match.HomeScore,
                 AwayScore = dto.Match.AwayScore,
                 Venue = dto.Match.Venue,
@@ -51,7 +51,7 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-            db.Match.Add(match);
+            db.ClubMatch.Add(match);
             await db.SaveChangesAsync();
 
             var result = new MatchRecordResultDto { MatchId = match.MatchId };

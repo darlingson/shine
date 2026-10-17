@@ -21,7 +21,7 @@ public class ClubMatchSquad
     public string? Notes { get; set; }
 
     // Navigation properties
-    public Match? Match { get; set; }
+    public ClubMatch? Match { get; set; }
     public Club? Club { get; set; }
     public Player? Player { get; set; }
 }

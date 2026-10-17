@@ -21,7 +21,7 @@ public class NationalTeamMatchSquad
     public string? Notes { get; set; }
 
     // Navigation properties
-    public Match? Match { get; set; }
+    public NationalTeamMatch? Match { get; set; }
     public NationalTeam? NationalTeam { get; set; }
     public Player? Player { get; set; }
 }
