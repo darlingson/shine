@@ -12,13 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -209,19 +203,21 @@ export function SquadsPage() {
               onChange={(e) => setQuery(e.target.value)}
               className="max-w-xs"
             />
-            <Select value={matchFilter} onValueChange={(v) => setMatchFilter(v ?? "all")}>
-              <SelectTrigger className="max-w-xs">
-                <SelectValue placeholder="All matches" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All matches</SelectItem>
-                {matches.map((m) => (
-                  <SelectItem key={m.matchId} value={m.matchId.toString()}>
-                    {m.matchDate} — {fixtureLabel(m)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              aria-label="Filter by match"
+              className="w-full max-w-xs"
+              value={matchFilter}
+              onValueChange={(v) => setMatchFilter(v || "all")}
+              options={[
+                { value: "all", label: "All matches" },
+                ...matches.map((m) => ({
+                  value: m.matchId.toString(),
+                  label: `${m.matchDate} — ${fixtureLabel(m)}`,
+                })),
+              ]}
+              placeholder="All matches"
+              searchPlaceholder="Search matches…"
+            />
           </div>
 
           {body ?? (

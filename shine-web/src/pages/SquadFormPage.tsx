@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
 import { fixtureLabel, type Match } from "@/lib/matches";
@@ -250,23 +251,15 @@ function EntitySelect({
 }) {
   return (
     <Field label={label} htmlFor={id}>
-      <Select value={value} onValueChange={(v) => onChange(v ?? "")} disabled={disabled}>
-        <SelectTrigger id={id}>
-          <SelectValue>
-            {(v: unknown) => {
-              if (typeof v !== "string" || v === "") return placeholder;
-              return options.find((o) => o.value === v)?.label ?? placeholder;
-            }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Combobox
+        id={id}
+        aria-label={label}
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        options={options}
+      />
     </Field>
   );
 }
