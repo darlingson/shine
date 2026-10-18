@@ -20,18 +20,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
-import { fixtureLabel, type Match } from "@/lib/matches";
+import { clubMatchLabel } from "@/lib/clubMatches";
+import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import { type Club } from "@/lib/clubs";
 import { type Player } from "@/lib/players";
 import {
+  useClubMatches,
   useClubSquads,
   useClubs,
-  useMatches,
   useNationalSquads,
+  useNationalTeamMatches,
+  useNationalTeams,
   usePlayers,
 } from "@/lib/queries";
+import {
+  nationalTeamLabel,
+  type NationalTeam,
+} from "@/lib/nationalTeams";
 import {
   EMPTY_SQUAD_FIELDS,
   LINEUP_STATUSES,
@@ -245,23 +253,15 @@ function EntitySelect({
 }) {
   return (
     <Field label={label} htmlFor={id}>
-      <Select value={value} onValueChange={(v) => onChange(v ?? "")} disabled={disabled}>
-        <SelectTrigger id={id}>
-          <SelectValue>
-            {(v: unknown) => {
-              if (typeof v !== "string" || v === "") return placeholder;
-              return options.find((o) => o.value === v)?.label ?? placeholder;
-            }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Combobox
+        id={id}
+        aria-label={label}
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        options={options}
+      />
     </Field>
   );
 }
@@ -272,50 +272,66 @@ function parseClubKey(key: string): [number, number, number] | null {
   return parts as [number, number, number];
 }
 
-function parseNationalKey(key: string): [number, number] | null {
+function parseNationalKey(key: string): [number, number, number] | null {
   const parts = key.split("-").map(Number);
-  if (parts.length !== 2 || parts.some((n) => !Number.isInteger(n))) return null;
-  return parts as [number, number];
+  if (parts.length !== 3 || parts.some((n) => !Number.isInteger(n))) return null;
+  return parts as [number, number, number];
 }
 
 export function SquadFormPage({
   kind,
   entryKey,
-  team,
 }: {
   kind: "club" | "national";
   entryKey?: string;
-  team?: string;
 }) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("squads:write");
   const editing = entryKey !== undefined;
 
-  const matchesQuery = useMatches();
+  const clubMatchesQuery = useClubMatches();
+  const nationalMatchesQuery = useNationalTeamMatches();
   const clubsQuery = useClubs();
   const playersQuery = usePlayers();
+  const nationalTeamsQuery = useNationalTeams();
   const clubSquadsQuery = useClubSquads(editing && kind === "club");
   const nationalSquadsQuery = useNationalSquads(
     editing && kind === "national",
   );
 
-  const matches = [...(matchesQuery.data ?? [])].sort((a, b) =>
-    b.matchDate.localeCompare(a.matchDate),
-  );
+  const matchOptions =
+    kind === "club"
+      ? [...(clubMatchesQuery.data ?? [])]
+          .sort((a, b) => b.matchDate.localeCompare(a.matchDate))
+          .map((m) => ({
+            value: m.matchId.toString(),
+            label: `${m.matchDate} — ${clubMatchLabel(m)}`,
+          }))
+      : [...(nationalMatchesQuery.data ?? [])]
+          .sort((a, b) => b.matchDate.localeCompare(a.matchDate))
+          .map((m) => ({
+            value: m.matchId.toString(),
+            label: `${m.matchDate} — ${nationalTeamMatchLabel(m)}`,
+          }));
   const clubs = clubsQuery.data ?? [];
   const players = playersQuery.data ?? [];
+  const nationalTeams = nationalTeamsQuery.data ?? [];
   const loading =
-    matchesQuery.isLoading ||
-    clubsQuery.isLoading ||
     playersQuery.isLoading ||
-    clubSquadsQuery.isLoading ||
-    nationalSquadsQuery.isLoading;
+    (kind === "club"
+      ? clubsQuery.isLoading ||
+        clubMatchesQuery.isLoading ||
+        clubSquadsQuery.isLoading
+      : nationalTeamsQuery.isLoading ||
+        nationalMatchesQuery.isLoading ||
+        nationalSquadsQuery.isLoading);
   const loadError =
-    matchesQuery.error ??
-    clubsQuery.error ??
     playersQuery.error ??
-    clubSquadsQuery.error ??
-    nationalSquadsQuery.error;
+    (kind === "club"
+      ? (clubsQuery.error ?? clubMatchesQuery.error ?? clubSquadsQuery.error)
+      : (nationalTeamsQuery.error ??
+        nationalMatchesQuery.error ??
+        nationalSquadsQuery.error));
 
   const title = editing
     ? "Edit squad entry"
@@ -333,7 +349,7 @@ export function SquadFormPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" render={<Link to="/manage/squads" />}>
+          <Button variant="outline" nativeButton={false} render={<Link to="/manage/squads" />}>
             <ArrowLeftIcon />
             Back to squads
           </Button>
@@ -364,7 +380,7 @@ export function SquadFormPage({
   }
 
   if (editing) {
-    const initial = findInitial(kind, entryKey, team, clubSquadsQuery.data, nationalSquadsQuery.data);
+    const initial = findInitial(kind, entryKey, clubSquadsQuery.data, nationalSquadsQuery.data);
     if (!initial) {
       return (
         <Card>
@@ -375,7 +391,7 @@ export function SquadFormPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" render={<Link to="/manage/squads" />}>
+            <Button variant="outline" nativeButton={false} render={<Link to="/manage/squads" />}>
               <ArrowLeftIcon />
               Back to squads
             </Button>
@@ -387,11 +403,11 @@ export function SquadFormPage({
       <SquadForm
         key={entryKey}
         kind={kind}
-        team={team}
         entryKey={entryKey}
-        matches={matches}
+        matchOptions={matchOptions}
         clubs={clubs}
         players={players}
+        nationalTeams={nationalTeams}
         initial={initial}
       />
     );
@@ -401,10 +417,10 @@ export function SquadFormPage({
     <SquadForm
       key="new"
       kind={kind}
-      team={team}
-      matches={matches}
+      matchOptions={matchOptions}
       clubs={clubs}
       players={players}
+      nationalTeams={nationalTeams}
       initial={null}
     />
   );
@@ -414,14 +430,13 @@ interface SquadInitial {
   matchId: string;
   clubId: string;
   playerId: string;
-  nationalTeam: string;
+  nationalTeamId: string;
   fields: FieldsState;
 }
 
 function findInitial(
   kind: "club" | "national",
   entryKey: string | undefined,
-  team: string | undefined,
   clubSquads: ClubSquad[] | undefined,
   nationalSquads: NationalSquad[] | undefined,
 ): SquadInitial | null {
@@ -441,45 +456,44 @@ function findInitial(
       matchId: String(found.matchId),
       clubId: String(found.clubId),
       playerId: String(found.playerId),
-      nationalTeam: "",
+      nationalTeamId: "",
       fields: fieldsFrom(found),
     };
   }
   const parsed = parseNationalKey(entryKey);
-  const found =
-    parsed && team
-      ? (nationalSquads ?? []).find(
-          (s) =>
-            s.matchId === parsed[0] &&
-            s.playerId === parsed[1] &&
-            s.nationalTeam === team,
-        )
-      : undefined;
+  const found = parsed
+    ? (nationalSquads ?? []).find(
+        (s) =>
+          s.matchId === parsed[0] &&
+          s.nationalTeamId === parsed[1] &&
+          s.playerId === parsed[2],
+      )
+    : undefined;
   if (!found) return null;
   return {
     matchId: String(found.matchId),
     clubId: "",
     playerId: String(found.playerId),
-    nationalTeam: found.nationalTeam,
+    nationalTeamId: String(found.nationalTeamId),
     fields: fieldsFrom(found),
   };
 }
 
 function SquadForm({
   kind,
-  team,
   entryKey,
-  matches,
+  matchOptions,
   clubs,
   players,
+  nationalTeams,
   initial,
 }: {
   kind: "club" | "national";
-  team?: string;
   entryKey?: string;
-  matches: Match[];
+  matchOptions: Array<{ value: string; label: string }>;
   clubs: Club[];
   players: Player[];
+  nationalTeams: NationalTeam[];
   initial: SquadInitial | null;
 }) {
   const navigate = useNavigate();
@@ -487,8 +501,8 @@ function SquadForm({
   const [matchId, setMatchId] = useState(initial?.matchId ?? "");
   const [clubId, setClubId] = useState(initial?.clubId ?? "");
   const [playerId, setPlayerId] = useState(initial?.playerId ?? "");
-  const [nationalTeam, setNationalTeam] = useState(
-    initial?.nationalTeam ?? team ?? "",
+  const [nationalTeamId, setNationalTeamId] = useState(
+    initial?.nationalTeamId ?? "",
   );
   const [fields, setFields] = useState<FieldsState>(
     () => initial?.fields ?? fieldsFrom(null),
@@ -519,16 +533,15 @@ function SquadForm({
           });
         }
       } else {
-        const teamName = nationalTeam.trim();
         if (editing && entryKey) {
           const parsed = parseNationalKey(entryKey);
-          if (!parsed || !team) throw new Error("Invalid squad entry reference.");
-          await updateNationalSquad(parsed[0], team, parsed[1], dto);
+          if (!parsed) throw new Error("Invalid squad entry reference.");
+          await updateNationalSquad(parsed[0], parsed[1], parsed[2], dto);
         } else {
           await createNationalSquad({
             ...dto,
             matchId: Number(matchId),
-            nationalTeam: teamName,
+            nationalTeamId: Number(nationalTeamId),
             playerId: Number(playerId),
           });
         }
@@ -553,6 +566,7 @@ function SquadForm({
         <Button
           variant="link"
           className="px-0"
+          nativeButton={false}
           render={<Link to="/manage/squads" />}
         >
           <ArrowLeftIcon />
@@ -577,10 +591,7 @@ function SquadForm({
               value={matchId}
               disabled={editing}
               placeholder="Select match…"
-              options={matches.map((m) => ({
-                value: m.matchId.toString(),
-                label: `${m.matchDate} — ${fixtureLabel(m)}`,
-              }))}
+              options={matchOptions}
               onChange={setMatchId}
             />
             {kind === "club" ? (
@@ -597,16 +608,22 @@ function SquadForm({
                 onChange={setClubId}
               />
             ) : (
-              <Field label="National team" htmlFor="sq-team">
-                <Input
-                  id="sq-team"
-                  required
-                  disabled={editing}
-                  value={nationalTeam}
-                  onChange={(e) => setNationalTeam(e.target.value)}
-                  placeholder="e.g. Malawi, Malawi U20, Malawi Women"
-                />
-              </Field>
+              <EntitySelect
+                id="sq-team"
+                label="National team"
+                value={nationalTeamId}
+                disabled={editing}
+                placeholder={
+                  nationalTeams.length === 0
+                    ? "No national teams yet"
+                    : "Select national team…"
+                }
+                options={nationalTeams.map((t) => ({
+                  value: t.nationalTeamId.toString(),
+                  label: nationalTeamLabel(t),
+                }))}
+                onChange={setNationalTeamId}
+              />
             )}
             <div className="sm:col-span-2">
               <EntitySelect
@@ -631,6 +648,7 @@ function SquadForm({
                 type="button"
                 variant="outline"
                 disabled={busy}
+                nativeButton={false}
                 render={<Link to="/manage/squads" />}
               >
                 Cancel
@@ -642,7 +660,7 @@ function SquadForm({
                   (!editing &&
                     (!matchId ||
                       !playerId ||
-                      (kind === "club" ? !clubId : !nationalTeam.trim())))
+                      (kind === "club" ? !clubId : !nationalTeamId)))
                 }
               >
                 {busy ? "Saving…" : editing ? "Save changes" : "Add entry"}

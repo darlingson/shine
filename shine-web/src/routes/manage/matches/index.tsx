@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { MatchesPage } from "@/pages/MatchesPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/manage/matches/")({
-  component: MatchesPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/manage/matches/club" });
+  },
 });

@@ -34,7 +34,9 @@ public class ClubMatchSquadsController : ControllerBase
     [HasPermission(Permissions.SquadsWrite)]
     public async Task<IActionResult> Create([FromBody] CreateClubMatchSquadDto dto)
     {
-        var squad = await _service.CreateAsync(dto);
+        var errors = new List<string>();
+        var squad = await _service.CreateAsync(dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
         if (squad is null) return Conflict("Squad entry with the same keys already exists.");
         return CreatedAtAction(nameof(GetById),
             new { matchId = squad.MatchId, clubId = squad.ClubId, playerId = squad.PlayerId }, squad);

@@ -16,8 +16,8 @@ public class NationalTeamMatchSquadRepository : INationalTeamMatchSquadRepositor
     public async Task<IEnumerable<NationalTeamMatchSquad>> GetAllAsync()
         => await _context.NationalTeamMatchSquad.AsNoTracking().ToListAsync();
 
-    public async Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, string nationalTeam, int playerId)
-        => await _context.NationalTeamMatchSquad.FindAsync(matchId, nationalTeam, playerId);
+    public async Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, int nationalTeamId, int playerId)
+        => await _context.NationalTeamMatchSquad.FindAsync(matchId, nationalTeamId, playerId);
 
     public async Task<NationalTeamMatchSquad> AddAsync(NationalTeamMatchSquad squad)
     {
@@ -31,9 +31,9 @@ public class NationalTeamMatchSquadRepository : INationalTeamMatchSquadRepositor
     public void Delete(NationalTeamMatchSquad squad)
         => _context.NationalTeamMatchSquad.Remove(squad);
 
-    public async Task<bool> ExistsAsync(int matchId, string nationalTeam, int playerId)
+    public async Task<bool> ExistsAsync(int matchId, int nationalTeamId, int playerId)
         => await _context.NationalTeamMatchSquad.AnyAsync(x =>
-            x.MatchId == matchId && x.NationalTeam == nationalTeam && x.PlayerId == playerId);
+            x.MatchId == matchId && x.NationalTeamId == nationalTeamId && x.PlayerId == playerId);
 
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();

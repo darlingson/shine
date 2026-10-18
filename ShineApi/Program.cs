@@ -113,7 +113,9 @@ builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler
 // Repository interfaces
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
-builder.Services.AddScoped<IMatchRepository, MatchRepository>();
+builder.Services.AddScoped<IClubMatchRepository, ClubMatchRepository>();
+builder.Services.AddScoped<INationalTeamMatchRepository, NationalTeamMatchRepository>();
+builder.Services.AddScoped<INationalTeamRepository, NationalTeamRepository>();
 builder.Services.AddScoped<IPlayerClubRepository, PlayerClubRepository>();
 builder.Services.AddScoped<IClubMatchSquadRepository, ClubMatchSquadRepository>();
 builder.Services.AddScoped<INationalTeamMatchSquadRepository, NationalTeamMatchSquadRepository>();
@@ -121,7 +123,9 @@ builder.Services.AddScoped<INationalTeamMatchSquadRepository, NationalTeamMatchS
 // Service interfaces
 builder.Services.AddScoped<IClubService, ClubService>();
 builder.Services.AddScoped<IPlayerService, PlayerService>();
-builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<IClubMatchService, ClubMatchService>();
+builder.Services.AddScoped<INationalTeamMatchService, NationalTeamMatchService>();
+builder.Services.AddScoped<INationalTeamService, NationalTeamService>();
 builder.Services.AddScoped<IPlayerClubService, PlayerClubService>();
 builder.Services.AddScoped<IClubMatchSquadService, ClubMatchSquadService>();
 builder.Services.AddScoped<INationalTeamMatchSquadService, NationalTeamMatchSquadService>();

@@ -10,8 +10,10 @@ public class ShineDbContext : IdentityDbContext
     }
 
     public DbSet<Club> Club { get; set; } = null!;
+    public DbSet<ClubMatch> ClubMatch { get; set; } = null!;
     public DbSet<ClubMatchSquad> ClubMatchSquad { get; set; } = null!;
-    public DbSet<Match> Match { get; set; } = null!;
+    public DbSet<NationalTeam> NationalTeam { get; set; } = null!;
+    public DbSet<NationalTeamMatch> NationalTeamMatch { get; set; } = null!;
     public DbSet<NationalTeamMatchSquad> NationalTeamMatchSquad { get; set; } = null!;
     public DbSet<Player> Player { get; set; } = null!;
     public DbSet<PlayerClub> PlayerClub { get; set; } = null!;
@@ -26,8 +28,39 @@ public class ShineDbContext : IdentityDbContext
         modelBuilder.Entity<ClubMatchSquad>()
             .HasKey(x => new { x.MatchId, x.ClubId, x.PlayerId });
 
+        modelBuilder.Entity<ClubMatch>(entity =>
+        {
+            entity.HasKey(x => x.MatchId);
+            entity.HasOne(x => x.HomeClub)
+                .WithMany()
+                .HasForeignKey(x => x.HomeClubId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.AwayClub)
+                .WithMany()
+                .HasForeignKey(x => x.AwayClubId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<NationalTeam>(entity =>
+        {
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<NationalTeamMatch>(entity =>
+        {
+            entity.HasKey(x => x.MatchId);
+            entity.HasOne(x => x.HomeNationalTeam)
+                .WithMany()
+                .HasForeignKey(x => x.HomeNationalTeamId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.AwayNationalTeam)
+                .WithMany()
+                .HasForeignKey(x => x.AwayNationalTeamId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         modelBuilder.Entity<NationalTeamMatchSquad>()
-            .HasKey(x => new { x.MatchId, x.NationalTeam, x.PlayerId });
+            .HasKey(x => new { x.MatchId, x.NationalTeamId, x.PlayerId });
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {

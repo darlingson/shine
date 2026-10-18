@@ -14,6 +14,9 @@ public static class Permissions
     public const string ClubsRead = "clubs:read";
     public const string ClubsWrite = "clubs:write";
 
+    public const string NationalTeamsRead = "nationalteams:read";
+    public const string NationalTeamsWrite = "nationalteams:write";
+
     public const string MatchesRead = "matches:read";
     public const string MatchesWrite = "matches:write";
 
@@ -29,6 +32,7 @@ public static class Permissions
     [
         PlayersRead, PlayersWrite,
         ClubsRead, ClubsWrite,
+        NationalTeamsRead, NationalTeamsWrite,
         MatchesRead, MatchesWrite,
         SquadsRead, SquadsWrite,
         UsersManage, PermissionsGrant,
@@ -56,6 +60,7 @@ public static class RolePermissions
         [
             Permissions.PlayersRead, Permissions.PlayersWrite,
             Permissions.ClubsRead, Permissions.ClubsWrite,
+            Permissions.NationalTeamsRead, Permissions.NationalTeamsWrite,
             Permissions.MatchesRead, Permissions.MatchesWrite,
             Permissions.SquadsRead, Permissions.SquadsWrite,
             Permissions.UsersManage, Permissions.PermissionsGrant,
@@ -64,6 +69,7 @@ public static class RolePermissions
         [
             Permissions.PlayersRead, Permissions.PlayersWrite,
             Permissions.ClubsRead, Permissions.ClubsWrite,
+            Permissions.NationalTeamsRead, Permissions.NationalTeamsWrite,
             Permissions.MatchesRead, Permissions.MatchesWrite,
             Permissions.SquadsRead, Permissions.SquadsWrite,
         ],
@@ -71,6 +77,7 @@ public static class RolePermissions
         [
             Permissions.PlayersRead,
             Permissions.ClubsRead,
+            Permissions.NationalTeamsRead,
             Permissions.MatchesRead,
             Permissions.SquadsRead,
         ],

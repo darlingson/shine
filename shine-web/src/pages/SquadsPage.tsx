@@ -12,13 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -29,7 +23,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import { fixtureLabel } from "@/lib/matches";
+import { clubMatchLabel } from "@/lib/clubMatches";
+import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import {
   clubEntryKey,
   deleteClubSquad,
@@ -38,12 +33,15 @@ import {
   statLine,
 } from "@/lib/squads";
 import {
+  useClubMatches,
   useClubSquads,
   useClubs,
-  useMatches,
   useNationalSquads,
+  useNationalTeamMatches,
+  useNationalTeams,
   usePlayers,
 } from "@/lib/queries";
+import { nationalTeamLabel } from "@/lib/nationalTeams";
 import { parseApiError } from "@/lib/users";
 
 export function SquadsPage() {
@@ -52,33 +50,47 @@ export function SquadsPage() {
   const [tab, setTab] = useState<"club" | "national">("club");
   const playersQuery = usePlayers();
   const clubsQuery = useClubs();
-  const matchesQuery = useMatches();
+  const clubMatchesQuery = useClubMatches();
+  const nationalMatchesQuery = useNationalTeamMatches();
   const clubEntriesQuery = useClubSquads();
   const nationalEntriesQuery = useNationalSquads();
+  const nationalTeamsQuery = useNationalTeams();
 
   const players = playersQuery.data ?? [];
   const clubs = clubsQuery.data ?? [];
   const clubEntries = clubEntriesQuery.data ?? [];
   const nationalEntries = nationalEntriesQuery.data ?? [];
-  const matches = useMemo(
+  const nationalTeams = nationalTeamsQuery.data ?? [];
+  const clubMatches = useMemo(
     () =>
-      [...(matchesQuery.data ?? [])].sort((a, b) =>
+      [...(clubMatchesQuery.data ?? [])].sort((a, b) =>
         b.matchDate.localeCompare(a.matchDate),
       ),
-    [matchesQuery.data],
+    [clubMatchesQuery.data],
+  );
+  const nationalMatches = useMemo(
+    () =>
+      [...(nationalMatchesQuery.data ?? [])].sort((a, b) =>
+        b.matchDate.localeCompare(a.matchDate),
+      ),
+    [nationalMatchesQuery.data],
   );
   const loading =
     playersQuery.isLoading ||
-    clubsQuery.isLoading ||
-    matchesQuery.isLoading ||
-    clubEntriesQuery.isLoading ||
-    nationalEntriesQuery.isLoading;
+    (tab === "club"
+      ? clubsQuery.isLoading ||
+        clubMatchesQuery.isLoading ||
+        clubEntriesQuery.isLoading
+      : nationalTeamsQuery.isLoading ||
+        nationalMatchesQuery.isLoading ||
+        nationalEntriesQuery.isLoading);
   const queryError =
     playersQuery.error ??
-    clubsQuery.error ??
-    matchesQuery.error ??
-    clubEntriesQuery.error ??
-    nationalEntriesQuery.error;
+    (tab === "club"
+      ? (clubsQuery.error ?? clubMatchesQuery.error ?? clubEntriesQuery.error)
+      : (nationalTeamsQuery.error ??
+        nationalMatchesQuery.error ??
+        nationalEntriesQuery.error));
   const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
   const [matchFilter, setMatchFilter] = useState<string>("all");
@@ -87,17 +99,49 @@ export function SquadsPage() {
     Promise.all([
       playersQuery.refetch(),
       clubsQuery.refetch(),
-      matchesQuery.refetch(),
+      clubMatchesQuery.refetch(),
+      nationalMatchesQuery.refetch(),
       clubEntriesQuery.refetch(),
       nationalEntriesQuery.refetch(),
+      nationalTeamsQuery.refetch(),
     ]);
 
   const playerNames = useMemo(() => new Map(players.map((p) => [p.playerId, p.fullName])), [players]);
   const clubNames = useMemo(() => new Map(clubs.map((c) => [c.clubId, c.name])), [clubs]);
-  const matchLabels = useMemo(
-    () => new Map(matches.map((m) => [m.matchId, `${m.matchDate} — ${fixtureLabel(m)}`])),
-    [matches],
+  const nationalTeamNames = useMemo(
+    () => new Map(nationalTeams.map((t) => [t.nationalTeamId, nationalTeamLabel(t)])),
+    [nationalTeams],
   );
+  const clubMatchLabels = useMemo(
+    () =>
+      new Map(
+        clubMatches.map((m) => [
+          m.matchId,
+          `${m.matchDate} — ${clubMatchLabel(m)}`,
+        ]),
+      ),
+    [clubMatches],
+  );
+  const nationalMatchLabels = useMemo(
+    () =>
+      new Map(
+        nationalMatches.map((m) => [
+          m.matchId,
+          `${m.matchDate} — ${nationalTeamMatchLabel(m)}`,
+        ]),
+      ),
+    [nationalMatches],
+  );
+  const matchOptions =
+    tab === "club"
+      ? clubMatches.map((m) => ({
+          value: m.matchId.toString(),
+          label: `${m.matchDate} — ${clubMatchLabel(m)}`,
+        }))
+      : nationalMatches.map((m) => ({
+          value: m.matchId.toString(),
+          label: `${m.matchDate} — ${nationalTeamMatchLabel(m)}`,
+        }));
 
   const filteredClub = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -155,6 +199,7 @@ export function SquadsPage() {
         </div>
         {canWrite && (
           <Button
+            nativeButton={false}
             render={
               <Link to={tab === "club" ? "/manage/squads/club/new" : "/manage/squads/national/new"} />
             }
@@ -165,16 +210,26 @@ export function SquadsPage() {
         )}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="tablist" aria-label="Squad kind">
         <Button
+          role="tab"
+          aria-selected={tab === "club"}
           variant={tab === "club" ? "default" : "outline"}
-          onClick={() => setTab("club")}
+          onClick={() => {
+            setTab("club");
+            setMatchFilter("all");
+          }}
         >
           Club ({clubEntries.length})
         </Button>
         <Button
+          role="tab"
+          aria-selected={tab === "national"}
           variant={tab === "national" ? "default" : "outline"}
-          onClick={() => setTab("national")}
+          onClick={() => {
+            setTab("national");
+            setMatchFilter("all");
+          }}
         >
           National team ({nationalEntries.length})
         </Button>
@@ -198,19 +253,18 @@ export function SquadsPage() {
               onChange={(e) => setQuery(e.target.value)}
               className="max-w-xs"
             />
-            <Select value={matchFilter} onValueChange={(v) => setMatchFilter(v ?? "all")}>
-              <SelectTrigger className="max-w-xs">
-                <SelectValue placeholder="All matches" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All matches</SelectItem>
-                {matches.map((m) => (
-                  <SelectItem key={m.matchId} value={m.matchId.toString()}>
-                    {m.matchDate} — {fixtureLabel(m)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              aria-label="Filter by match"
+              className="w-full max-w-xs"
+              value={matchFilter}
+              onValueChange={(v) => setMatchFilter(v || "all")}
+              options={[
+                { value: "all", label: "All matches" },
+                ...matchOptions,
+              ]}
+              placeholder="All matches"
+              searchPlaceholder="Search matches…"
+            />
           </div>
 
           {body ?? (
@@ -231,7 +285,7 @@ export function SquadsPage() {
                   {filteredClub.map((s) => (
                     <TableRow key={clubEntryKey(s)}>
                       <TableCell className="whitespace-nowrap">
-                        {matchLabels.get(s.matchId) ?? `#${s.matchId}`}
+                        {clubMatchLabels.get(s.matchId) ?? `#${s.matchId}`}
                       </TableCell>
                       <TableCell>{clubNames.get(s.clubId) ?? `#${s.clubId}`}</TableCell>
                       <TableCell className="font-medium">
@@ -252,6 +306,7 @@ export function SquadsPage() {
                               size="icon-sm"
                               title="Edit entry"
                               aria-label="Edit squad entry"
+                              nativeButton={false}
                               render={
                                 <Link
                                   to="/manage/squads/club/$key"
@@ -301,11 +356,14 @@ export function SquadsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredNational.map((s) => (
-                    <TableRow key={`${s.matchId}-${s.nationalTeam}-${s.playerId}`}>
+                    <TableRow key={`${s.matchId}-${s.nationalTeamId}-${s.playerId}`}>
                       <TableCell className="whitespace-nowrap">
-                        {matchLabels.get(s.matchId) ?? `#${s.matchId}`}
+                        {nationalMatchLabels.get(s.matchId) ?? `#${s.matchId}`}
                       </TableCell>
-                      <TableCell>{s.nationalTeam}</TableCell>
+                      <TableCell>
+                        {nationalTeamNames.get(s.nationalTeamId) ??
+                          `#${s.nationalTeamId}`}
+                      </TableCell>
                       <TableCell className="font-medium">
                         {playerNames.get(s.playerId) ?? `#${s.playerId}`}
                         {s.captain && <Badge className="ml-2">C</Badge>}
@@ -324,11 +382,11 @@ export function SquadsPage() {
                               size="icon-sm"
                               title="Edit entry"
                               aria-label="Edit squad entry"
+                              nativeButton={false}
                               render={
                                 <Link
                                   to="/manage/squads/national/$key"
                                   params={{ key: nationalEntryKey(s) }}
-                                  search={{ team: s.nationalTeam }}
                                 />
                               }
                             >
@@ -337,7 +395,7 @@ export function SquadsPage() {
                             <DeleteButton
                               name="squad entry"
                               onConfirm={async () => {
-                                await deleteNationalSquad(s.matchId, s.nationalTeam, s.playerId);
+                                await deleteNationalSquad(s.matchId, s.nationalTeamId, s.playerId);
                                 await refresh();
                               }}
                             />

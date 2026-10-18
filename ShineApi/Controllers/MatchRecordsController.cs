@@ -28,7 +28,8 @@ public class MatchRecordsController : ControllerBase
         var errors = new List<string>();
         var result = await _service.CreateAsync(dto, errors);
         if (result is null) return BadRequest(new { errors });
-        return CreatedAtAction("GetById", "Matches", new { id = result.MatchId }, result);
+        return CreatedAtAction(
+            nameof(ClubMatchesController.GetById), "ClubMatches", new { id = result.MatchId }, result);
     }
 
     [HttpGet("review-flags")]

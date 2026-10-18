@@ -8,10 +8,20 @@ namespace ShineApi.Services;
 public class ClubMatchSquadService : IClubMatchSquadService
 {
     private readonly IClubMatchSquadRepository _repository;
+    private readonly IClubMatchRepository _matchRepository;
+    private readonly IClubRepository _clubRepository;
+    private readonly IPlayerRepository _playerRepository;
 
-    public ClubMatchSquadService(IClubMatchSquadRepository repository)
+    public ClubMatchSquadService(
+        IClubMatchSquadRepository repository,
+        IClubMatchRepository matchRepository,
+        IClubRepository clubRepository,
+        IPlayerRepository playerRepository)
     {
         _repository = repository;
+        _matchRepository = matchRepository;
+        _clubRepository = clubRepository;
+        _playerRepository = playerRepository;
     }
 
     public async Task<IEnumerable<ClubMatchSquad>> GetAllAsync()
@@ -20,8 +30,17 @@ public class ClubMatchSquadService : IClubMatchSquadService
     public async Task<ClubMatchSquad?> GetByIdAsync(int matchId, int clubId, int playerId)
         => await _repository.GetByIdAsync(matchId, clubId, playerId);
 
-    public async Task<ClubMatchSquad?> CreateAsync(CreateClubMatchSquadDto dto)
+    public async Task<ClubMatchSquad?> CreateAsync(CreateClubMatchSquadDto dto, List<string> errors)
     {
+        var before = errors.Count;
+        if (!await _matchRepository.ExistsAsync(dto.MatchId))
+            errors.Add($"Unknown matchId {dto.MatchId}.");
+        if (!await _clubRepository.ExistsAsync(dto.ClubId))
+            errors.Add($"Unknown clubId {dto.ClubId}.");
+        if (!await _playerRepository.ExistsAsync(dto.PlayerId))
+            errors.Add($"Unknown playerId {dto.PlayerId}.");
+        if (errors.Count != before) return null;
+
         if (await _repository.ExistsAsync(dto.MatchId, dto.ClubId, dto.PlayerId))
             return null;
 

@@ -1,10 +1,20 @@
-import {
-  useQuery,
-  useQueryClient,
-  type UseQueryResult,
-} from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { getClub, listClubs, type Club } from "@/lib/clubs";
-import { getMatch, listMatches, type Match } from "@/lib/matches";
+import {
+  getClubMatch,
+  listClubMatches,
+  type ClubMatch,
+} from "@/lib/clubMatches";
+import {
+  getNationalTeamMatch,
+  listNationalTeamMatches,
+  type NationalTeamMatch,
+} from "@/lib/nationalTeamMatches";
+import {
+  getNationalTeam,
+  listNationalTeams,
+  type NationalTeam,
+} from "@/lib/nationalTeams";
 import { getPlayer, listPlayers, type Player } from "@/lib/players";
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
 import {
@@ -20,8 +30,13 @@ export const queryKeys = {
   player: (id: number | string) => ["players", String(id)] as const,
   clubs: ["clubs"] as const,
   club: (id: number | string) => ["clubs", String(id)] as const,
-  matches: ["matches"] as const,
-  match: (id: number | string) => ["matches", String(id)] as const,
+  nationalTeams: ["nationalTeams"] as const,
+  nationalTeam: (id: number | string) => ["nationalTeams", String(id)] as const,
+  clubMatches: ["clubMatches"] as const,
+  clubMatch: (id: number | string) => ["clubMatches", String(id)] as const,
+  nationalTeamMatches: ["nationalTeamMatches"] as const,
+  nationalTeamMatch: (id: number | string) =>
+    ["nationalTeamMatches", String(id)] as const,
   playerClubs: ["playerClubs"] as const,
   clubSquads: ["clubSquads"] as const,
   nationalSquads: ["nationalSquads"] as const,
@@ -58,17 +73,62 @@ export function useClub(
   });
 }
 
-export function useMatches(): UseQueryResult<Match[], Error> {
-  return useQuery({ queryKey: queryKeys.matches, queryFn: listMatches });
+export function useNationalTeams(): UseQueryResult<NationalTeam[], Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeams,
+    queryFn: listNationalTeams,
+  });
 }
 
-export function useMatch(
+export function useNationalTeam(
   id: number | string,
   enabled = true,
-): UseQueryResult<Match, Error> {
+): UseQueryResult<NationalTeam, Error> {
   return useQuery({
-    queryKey: queryKeys.match(id),
-    queryFn: () => getMatch(Number(id)),
+    queryKey: queryKeys.nationalTeam(id),
+    queryFn: () => getNationalTeam(Number(id)),
+    enabled,
+  });
+}
+
+export function useClubMatches(
+  enabled = true,
+): UseQueryResult<ClubMatch[], Error> {
+  return useQuery({
+    queryKey: queryKeys.clubMatches,
+    queryFn: listClubMatches,
+    enabled,
+  });
+}
+
+export function useClubMatch(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<ClubMatch, Error> {
+  return useQuery({
+    queryKey: queryKeys.clubMatch(id),
+    queryFn: () => getClubMatch(Number(id)),
+    enabled,
+  });
+}
+
+export function useNationalTeamMatches(
+  enabled = true,
+): UseQueryResult<NationalTeamMatch[], Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamMatches,
+    queryFn: listNationalTeamMatches,
+    enabled,
+  });
+}
+
+export function useNationalTeamMatch(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<NationalTeamMatch, Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamMatch(id),
+    queryFn: () => getNationalTeamMatch(Number(id)),
     enabled,
   });
 }
@@ -103,11 +163,4 @@ export function useUsers(enabled = true): UseQueryResult<ManagedUser[], Error> {
     queryFn: listUsers,
     enabled,
   });
-}
-
-/** Invalidate list queries after a write; detail queries refetch on mount. */
-export function useInvalidateLists() {
-  const client = useQueryClient();
-  return (keys: ReadonlyArray<readonly string[]>) =>
-    Promise.all(keys.map((key) => client.invalidateQueries({ queryKey: key })));
 }

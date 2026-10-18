@@ -12,23 +12,66 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
 import {
-  createMatch,
-  updateMatch,
-  type Match,
-  type MatchForm,
-} from "@/lib/matches";
-import { useMatch } from "@/lib/queries";
+  createClubMatch,
+  updateClubMatch,
+  type ClubMatchForm,
+} from "@/lib/clubMatches";
+import {
+  createNationalTeamMatch,
+  updateNationalTeamMatch,
+  type NationalTeamMatchForm,
+} from "@/lib/nationalTeamMatches";
+import { nationalTeamLabel } from "@/lib/nationalTeams";
+import {
+  useClubMatch,
+  useClubs,
+  useNationalTeamMatch,
+  useNationalTeams,
+} from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
+type Kind = "club" | "national";
+
+interface MatchInitial {
+  matchDate: string;
+  competition?: string | null;
+  season?: string | null;
+  homeTeamId?: number | null;
+  awayTeamId?: number | null;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  venue?: string | null;
+  sourceUrl?: string | null;
+}
+
 /** Shared add/edit form. Pass matchId to edit, omit to create. */
-export function MatchFormPage({ matchId }: { matchId?: string }) {
+export function MatchFormPage({
+  kind,
+  matchId,
+}: {
+  kind: Kind;
+  matchId?: string;
+}) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("matches:write");
   const editing = matchId !== undefined;
-  const matchQuery = useMatch(matchId ?? "", editing);
+  const isClub = kind === "club";
+
+  const clubMatch = useClubMatch(matchId ?? "", editing && isClub);
+  const nationalMatch = useNationalTeamMatch(
+    matchId ?? "",
+    editing && !isClub,
+  );
+  const matchQuery = isClub ? clubMatch : nationalMatch;
+
+  const backTo: "/manage/matches/club" | "/manage/matches/national" = isClub
+    ? "/manage/matches/club"
+    : "/manage/matches/national";
+  const backLabel = isClub ? "club matches" : "national team matches";
 
   if (!canWrite) {
     return (
@@ -40,9 +83,9 @@ export function MatchFormPage({ matchId }: { matchId?: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" render={<Link to="/manage/matches" />}>
+          <Button variant="outline" nativeButton={false} render={<Link to={backTo} />}>
             <ArrowLeftIcon />
-            Back to matches
+            Back to {backLabel}
           </Button>
         </CardContent>
       </Card>
@@ -64,42 +107,90 @@ export function MatchFormPage({ matchId }: { matchId?: string }) {
       <Card>
         <CardHeader>
           <CardTitle>Match not found</CardTitle>
-          <CardDescription>
-            No match with id “{matchId}” exists.
-          </CardDescription>
+          <CardDescription>No match with id “{matchId}” exists.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" render={<Link to="/manage/matches" />}>
+          <Button variant="outline" nativeButton={false} render={<Link to={backTo} />}>
             <ArrowLeftIcon />
-            Back to matches
+            Back to {backLabel}
           </Button>
         </CardContent>
       </Card>
     );
   }
 
+  const initial: MatchInitial | undefined = !matchQuery.data
+    ? undefined
+    : isClub
+      ? {
+          matchDate: clubMatch.data!.matchDate,
+          competition: clubMatch.data!.competition,
+          season: clubMatch.data!.season,
+          homeTeamId: clubMatch.data!.homeClubId,
+          awayTeamId: clubMatch.data!.awayClubId,
+          homeScore: clubMatch.data!.homeScore,
+          awayScore: clubMatch.data!.awayScore,
+          venue: clubMatch.data!.venue,
+          sourceUrl: clubMatch.data!.sourceUrl,
+        }
+      : {
+          matchDate: nationalMatch.data!.matchDate,
+          competition: nationalMatch.data!.competition,
+          season: nationalMatch.data!.season,
+          homeTeamId: nationalMatch.data!.homeNationalTeamId,
+          awayTeamId: nationalMatch.data!.awayNationalTeamId,
+          homeScore: nationalMatch.data!.homeScore,
+          awayScore: nationalMatch.data!.awayScore,
+          venue: nationalMatch.data!.venue,
+          sourceUrl: nationalMatch.data!.sourceUrl,
+        };
+
   return (
     <MatchForm
       key={matchId ?? "new"}
+      kind={kind}
       matchId={matchId}
-      initial={editing ? (matchQuery.data as Match) : undefined}
+      initial={initial}
     />
   );
 }
 
 function MatchForm({
+  kind,
   matchId,
   initial,
 }: {
+  kind: Kind;
   matchId?: string;
-  initial?: Match;
+  initial?: MatchInitial;
 }) {
   const navigate = useNavigate();
+  const isClub = kind === "club";
+  const clubsQuery = useClubs();
+  const nationalTeamsQuery = useNationalTeams();
+  const teamOptions = isClub
+    ? (clubsQuery.data ?? []).map((c) => ({
+        value: c.clubId.toString(),
+        label: c.name,
+      }))
+    : (nationalTeamsQuery.data ?? []).map((t) => ({
+        value: t.nationalTeamId.toString(),
+        label: nationalTeamLabel(t),
+      }));
+  const teamField = isClub ? "club" : "national team";
+  const backTo: "/manage/matches/club" | "/manage/matches/national" = isClub
+    ? "/manage/matches/club"
+    : "/manage/matches/national";
+
   const [matchDate, setMatchDate] = useState(initial?.matchDate ?? "");
   const [competition, setCompetition] = useState(initial?.competition ?? "");
   const [season, setSeason] = useState(initial?.season ?? "");
-  const [homeTeam, setHomeTeam] = useState(initial?.homeTeam ?? "");
-  const [awayTeam, setAwayTeam] = useState(initial?.awayTeam ?? "");
+  const [homeTeamId, setHomeTeamId] = useState(
+    initial?.homeTeamId?.toString() ?? "",
+  );
+  const [awayTeamId, setAwayTeamId] = useState(
+    initial?.awayTeamId?.toString() ?? "",
+  );
   const [homeScore, setHomeScore] = useState(initial?.homeScore?.toString() ?? "");
   const [awayScore, setAwayScore] = useState(initial?.awayScore?.toString() ?? "");
   const [venue, setVenue] = useState(initial?.venue ?? "");
@@ -111,21 +202,35 @@ function MatchForm({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const dto: MatchForm = {
+    const common = {
       matchDate,
       competition: competition.trim() || undefined,
       season: season.trim() || undefined,
-      homeTeam: homeTeam.trim() || undefined,
-      awayTeam: awayTeam.trim() || undefined,
       homeScore: parseOptionalInt(homeScore),
       awayScore: parseOptionalInt(awayScore),
       venue: venue.trim() || undefined,
       sourceUrl: sourceUrl.trim() || undefined,
     };
     try {
-      if (matchId !== undefined) await updateMatch(Number(matchId), dto);
-      else await createMatch(dto);
-      await navigate({ to: "/manage/matches" });
+      if (isClub) {
+        const dto: ClubMatchForm = {
+          ...common,
+          homeClubId: homeTeamId ? Number(homeTeamId) : undefined,
+          awayClubId: awayTeamId ? Number(awayTeamId) : undefined,
+        };
+        if (matchId !== undefined) await updateClubMatch(Number(matchId), dto);
+        else await createClubMatch(dto);
+      } else {
+        const dto: NationalTeamMatchForm = {
+          ...common,
+          homeNationalTeamId: homeTeamId ? Number(homeTeamId) : undefined,
+          awayNationalTeamId: awayTeamId ? Number(awayTeamId) : undefined,
+        };
+        if (matchId !== undefined)
+          await updateNationalTeamMatch(Number(matchId), dto);
+        else await createNationalTeamMatch(dto);
+      }
+      await navigate({ to: backTo });
     } catch (err) {
       setError(parseApiError(err));
     } finally {
@@ -141,13 +246,14 @@ function MatchForm({
         <Button
           variant="link"
           className="px-0"
-          render={<Link to="/manage/matches" />}
+          nativeButton={false}
+          render={<Link to={backTo} />}
         >
           <ArrowLeftIcon />
-          Back to matches
+          Back to {isClub ? "club matches" : "national team matches"}
         </Button>
         <h1 className="font-heading text-xl font-semibold tracking-tight">
-          {editing ? "Edit match" : "Add match"}
+          {editing ? "Edit" : "Add"} {isClub ? "club match" : "national team match"}
         </h1>
         <p className="text-sm text-muted-foreground">
           {editing
@@ -181,7 +287,9 @@ function MatchForm({
                 id="match-competition"
                 value={competition}
                 onChange={(e) => setCompetition(e.target.value)}
-                placeholder="e.g. Super League, AFCON qualifier"
+                placeholder={
+                  isClub ? "e.g. Super League" : "e.g. AFCON qualifier"
+                }
               />
             </Field>
             <Field label="Season" htmlFor="match-season">
@@ -192,20 +300,26 @@ function MatchForm({
                 placeholder="e.g. 2025/26"
               />
             </Field>
-            <Field label="Home team" htmlFor="match-home">
-              <Input
+            <Field label={`Home ${teamField}`} htmlFor="match-home">
+              <Combobox
                 id="match-home"
-                value={homeTeam}
-                onChange={(e) => setHomeTeam(e.target.value)}
-                placeholder="Home side"
+                aria-label={`Home ${teamField}`}
+                value={homeTeamId}
+                onValueChange={setHomeTeamId}
+                options={teamOptions}
+                placeholder={`Select a ${teamField}…`}
+                emptyMessage={`No ${teamField}s found.`}
               />
             </Field>
-            <Field label="Away team" htmlFor="match-away">
-              <Input
+            <Field label={`Away ${teamField}`} htmlFor="match-away">
+              <Combobox
                 id="match-away"
-                value={awayTeam}
-                onChange={(e) => setAwayTeam(e.target.value)}
-                placeholder="Away side"
+                aria-label={`Away ${teamField}`}
+                value={awayTeamId}
+                onValueChange={setAwayTeamId}
+                options={teamOptions}
+                placeholder={`Select a ${teamField}…`}
+                emptyMessage={`No ${teamField}s found.`}
               />
             </Field>
             <Field label="Home score" htmlFor="match-hs">
@@ -245,7 +359,8 @@ function MatchForm({
                 type="button"
                 variant="outline"
                 disabled={busy}
-                render={<Link to="/manage/matches" />}
+                nativeButton={false}
+                render={<Link to={backTo} />}
               >
                 Cancel
               </Button>
