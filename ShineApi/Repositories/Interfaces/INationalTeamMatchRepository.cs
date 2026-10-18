@@ -9,5 +9,6 @@ public interface INationalTeamMatchRepository
     Task<NationalTeamMatch> AddAsync(NationalTeamMatch match);
     void Update(NationalTeamMatch match);
     void Delete(NationalTeamMatch match);
+    Task<bool> ExistsAsync(int id);
     Task SaveChangesAsync();
 }

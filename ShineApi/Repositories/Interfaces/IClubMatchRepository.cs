@@ -9,5 +9,6 @@ public interface IClubMatchRepository
     Task<ClubMatch> AddAsync(ClubMatch match);
     void Update(ClubMatch match);
     void Delete(ClubMatch match);
+    Task<bool> ExistsAsync(int id);
     Task SaveChangesAsync();
 }

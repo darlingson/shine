@@ -8,10 +8,20 @@ namespace ShineApi.Services;
 public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
 {
     private readonly INationalTeamMatchSquadRepository _repository;
+    private readonly INationalTeamMatchRepository _matchRepository;
+    private readonly INationalTeamRepository _nationalTeamRepository;
+    private readonly IPlayerRepository _playerRepository;
 
-    public NationalTeamMatchSquadService(INationalTeamMatchSquadRepository repository)
+    public NationalTeamMatchSquadService(
+        INationalTeamMatchSquadRepository repository,
+        INationalTeamMatchRepository matchRepository,
+        INationalTeamRepository nationalTeamRepository,
+        IPlayerRepository playerRepository)
     {
         _repository = repository;
+        _matchRepository = matchRepository;
+        _nationalTeamRepository = nationalTeamRepository;
+        _playerRepository = playerRepository;
     }
 
     public async Task<IEnumerable<NationalTeamMatchSquad>> GetAllAsync()
@@ -20,8 +30,17 @@ public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
     public async Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, int nationalTeamId, int playerId)
         => await _repository.GetByIdAsync(matchId, nationalTeamId, playerId);
 
-    public async Task<NationalTeamMatchSquad?> CreateAsync(CreateNationalTeamMatchSquadDto dto)
+    public async Task<NationalTeamMatchSquad?> CreateAsync(CreateNationalTeamMatchSquadDto dto, List<string> errors)
     {
+        var before = errors.Count;
+        if (!await _matchRepository.ExistsAsync(dto.MatchId))
+            errors.Add($"Unknown matchId {dto.MatchId}.");
+        if (!await _nationalTeamRepository.ExistsAsync(dto.NationalTeamId))
+            errors.Add($"Unknown nationalTeamId {dto.NationalTeamId}.");
+        if (!await _playerRepository.ExistsAsync(dto.PlayerId))
+            errors.Add($"Unknown playerId {dto.PlayerId}.");
+        if (errors.Count != before) return null;
+
         if (await _repository.ExistsAsync(dto.MatchId, dto.NationalTeamId, dto.PlayerId))
             return null;
 

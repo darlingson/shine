@@ -38,6 +38,9 @@ public class ClubMatchRepository : IClubMatchRepository
     public void Delete(ClubMatch match)
         => _context.ClubMatch.Remove(match);
 
+    public async Task<bool> ExistsAsync(int id)
+        => await _context.ClubMatch.AnyAsync(x => x.MatchId == id);
+
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 }

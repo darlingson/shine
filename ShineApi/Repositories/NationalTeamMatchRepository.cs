@@ -38,6 +38,9 @@ public class NationalTeamMatchRepository : INationalTeamMatchRepository
     public void Delete(NationalTeamMatch match)
         => _context.NationalTeamMatch.Remove(match);
 
+    public async Task<bool> ExistsAsync(int id)
+        => await _context.NationalTeamMatch.AnyAsync(x => x.MatchId == id);
+
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 }
