@@ -44,9 +44,11 @@ public class NationalTeamsController : ControllerBase
     [HasPermission(Permissions.NationalTeamsWrite)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateNationalTeamDto dto)
     {
+        if (await _service.GetByIdAsync(id) is null) return NotFound();
+
         var nationalTeam = await _service.UpdateAsync(id, dto);
         return nationalTeam is null
-            ? Conflict("National team not found, or another team already uses that name.")
+            ? Conflict("Another team already uses that name.")
             : Ok(nationalTeam);
     }
 
