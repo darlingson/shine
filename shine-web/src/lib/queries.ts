@@ -1,8 +1,4 @@
-import {
-  useQuery,
-  useQueryClient,
-  type UseQueryResult,
-} from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { getClub, listClubs, type Club } from "@/lib/clubs";
 import {
   getClubMatch,
@@ -95,10 +91,13 @@ export function useNationalTeam(
   });
 }
 
-export function useClubMatches(): UseQueryResult<ClubMatch[], Error> {
+export function useClubMatches(
+  enabled = true,
+): UseQueryResult<ClubMatch[], Error> {
   return useQuery({
     queryKey: queryKeys.clubMatches,
     queryFn: listClubMatches,
+    enabled,
   });
 }
 
@@ -113,13 +112,13 @@ export function useClubMatch(
   });
 }
 
-export function useNationalTeamMatches(): UseQueryResult<
-  NationalTeamMatch[],
-  Error
-> {
+export function useNationalTeamMatches(
+  enabled = true,
+): UseQueryResult<NationalTeamMatch[], Error> {
   return useQuery({
     queryKey: queryKeys.nationalTeamMatches,
     queryFn: listNationalTeamMatches,
+    enabled,
   });
 }
 
@@ -164,11 +163,4 @@ export function useUsers(enabled = true): UseQueryResult<ManagedUser[], Error> {
     queryFn: listUsers,
     enabled,
   });
-}
-
-/** Invalidate list queries after a write; detail queries refetch on mount. */
-export function useInvalidateLists() {
-  const client = useQueryClient();
-  return (keys: ReadonlyArray<readonly string[]>) =>
-    Promise.all(keys.map((key) => client.invalidateQueries({ queryKey: key })));
 }
