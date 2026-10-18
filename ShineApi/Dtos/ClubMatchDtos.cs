@@ -21,7 +21,7 @@ public class ClubMatchDto
 public class CreateClubMatchDto
 {
     [Required]
-    public DateOnly MatchDate { get; set; }
+    public DateOnly? MatchDate { get; set; }
     public string? Competition { get; set; }
     public string? Season { get; set; }
     public int? HomeClubId { get; set; }
@@ -35,7 +35,7 @@ public class CreateClubMatchDto
 public class UpdateClubMatchDto
 {
     [Required]
-    public DateOnly MatchDate { get; set; }
+    public DateOnly? MatchDate { get; set; }
     public string? Competition { get; set; }
     public string? Season { get; set; }
     public int? HomeClubId { get; set; }

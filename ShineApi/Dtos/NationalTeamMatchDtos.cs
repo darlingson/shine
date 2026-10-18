@@ -21,7 +21,7 @@ public class NationalTeamMatchDto
 public class CreateNationalTeamMatchDto
 {
     [Required]
-    public DateOnly MatchDate { get; set; }
+    public DateOnly? MatchDate { get; set; }
     public string? Competition { get; set; }
     public string? Season { get; set; }
     public int? HomeNationalTeamId { get; set; }
@@ -35,7 +35,7 @@ public class CreateNationalTeamMatchDto
 public class UpdateNationalTeamMatchDto
 {
     [Required]
-    public DateOnly MatchDate { get; set; }
+    public DateOnly? MatchDate { get; set; }
     public string? Competition { get; set; }
     public string? Season { get; set; }
     public int? HomeNationalTeamId { get; set; }

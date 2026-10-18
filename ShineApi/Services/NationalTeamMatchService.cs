@@ -34,7 +34,7 @@ public class NationalTeamMatchService : INationalTeamMatchService
 
         var match = new NationalTeamMatch
         {
-            MatchDate = dto.MatchDate,
+            MatchDate = dto.MatchDate!.Value,
             Competition = dto.Competition,
             Season = dto.Season,
             HomeNationalTeamId = dto.HomeNationalTeamId,
@@ -60,7 +60,7 @@ public class NationalTeamMatchService : INationalTeamMatchService
         if (!await TeamsExistAsync(dto.HomeNationalTeamId, dto.AwayNationalTeamId, errors))
             return null;
 
-        match.MatchDate = dto.MatchDate;
+        match.MatchDate = dto.MatchDate!.Value;
         match.Competition = dto.Competition;
         match.Season = dto.Season;
         match.HomeNationalTeamId = dto.HomeNationalTeamId;

@@ -32,7 +32,7 @@ public class ClubMatchService : IClubMatchService
 
         var match = new ClubMatch
         {
-            MatchDate = dto.MatchDate,
+            MatchDate = dto.MatchDate!.Value,
             Competition = dto.Competition,
             Season = dto.Season,
             HomeClubId = dto.HomeClubId,
@@ -58,7 +58,7 @@ public class ClubMatchService : IClubMatchService
         if (!await ClubsExistAsync(dto.HomeClubId, dto.AwayClubId, errors))
             return null;
 
-        match.MatchDate = dto.MatchDate;
+        match.MatchDate = dto.MatchDate!.Value;
         match.Competition = dto.Competition;
         match.Season = dto.Season;
         match.HomeClubId = dto.HomeClubId;
