@@ -77,20 +77,20 @@ export function SquadsPage() {
   );
   const loading =
     playersQuery.isLoading ||
-    clubsQuery.isLoading ||
-    clubMatchesQuery.isLoading ||
-    nationalMatchesQuery.isLoading ||
-    clubEntriesQuery.isLoading ||
-    nationalEntriesQuery.isLoading ||
-    nationalTeamsQuery.isLoading;
+    (tab === "club"
+      ? clubsQuery.isLoading ||
+        clubMatchesQuery.isLoading ||
+        clubEntriesQuery.isLoading
+      : nationalTeamsQuery.isLoading ||
+        nationalMatchesQuery.isLoading ||
+        nationalEntriesQuery.isLoading);
   const queryError =
     playersQuery.error ??
-    clubsQuery.error ??
-    clubMatchesQuery.error ??
-    nationalMatchesQuery.error ??
-    clubEntriesQuery.error ??
-    nationalEntriesQuery.error ??
-    nationalTeamsQuery.error;
+    (tab === "club"
+      ? (clubsQuery.error ?? clubMatchesQuery.error ?? clubEntriesQuery.error)
+      : (nationalTeamsQuery.error ??
+        nationalMatchesQuery.error ??
+        nationalEntriesQuery.error));
   const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
   const [matchFilter, setMatchFilter] = useState<string>("all");
@@ -199,6 +199,7 @@ export function SquadsPage() {
         </div>
         {canWrite && (
           <Button
+            nativeButton={false}
             render={
               <Link to={tab === "club" ? "/manage/squads/club/new" : "/manage/squads/national/new"} />
             }
@@ -209,8 +210,10 @@ export function SquadsPage() {
         )}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="tablist" aria-label="Squad kind">
         <Button
+          role="tab"
+          aria-selected={tab === "club"}
           variant={tab === "club" ? "default" : "outline"}
           onClick={() => {
             setTab("club");
@@ -220,6 +223,8 @@ export function SquadsPage() {
           Club ({clubEntries.length})
         </Button>
         <Button
+          role="tab"
+          aria-selected={tab === "national"}
           variant={tab === "national" ? "default" : "outline"}
           onClick={() => {
             setTab("national");
@@ -301,6 +306,7 @@ export function SquadsPage() {
                               size="icon-sm"
                               title="Edit entry"
                               aria-label="Edit squad entry"
+                              nativeButton={false}
                               render={
                                 <Link
                                   to="/manage/squads/club/$key"
@@ -376,6 +382,7 @@ export function SquadsPage() {
                               size="icon-sm"
                               title="Edit entry"
                               aria-label="Edit squad entry"
+                              nativeButton={false}
                               render={
                                 <Link
                                   to="/manage/squads/national/$key"
