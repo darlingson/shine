@@ -42,8 +42,9 @@ interface MatchRow {
 export function MatchesPage({ kind }: { kind: Kind }) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission("matches:write");
-  const clubQuery = useClubMatches();
-  const nationalQuery = useNationalTeamMatches();
+  const isClub = kind === "club";
+  const clubQuery = useClubMatches(isClub);
+  const nationalQuery = useNationalTeamMatches(!isClub);
   const {
     isLoading: loading,
     error: queryError,
@@ -51,8 +52,6 @@ export function MatchesPage({ kind }: { kind: Kind }) {
   } = kind === "club" ? clubQuery : nationalQuery;
   const error = queryError ? parseApiError(queryError) : null;
   const [query, setQuery] = useState("");
-
-  const isClub = kind === "club";
 
   const matches = useMemo<MatchRow[]>(() => {
     const rows: MatchRow[] = isClub
