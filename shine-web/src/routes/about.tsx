@@ -220,13 +220,13 @@ function AboutPage() {
           <p className="text-sm text-muted-foreground">
             Shine — a structured record of Malawian football players.
           </p>
-          <Button
-            variant="link"
-            nativeButton={false}
-            render={<Link to="/manage" />}
-          >
-            Contribute
-          </Button>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>App by Darlingson</span>
+            <a href="https://darlingson-dev.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Portfolio</a>
+            <a href="https://instagram.com/darlingson_m" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Instagram</a>
+            <a href="https://t.me/darlingson_m" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Telegram</a>
+            <a href="https://github.com/darlingson" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
+          </div>
         </div>
       </footer>
     </div>
