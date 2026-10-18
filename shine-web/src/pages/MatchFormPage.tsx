@@ -71,7 +71,7 @@ export function MatchFormPage({
   const backTo: "/manage/matches/club" | "/manage/matches/national" = isClub
     ? "/manage/matches/club"
     : "/manage/matches/national";
-  const title = isClub ? "club match" : "national team match";
+  const backLabel = isClub ? "club matches" : "national team matches";
 
   if (!canWrite) {
     return (
@@ -83,9 +83,9 @@ export function MatchFormPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" render={<Link to={backTo} />}>
+          <Button variant="outline" nativeButton={false} render={<Link to={backTo} />}>
             <ArrowLeftIcon />
-            Back to {title}s
+            Back to {backLabel}
           </Button>
         </CardContent>
       </Card>
@@ -110,9 +110,9 @@ export function MatchFormPage({
           <CardDescription>No match with id “{matchId}” exists.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" render={<Link to={backTo} />}>
+          <Button variant="outline" nativeButton={false} render={<Link to={backTo} />}>
             <ArrowLeftIcon />
-            Back to {title}s
+            Back to {backLabel}
           </Button>
         </CardContent>
       </Card>
@@ -246,6 +246,7 @@ function MatchForm({
         <Button
           variant="link"
           className="px-0"
+          nativeButton={false}
           render={<Link to={backTo} />}
         >
           <ArrowLeftIcon />
@@ -358,6 +359,7 @@ function MatchForm({
                 type="button"
                 variant="outline"
                 disabled={busy}
+                nativeButton={false}
                 render={<Link to={backTo} />}
               >
                 Cancel
