@@ -317,21 +317,21 @@ export function SquadFormPage({
   const players = playersQuery.data ?? [];
   const nationalTeams = nationalTeamsQuery.data ?? [];
   const loading =
-    clubMatchesQuery.isLoading ||
-    nationalMatchesQuery.isLoading ||
-    clubsQuery.isLoading ||
     playersQuery.isLoading ||
-    nationalTeamsQuery.isLoading ||
-    clubSquadsQuery.isLoading ||
-    nationalSquadsQuery.isLoading;
+    (kind === "club"
+      ? clubsQuery.isLoading ||
+        clubMatchesQuery.isLoading ||
+        clubSquadsQuery.isLoading
+      : nationalTeamsQuery.isLoading ||
+        nationalMatchesQuery.isLoading ||
+        nationalSquadsQuery.isLoading);
   const loadError =
-    clubMatchesQuery.error ??
-    nationalMatchesQuery.error ??
-    clubsQuery.error ??
     playersQuery.error ??
-    nationalTeamsQuery.error ??
-    clubSquadsQuery.error ??
-    nationalSquadsQuery.error;
+    (kind === "club"
+      ? (clubsQuery.error ?? clubMatchesQuery.error ?? clubSquadsQuery.error)
+      : (nationalTeamsQuery.error ??
+        nationalMatchesQuery.error ??
+        nationalSquadsQuery.error));
 
   const title = editing
     ? "Edit squad entry"
@@ -349,7 +349,7 @@ export function SquadFormPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" render={<Link to="/manage/squads" />}>
+          <Button variant="outline" nativeButton={false} render={<Link to="/manage/squads" />}>
             <ArrowLeftIcon />
             Back to squads
           </Button>
@@ -391,7 +391,7 @@ export function SquadFormPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" render={<Link to="/manage/squads" />}>
+            <Button variant="outline" nativeButton={false} render={<Link to="/manage/squads" />}>
               <ArrowLeftIcon />
               Back to squads
             </Button>
@@ -566,6 +566,7 @@ function SquadForm({
         <Button
           variant="link"
           className="px-0"
+          nativeButton={false}
           render={<Link to="/manage/squads" />}
         >
           <ArrowLeftIcon />
@@ -647,6 +648,7 @@ function SquadForm({
                 type="button"
                 variant="outline"
                 disabled={busy}
+                nativeButton={false}
                 render={<Link to="/manage/squads" />}
               >
                 Cancel
