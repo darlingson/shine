@@ -27,11 +27,6 @@ export interface ClubMatchForm {
   sourceUrl?: string;
 }
 
-export interface LinkClubMatchTeams {
-  homeClubId: number;
-  awayClubId: number;
-}
-
 export function listClubMatches(): Promise<ClubMatch[]> {
   return apiJson<ClubMatch[]>("/api/clubmatches");
 }
@@ -57,26 +52,15 @@ export function updateClubMatch(
   });
 }
 
-/** Sets or corrects the two clubs on an existing match. */
-export function linkClubMatchTeams(
-  id: number,
-  dto: LinkClubMatchTeams,
-): Promise<ClubMatch> {
-  return apiJson<ClubMatch>(`/api/clubmatches/${id}/teams`, {
-    method: "PATCH",
-    body: JSON.stringify(dto),
-  });
-}
-
 export function deleteClubMatch(id: number): Promise<void> {
   return apiJson<void>(`/api/clubmatches/${id}`, { method: "DELETE" });
 }
 
 /** "Home 2–1 Away" style label; "?" stands in for an unlinked club. */
 export function clubMatchLabel(m: ClubMatch): string {
-  const score =
-    m.homeScore !== null && m.homeScore !== undefined
-      ? `${m.homeScore}–${m.awayScore ?? "?"}`
-      : "vs";
+  const hasScore =
+    (m.homeScore !== null && m.homeScore !== undefined) ||
+    (m.awayScore !== null && m.awayScore !== undefined);
+  const score = hasScore ? `${m.homeScore ?? "?"}–${m.awayScore ?? "?"}` : "vs";
   return `${m.homeClubName || "?"} ${score} ${m.awayClubName || "?"}`;
 }
