@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using ShineApi.Dtos;
 using ShineApi.Models;
 using ShineApi.Services.Interfaces;
-using ApiMatch = ShineApi.Models.ClubMatch;
 
 namespace ShineApi.Services;
 
@@ -37,7 +36,7 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
         await using var tx = await db.Database.BeginTransactionAsync();
         try
         {
-            var match = new ApiMatch
+            var match = new ClubMatch
             {
                 MatchDate = dto.Match.MatchDate,
                 Competition = dto.Match.Competition,
