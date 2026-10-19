@@ -4,15 +4,17 @@ import { cn } from "@/lib/utils";
 
 interface ListSearchProps {
   "aria-label": string;
+  id?: string;
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
   className?: string;
 }
 
-/** Filter box for a list that is already loaded. Clears on Escape. */
+/** Filter box for a list. Clears on Escape. */
 export function ListSearch({
   "aria-label": ariaLabel,
+  id,
   value,
   onValueChange,
   placeholder = "Search",
@@ -22,6 +24,7 @@ export function ListSearch({
     <div className={cn("relative", className)}>
       <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
+        id={id}
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
         onKeyDown={(e) => {

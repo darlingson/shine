@@ -1,5 +1,14 @@
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { getClub, listClubs, type Club } from "@/lib/clubs";
+import { keepPreviousData, useQuery, type UseQueryResult } from "@tanstack/react-query";
+import {
+  getClub,
+  getClubFilterOptions,
+  listClubs,
+  queryClubs,
+  type Club,
+  type ClubFilterOptions,
+  type ClubPage,
+  type ClubQuery,
+} from "@/lib/clubs";
 import {
   getClubMatch,
   listClubMatches,
@@ -36,6 +45,8 @@ export const queryKeys = {
   player: (id: number | string) => ["players", String(id)] as const,
   clubs: ["clubs"] as const,
   club: (id: number | string) => ["clubs", String(id)] as const,
+  clubPage: (query: ClubQuery) => ["clubs", "page", query] as const,
+  clubFilterOptions: ["clubs", "filterOptions"] as const,
   nationalTeams: ["nationalTeams"] as const,
   nationalTeam: (id: number | string) => ["nationalTeams", String(id)] as const,
   clubMatches: ["clubMatches"] as const,
@@ -78,6 +89,26 @@ export function useClub(
     queryKey: queryKeys.club(id),
     queryFn: () => getClub(Number(id)),
     enabled,
+  });
+}
+
+export function useClubPage(
+  query: ClubQuery,
+): UseQueryResult<ClubPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.clubPage(query),
+    queryFn: () => queryClubs(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useClubFilterOptions(): UseQueryResult<
+  ClubFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.clubFilterOptions,
+    queryFn: getClubFilterOptions,
   });
 }
 
