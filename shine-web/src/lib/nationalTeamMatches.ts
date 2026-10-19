@@ -1,4 +1,5 @@
 import { apiJson } from "@/lib/api";
+import type { SortOrder } from "@/lib/sorting";
 
 export interface NationalTeamMatch {
   matchId: number;
@@ -13,6 +14,68 @@ export interface NationalTeamMatch {
   awayScore?: number | null;
   venue?: string | null;
   sourceUrl?: string | null;
+}
+
+export const NATIONAL_TEAM_MATCH_SORTS = [
+  "matchDate",
+  "competition",
+  "venue",
+  "createdAt",
+] as const;
+
+export type NationalTeamMatchSort = (typeof NATIONAL_TEAM_MATCH_SORTS)[number];
+
+export interface NationalTeamMatchQuery {
+  q?: string;
+  /** Matches where the team is either the home or the away side. */
+  nationalTeamId?: number;
+  competition?: string;
+  season?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  sort?: NationalTeamMatchSort;
+  order?: SortOrder;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface NationalTeamMatchPage {
+  items: NationalTeamMatch[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface NationalTeamMatchFilterOptions {
+  competitions: string[];
+  seasons: string[];
+}
+
+/** Filtered, sorted, paged national-team match list for the data browser. */
+export function queryNationalTeamMatches(
+  query: NationalTeamMatchQuery,
+): Promise<NationalTeamMatchPage> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.nationalTeamId != null)
+    params.set("nationalTeamId", String(query.nationalTeamId));
+  if (query.competition) params.set("competition", query.competition);
+  if (query.season) params.set("season", query.season);
+  if (query.dateFrom) params.set("dateFrom", query.dateFrom);
+  if (query.dateTo) params.set("dateTo", query.dateTo);
+  if (query.sort) params.set("sort", query.sort);
+  if (query.order) params.set("order", query.order);
+  params.set("page", String(query.page ?? 1));
+  params.set("pageSize", String(query.pageSize ?? 25));
+  return apiJson<NationalTeamMatchPage>(
+    `/api/nationalteammatches/query?${params.toString()}`,
+  );
+}
+
+export function getNationalTeamMatchFilterOptions(): Promise<NationalTeamMatchFilterOptions> {
+  return apiJson<NationalTeamMatchFilterOptions>(
+    "/api/nationalteammatches/filter-options",
+  );
 }
 
 export interface NationalTeamMatchForm {

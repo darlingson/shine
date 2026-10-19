@@ -11,13 +11,23 @@ import {
 } from "@/lib/clubs";
 import {
   getClubMatch,
+  getClubMatchFilterOptions,
   listClubMatches,
+  queryClubMatches,
   type ClubMatch,
+  type ClubMatchFilterOptions,
+  type ClubMatchPage,
+  type ClubMatchQuery,
 } from "@/lib/clubMatches";
 import {
   getNationalTeamMatch,
+  getNationalTeamMatchFilterOptions,
   listNationalTeamMatches,
+  queryNationalTeamMatches,
   type NationalTeamMatch,
+  type NationalTeamMatchFilterOptions,
+  type NationalTeamMatchPage,
+  type NationalTeamMatchQuery,
 } from "@/lib/nationalTeamMatches";
 import {
   getNationalTeam,
@@ -62,9 +72,15 @@ export const queryKeys = {
   nationalTeam: (id: number | string) => ["nationalTeams", String(id)] as const,
   clubMatches: ["clubMatches"] as const,
   clubMatch: (id: number | string) => ["clubMatches", String(id)] as const,
+  clubMatchPage: (query: ClubMatchQuery) =>
+    ["clubMatches", "page", query] as const,
+  clubMatchFilterOptions: ["clubMatches", "filterOptions"] as const,
   nationalTeamMatches: ["nationalTeamMatches"] as const,
   nationalTeamMatch: (id: number | string) =>
     ["nationalTeamMatches", String(id)] as const,
+  nationalTeamMatchPage: (query: NationalTeamMatchQuery) =>
+    ["nationalTeamMatches", "page", query] as const,
+  nationalTeamMatchFilterOptions: ["nationalTeamMatches", "filterOptions"] as const,
   playerClubs: ["playerClubs"] as const,
   clubSquads: ["clubSquads"] as const,
   nationalSquads: ["nationalSquads"] as const,
@@ -182,6 +198,26 @@ export function useClubMatch(
   });
 }
 
+export function useClubMatchPage(
+  query: ClubMatchQuery,
+): UseQueryResult<ClubMatchPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.clubMatchPage(query),
+    queryFn: () => queryClubMatches(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useClubMatchFilterOptions(): UseQueryResult<
+  ClubMatchFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.clubMatchFilterOptions,
+    queryFn: getClubMatchFilterOptions,
+  });
+}
+
 export function useNationalTeamMatches(
   enabled = true,
 ): UseQueryResult<NationalTeamMatch[], Error> {
@@ -200,6 +236,26 @@ export function useNationalTeamMatch(
     queryKey: queryKeys.nationalTeamMatch(id),
     queryFn: () => getNationalTeamMatch(Number(id)),
     enabled,
+  });
+}
+
+export function useNationalTeamMatchPage(
+  query: NationalTeamMatchQuery,
+): UseQueryResult<NationalTeamMatchPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamMatchPage(query),
+    queryFn: () => queryNationalTeamMatches(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useNationalTeamMatchFilterOptions(): UseQueryResult<
+  NationalTeamMatchFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamMatchFilterOptions,
+    queryFn: getNationalTeamMatchFilterOptions,
   });
 }
 
