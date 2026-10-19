@@ -9,6 +9,7 @@ type SectionRoute =
   | "/data"
   | "/data/players"
   | "/data/clubs"
+  | "/data/national-teams"
   | "/data/matches"
   | "/data/matches/club"
   | "/data/matches/national";

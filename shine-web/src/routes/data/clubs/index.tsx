@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Field } from "@/components/data-ui";
 import { ListSearch } from "@/components/list-search";
 import { Pagination } from "@/components/pagination";
+import { TeamTabs } from "@/components/section-tabs";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -88,6 +89,8 @@ function ClubsListPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <TeamTabs />
+
       <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Clubs
       </h1>

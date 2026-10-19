@@ -31,8 +31,13 @@ import {
 } from "@/lib/nationalTeamMatches";
 import {
   getNationalTeam,
+  getNationalTeamFilterOptions,
   listNationalTeams,
+  queryNationalTeams,
   type NationalTeam,
+  type NationalTeamFilterOptions,
+  type NationalTeamPage,
+  type NationalTeamQuery,
 } from "@/lib/nationalTeams";
 import {
   getPlayer,
@@ -70,6 +75,9 @@ export const queryKeys = {
   clubFilterOptions: ["clubs", "filterOptions"] as const,
   nationalTeams: ["nationalTeams"] as const,
   nationalTeam: (id: number | string) => ["nationalTeams", String(id)] as const,
+  nationalTeamPage: (query: NationalTeamQuery) =>
+    ["nationalTeams", "page", query] as const,
+  nationalTeamFilterOptions: ["nationalTeams", "filterOptions"] as const,
   clubMatches: ["clubMatches"] as const,
   clubMatch: (id: number | string) => ["clubMatches", String(id)] as const,
   clubMatchPage: (query: ClubMatchQuery) =>
@@ -174,6 +182,26 @@ export function useNationalTeam(
     queryKey: queryKeys.nationalTeam(id),
     queryFn: () => getNationalTeam(Number(id)),
     enabled,
+  });
+}
+
+export function useNationalTeamPage(
+  query: NationalTeamQuery,
+): UseQueryResult<NationalTeamPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamPage(query),
+    queryFn: () => queryNationalTeams(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useNationalTeamFilterOptions(): UseQueryResult<
+  NationalTeamFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.nationalTeamFilterOptions,
+    queryFn: getNationalTeamFilterOptions,
   });
 }
 

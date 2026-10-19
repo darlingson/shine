@@ -1,4 +1,5 @@
 import { apiJson } from "@/lib/api";
+import type { SortOrder } from "@/lib/sorting";
 
 export interface NationalTeam {
   nationalTeamId: number;
@@ -53,6 +54,62 @@ export function updateNationalTeam(
 
 export function deleteNationalTeam(id: number): Promise<void> {
   return apiJson<void>(`/api/nationalteams/${id}`, { method: "DELETE" });
+}
+
+export const NATIONAL_TEAM_SORTS = [
+  "name",
+  "country",
+  "level",
+  "gender",
+  "createdAt",
+] as const;
+
+export type NationalTeamSort = (typeof NATIONAL_TEAM_SORTS)[number];
+
+export interface NationalTeamQuery {
+  q?: string;
+  country?: string;
+  gender?: string;
+  level?: string;
+  sort?: NationalTeamSort;
+  order?: SortOrder;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface NationalTeamPage {
+  items: NationalTeam[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface NationalTeamFilterOptions {
+  countries: string[];
+  genders: string[];
+  levels: string[];
+}
+
+/** Filtered, sorted, paged national team list for the data browser. */
+export function queryNationalTeams(
+  query: NationalTeamQuery,
+): Promise<NationalTeamPage> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.country) params.set("country", query.country);
+  if (query.gender) params.set("gender", query.gender);
+  if (query.level) params.set("level", query.level);
+  if (query.sort) params.set("sort", query.sort);
+  if (query.order) params.set("order", query.order);
+  params.set("page", String(query.page ?? 1));
+  params.set("pageSize", String(query.pageSize ?? 25));
+  return apiJson<NationalTeamPage>(
+    `/api/nationalteams/query?${params.toString()}`,
+  );
+}
+
+export function getNationalTeamFilterOptions(): Promise<NationalTeamFilterOptions> {
+  return apiJson<NationalTeamFilterOptions>("/api/nationalteams/filter-options");
 }
 
 /** Human label: "Malawi Women (U20)" style, for pickers and tables. */

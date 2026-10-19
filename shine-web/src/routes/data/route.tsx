@@ -9,9 +9,8 @@ function DataLayout() {
       <SiteNav
         sections={[
           { label: "Players", to: "/data/players" },
-          { label: "Clubs", to: "/data/clubs" },
-          { label: "Club matches", to: "/data/matches/club" },
-          { label: "National matches", to: "/data/matches/national" },
+          { label: "Teams", to: "/data/clubs" },
+          { label: "Matches", to: "/data/matches/club" },
         ]}
       />
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
