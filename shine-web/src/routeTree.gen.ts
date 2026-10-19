@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as DataRouteRouteImport } from './routes/data/route'
 import { Route as ManageRouteRouteImport } from './routes/manage/route'
 import { Route as DataIndexRouteImport } from './routes/data/index'
+import { Route as DataSearchRouteImport } from './routes/data/search'
 import { Route as ManageIndexRouteImport } from './routes/manage/index'
 import { Route as ManageClubsRouteRouteImport } from './routes/manage/clubs/route'
 import { Route as ManageMatchesRouteRouteImport } from './routes/manage/matches/route'
@@ -82,6 +83,11 @@ const ManageRouteRoute = ManageRouteRouteImport.update({
 const DataIndexRoute = DataIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DataRouteRoute,
+} as any)
+const DataSearchRoute = DataSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => DataRouteRoute,
 } as any)
 const ManageIndexRoute = ManageIndexRouteImport.update({
@@ -326,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/manage/players': typeof ManagePlayersRouteRouteWithChildren
   '/manage/squads': typeof ManageSquadsRouteRouteWithChildren
   '/manage/users': typeof ManageUsersRouteRouteWithChildren
+  '/data/search': typeof DataSearchRoute
   '/manage/roles': typeof ManageRolesRoute
   '/data/': typeof DataIndexRoute
   '/manage/': typeof ManageIndexRoute
@@ -369,6 +376,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/data/search': typeof DataSearchRoute
   '/manage/roles': typeof ManageRolesRoute
   '/data': typeof DataIndexRoute
   '/manage': typeof ManageIndexRoute
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/manage/players': typeof ManagePlayersRouteRouteWithChildren
   '/manage/squads': typeof ManageSquadsRouteRouteWithChildren
   '/manage/users': typeof ManageUsersRouteRouteWithChildren
+  '/data/search': typeof DataSearchRoute
   '/manage/roles': typeof ManageRolesRoute
   '/data/': typeof DataIndexRoute
   '/manage/': typeof ManageIndexRoute
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/manage/players'
     | '/manage/squads'
     | '/manage/users'
+    | '/data/search'
     | '/manage/roles'
     | '/data/'
     | '/manage/'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/data/search'
     | '/manage/roles'
     | '/data'
     | '/manage'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/manage/players'
     | '/manage/squads'
     | '/manage/users'
+    | '/data/search'
     | '/manage/roles'
     | '/data/'
     | '/manage/'
@@ -651,6 +663,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/data/'
       preLoaderRoute: typeof DataIndexRouteImport
+      parentRoute: typeof DataRouteRoute
+    }
+    '/data/search': {
+      id: '/data/search'
+      path: '/search'
+      fullPath: '/data/search'
+      preLoaderRoute: typeof DataSearchRouteImport
       parentRoute: typeof DataRouteRoute
     }
     '/manage/': {
@@ -965,6 +984,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DataRouteRouteChildren {
+  DataSearchRoute: typeof DataSearchRoute
   DataIndexRoute: typeof DataIndexRoute
   DataClubsClubIdRoute: typeof DataClubsClubIdRoute
   DataPlayersPlayerIdRoute: typeof DataPlayersPlayerIdRoute
@@ -978,6 +998,7 @@ interface DataRouteRouteChildren {
 }
 
 const DataRouteRouteChildren: DataRouteRouteChildren = {
+  DataSearchRoute: DataSearchRoute,
   DataIndexRoute: DataIndexRoute,
   DataClubsClubIdRoute: DataClubsClubIdRoute,
   DataPlayersPlayerIdRoute: DataPlayersPlayerIdRoute,

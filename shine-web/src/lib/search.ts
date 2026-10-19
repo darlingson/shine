@@ -31,6 +31,15 @@ export interface SearchOptions {
 
 export const SEARCH_MIN_LENGTH = 2;
 
+/** Section headings for grouped results, in display order. */
+export const SEARCH_KIND_LABELS: Record<SearchKind, string> = {
+  player: "Players",
+  club: "Clubs",
+  nationalTeam: "National teams",
+  clubMatch: "Club matches",
+  nationalTeamMatch: "National matches",
+};
+
 export function search(
   q: string,
   { kinds, limit }: SearchOptions = {},
@@ -42,21 +51,12 @@ export function search(
 }
 
 /**
- * Public route for a result, or null when the kind has no public page yet.
- * National teams are managed at /manage/national-teams, which is behind auth,
- * so they are not linked from public search.
+ * Kinds with a public page to land on. National teams are managed behind auth at
+ * /manage/national-teams, so they are searchable over the API but not surfaced here.
  */
-export function searchResultPath(result: SearchResult): string | null {
-  switch (result.kind) {
-    case "player":
-      return `/data/players/${result.id}`;
-    case "club":
-      return `/data/clubs/${result.id}`;
-    case "clubMatch":
-      return `/data/matches/club/${result.id}`;
-    case "nationalTeamMatch":
-      return `/data/matches/national/${result.id}`;
-    default:
-      return null;
-  }
-}
+export const PUBLIC_SEARCH_KINDS = [
+  "player",
+  "club",
+  "clubMatch",
+  "nationalTeamMatch",
+] as const;

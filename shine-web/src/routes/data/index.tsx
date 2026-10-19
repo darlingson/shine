@@ -5,6 +5,7 @@ export const Route = createFileRoute("/data/")({
 });
 
 const SECTIONS = [
+  { to: "/data/search", title: "Search", blurb: "Find a player, club or match by name." },
   { to: "/data/players", title: "Players", blurb: "Find a player, see their clubs." },
   { to: "/data/clubs", title: "Clubs", blurb: "Find a club, see players and matches." },
   {
