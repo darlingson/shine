@@ -1,7 +1,10 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { Fact } from "@/components/data-ui";
+import { MatchSquad } from "@/components/match-squad";
+import { Badge } from "@/components/ui/badge";
+import { formatMatchDate } from "@/lib/dates";
 import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
-import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
 import { useNationalSquads, useNationalTeamMatch, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
@@ -35,58 +38,43 @@ function NationalTeamMatchDetailPage() {
   if (!match.data) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const m = match.data;
+  const playerName = (playerId: number) => {
+    const p = names.get(playerId);
+    return p ? p.knownAs || p.fullName : "Unknown player";
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {nationalTeamMatchLabel(m)}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {[
-            m.matchDate,
-            m.kickoffTime ? `${m.kickoffTime.slice(0, 5)} CAT` : null,
-            m.stage,
-            m.competition,
-            m.season,
-            m.venue,
-            m.isNeutral ? "Neutral" : null,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
+      <div className="flex flex-col gap-3">
+        {(m.stage || m.isNeutral) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {m.stage && <Badge variant="secondary">{m.stage}</Badge>}
+            {m.isNeutral && <Badge variant="outline">Neutral venue</Badge>}
+          </div>
+        )}
+        <div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            {nationalTeamMatchLabel(m)}
+          </h1>
+          {(m.competition || m.season) && (
+            <p className="text-sm text-muted-foreground">
+              {[m.competition, m.season].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </div>
       </div>
+
+      <dl className="grid gap-4 rounded-2xl border border-border bg-card p-4 sm:grid-cols-3">
+        <Fact label="Date">{formatMatchDate(m.matchDate)}</Fact>
+        <Fact label="Kickoff">
+          {m.kickoffTime ? `${m.kickoffTime.slice(0, 5)} CAT` : "—"}
+        </Fact>
+        <Fact label="Venue">{m.venue ?? "—"}</Fact>
+      </dl>
 
       <section className="flex flex-col gap-2">
         <h2 className="font-heading text-lg font-semibold tracking-tight">Squad</h2>
-        {squad.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No squad recorded.</p>
-        ) : (
-          <ul className="flex flex-col rounded-2xl border border-border bg-card">
-            {squad.map((s) => {
-              const p = names.get(s.playerId);
-              return (
-                <li
-                  key={`${s.nationalTeamId}-${s.playerId}`}
-                  className="border-b border-border last:border-b-0"
-                >
-                  <Link
-                    to="/data/players/$playerId"
-                    params={{ playerId: String(s.playerId) }}
-                    className="flex items-center justify-between gap-2 px-4 py-3 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <span className="text-sm font-medium">
-                      {p ? p.knownAs || p.fullName : "Unknown player"}
-                      {s.captain ? " (C)" : ""}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {SQUAD_STATUS_LABELS[s.lineupStatus] ?? s.lineupStatus}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <MatchSquad squad={squad} playerName={playerName} />
       </section>
     </div>
   );
