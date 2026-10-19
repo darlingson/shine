@@ -4,8 +4,10 @@ export interface NationalTeam {
   nationalTeamId: number;
   name: string;
   shortName?: string | null;
+  nickname?: string | null;
   gender?: string | null;
   level?: string | null;
+  coach?: string | null;
   country: string;
   sourceUrl?: string | null;
 }
@@ -13,8 +15,10 @@ export interface NationalTeam {
 export interface NationalTeamForm {
   name: string;
   shortName?: string;
+  nickname?: string;
   gender?: string;
   level?: string;
+  coach?: string;
   country: string;
   sourceUrl?: string;
 }

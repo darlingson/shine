@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Combobox } from "@/components/ui/combobox";
 import { Field, FormError } from "@/components/data-ui";
+import { Label } from "@/components/ui/label";
 import { parseOptionalInt } from "@/lib/forms";
 import {
   createClubMatch,
@@ -38,13 +39,19 @@ type Kind = "club" | "national";
 
 interface MatchInitial {
   matchDate: string;
+  kickoffTime?: string | null;
   competition?: string | null;
   season?: string | null;
+  stage?: string | null;
   homeTeamId?: number | null;
   awayTeamId?: number | null;
   homeScore?: number | null;
   awayScore?: number | null;
   venue?: string | null;
+  isNeutral?: boolean;
+  wentToExtraTime?: boolean;
+  homePenaltyScore?: number | null;
+  awayPenaltyScore?: number | null;
   sourceUrl?: string | null;
 }
 
@@ -135,13 +142,19 @@ export function MatchFormPage({
         }
       : {
           matchDate: nationalMatch.data!.matchDate,
+          kickoffTime: nationalMatch.data!.kickoffTime,
           competition: nationalMatch.data!.competition,
           season: nationalMatch.data!.season,
+          stage: nationalMatch.data!.stage,
           homeTeamId: nationalMatch.data!.homeNationalTeamId,
           awayTeamId: nationalMatch.data!.awayNationalTeamId,
           homeScore: nationalMatch.data!.homeScore,
           awayScore: nationalMatch.data!.awayScore,
           venue: nationalMatch.data!.venue,
+          isNeutral: nationalMatch.data!.isNeutral,
+          wentToExtraTime: nationalMatch.data!.wentToExtraTime,
+          homePenaltyScore: nationalMatch.data!.homePenaltyScore,
+          awayPenaltyScore: nationalMatch.data!.awayPenaltyScore,
           sourceUrl: nationalMatch.data!.sourceUrl,
         };
 
@@ -183,8 +196,12 @@ function MatchForm({
     : "/manage/matches/national";
 
   const [matchDate, setMatchDate] = useState(initial?.matchDate ?? "");
+  const [kickoffTime, setKickoffTime] = useState(
+    initial?.kickoffTime?.slice(0, 5) ?? "",
+  );
   const [competition, setCompetition] = useState(initial?.competition ?? "");
   const [season, setSeason] = useState(initial?.season ?? "");
+  const [stage, setStage] = useState(initial?.stage ?? "");
   const [homeTeamId, setHomeTeamId] = useState(
     initial?.homeTeamId?.toString() ?? "",
   );
@@ -194,6 +211,16 @@ function MatchForm({
   const [homeScore, setHomeScore] = useState(initial?.homeScore?.toString() ?? "");
   const [awayScore, setAwayScore] = useState(initial?.awayScore?.toString() ?? "");
   const [venue, setVenue] = useState(initial?.venue ?? "");
+  const [isNeutral, setIsNeutral] = useState(initial?.isNeutral ?? false);
+  const [wentToExtraTime, setWentToExtraTime] = useState(
+    initial?.wentToExtraTime ?? false,
+  );
+  const [homePenaltyScore, setHomePenaltyScore] = useState(
+    initial?.homePenaltyScore?.toString() ?? "",
+  );
+  const [awayPenaltyScore, setAwayPenaltyScore] = useState(
+    initial?.awayPenaltyScore?.toString() ?? "",
+  );
   const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -223,8 +250,18 @@ function MatchForm({
       } else {
         const dto: NationalTeamMatchForm = {
           ...common,
+          kickoffTime: kickoffTime
+            ? kickoffTime.length === 5
+              ? `${kickoffTime}:00`
+              : kickoffTime
+            : undefined,
+          stage: stage.trim() || undefined,
           homeNationalTeamId: homeTeamId ? Number(homeTeamId) : undefined,
           awayNationalTeamId: awayTeamId ? Number(awayTeamId) : undefined,
+          isNeutral,
+          wentToExtraTime,
+          homePenaltyScore: parseOptionalInt(homePenaltyScore),
+          awayPenaltyScore: parseOptionalInt(awayPenaltyScore),
         };
         if (matchId !== undefined)
           await updateNationalTeamMatch(Number(matchId), dto);
@@ -274,6 +311,16 @@ function MatchForm({
                 onChange={(e) => setMatchDate(e.target.value)}
               />
             </Field>
+            {!isClub && (
+              <Field label="Kickoff time" htmlFor="match-kickoff">
+                <Input
+                  id="match-kickoff"
+                  type="time"
+                  value={kickoffTime}
+                  onChange={(e) => setKickoffTime(e.target.value)}
+                />
+              </Field>
+            )}
             <Field label="Venue" htmlFor="match-venue">
               <Input
                 id="match-venue"
@@ -300,6 +347,16 @@ function MatchForm({
                 placeholder="e.g. 2025/26"
               />
             </Field>
+            {!isClub && (
+              <Field label="Stage" htmlFor="match-stage">
+                <Input
+                  id="match-stage"
+                  value={stage}
+                  onChange={(e) => setStage(e.target.value)}
+                  placeholder="e.g. Group C, Quarter-final"
+                />
+              </Field>
+            )}
             <Field label={`Home ${teamField}`} htmlFor="match-home">
               <Combobox
                 id="match-home"
@@ -340,6 +397,48 @@ function MatchForm({
                 onChange={(e) => setAwayScore(e.target.value)}
               />
             </Field>
+            {!isClub && (
+              <>
+                <div className="flex items-center gap-2 pt-6">
+                  <input
+                    id="match-neutral"
+                    type="checkbox"
+                    className="size-4 accent-primary"
+                    checked={isNeutral}
+                    onChange={(e) => setIsNeutral(e.target.checked)}
+                  />
+                  <Label htmlFor="match-neutral">Neutral venue</Label>
+                </div>
+                <div className="flex items-center gap-2 pt-6">
+                  <input
+                    id="match-aet"
+                    type="checkbox"
+                    className="size-4 accent-primary"
+                    checked={wentToExtraTime}
+                    onChange={(e) => setWentToExtraTime(e.target.checked)}
+                  />
+                  <Label htmlFor="match-aet">Went to extra time</Label>
+                </div>
+                <Field label="Home penalties" htmlFor="match-hp">
+                  <Input
+                    id="match-hp"
+                    type="number"
+                    min={0}
+                    value={homePenaltyScore}
+                    onChange={(e) => setHomePenaltyScore(e.target.value)}
+                  />
+                </Field>
+                <Field label="Away penalties" htmlFor="match-ap">
+                  <Input
+                    id="match-ap"
+                    type="number"
+                    min={0}
+                    value={awayPenaltyScore}
+                    onChange={(e) => setAwayPenaltyScore(e.target.value)}
+                  />
+                </Field>
+              </>
+            )}
             <div className="sm:col-span-2">
               <Field label="Source URL" htmlFor="match-source">
                 <Input
