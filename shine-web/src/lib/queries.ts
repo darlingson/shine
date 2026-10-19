@@ -24,7 +24,16 @@ import {
   listNationalTeams,
   type NationalTeam,
 } from "@/lib/nationalTeams";
-import { getPlayer, listPlayers, type Player } from "@/lib/players";
+import {
+  getPlayer,
+  getPlayerFilterOptions,
+  listPlayers,
+  queryPlayers,
+  type Player,
+  type PlayerFilterOptions,
+  type PlayerPage,
+  type PlayerQuery,
+} from "@/lib/players";
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
 import {
   listClubSquads,
@@ -43,6 +52,8 @@ import {
 export const queryKeys = {
   players: ["players"] as const,
   player: (id: number | string) => ["players", String(id)] as const,
+  playerPage: (query: PlayerQuery) => ["players", "page", query] as const,
+  playerFilterOptions: ["players", "filterOptions"] as const,
   clubs: ["clubs"] as const,
   club: (id: number | string) => ["clubs", String(id)] as const,
   clubPage: (query: ClubQuery) => ["clubs", "page", query] as const,
@@ -74,6 +85,26 @@ export function usePlayer(
     queryKey: queryKeys.player(id),
     queryFn: () => getPlayer(Number(id)),
     enabled,
+  });
+}
+
+export function usePlayerPage(
+  query: PlayerQuery,
+): UseQueryResult<PlayerPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.playerPage(query),
+    queryFn: () => queryPlayers(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function usePlayerFilterOptions(): UseQueryResult<
+  PlayerFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.playerFilterOptions,
+    queryFn: getPlayerFilterOptions,
   });
 }
 

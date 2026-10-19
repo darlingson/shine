@@ -1,4 +1,5 @@
 import { apiJson } from "@/lib/api";
+import type { SortOrder } from "@/lib/sorting";
 
 export interface Player {
   playerId: number;
@@ -33,6 +34,65 @@ export interface PlayerForm {
 
 export const PLAYER_STATUSES = ["active", "retired", "unknown"];
 export const PLAYER_FEET = ["left", "right", "both"];
+
+export const PLAYER_SORTS = [
+  "name",
+  "knownAs",
+  "dateOfBirth",
+  "heightCm",
+  "status",
+  "createdAt",
+] as const;
+
+export type PlayerSort = (typeof PLAYER_SORTS)[number];
+
+export interface PlayerQuery {
+  q?: string;
+  status?: string;
+  foot?: string;
+  nationality?: string;
+  position?: string;
+  bornFrom?: number;
+  bornTo?: number;
+  sort?: PlayerSort;
+  order?: SortOrder;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PlayerPage {
+  items: Player[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface PlayerFilterOptions {
+  nationalities: string[];
+  /** Distinct primary and secondary positions, combined. */
+  positions: string[];
+}
+
+/** Filtered, sorted, paged player list for the data browser. */
+export function queryPlayers(query: PlayerQuery): Promise<PlayerPage> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.status) params.set("status", query.status);
+  if (query.foot) params.set("foot", query.foot);
+  if (query.nationality) params.set("nationality", query.nationality);
+  if (query.position) params.set("position", query.position);
+  if (query.bornFrom != null) params.set("bornFrom", String(query.bornFrom));
+  if (query.bornTo != null) params.set("bornTo", String(query.bornTo));
+  if (query.sort) params.set("sort", query.sort);
+  if (query.order) params.set("order", query.order);
+  params.set("page", String(query.page ?? 1));
+  params.set("pageSize", String(query.pageSize ?? 25));
+  return apiJson<PlayerPage>(`/api/players/query?${params.toString()}`);
+}
+
+export function getPlayerFilterOptions(): Promise<PlayerFilterOptions> {
+  return apiJson<PlayerFilterOptions>("/api/players/filter-options");
+}
 
 export function listPlayers(): Promise<Player[]> {
   return apiJson<Player[]>("/api/players");
