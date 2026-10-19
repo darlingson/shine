@@ -17,6 +17,29 @@ public class NationalTeamService : INationalTeamService
     public async Task<IEnumerable<NationalTeam>> GetAllAsync()
         => await _repository.GetAllAsync();
 
+    public async Task<PagedResult<NationalTeam>> GetPageAsync(NationalTeamQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<NationalTeam>
+        {
+            Items = [.. items],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<NationalTeamFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (countries, genders, levels) = await _repository.GetFilterOptionsAsync();
+        return new NationalTeamFilterOptionsDto
+        {
+            Countries = [.. countries],
+            Genders = [.. genders],
+            Levels = [.. levels]
+        };
+    }
+
     public async Task<NationalTeam?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
