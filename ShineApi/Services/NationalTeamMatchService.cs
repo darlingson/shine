@@ -21,6 +21,28 @@ public class NationalTeamMatchService : INationalTeamMatchService
     public async Task<IEnumerable<NationalTeamMatchDto>> GetAllAsync()
         => (await _repository.GetAllAsync()).Select(ToDto);
 
+    public async Task<PagedResult<NationalTeamMatchDto>> GetPageAsync(NationalTeamMatchQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<NationalTeamMatchDto>
+        {
+            Items = [.. items.Select(ToDto)],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<NationalTeamMatchFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (competitions, seasons) = await _repository.GetFilterOptionsAsync();
+        return new NationalTeamMatchFilterOptionsDto
+        {
+            Competitions = [.. competitions],
+            Seasons = [.. seasons]
+        };
+    }
+
     public async Task<NationalTeamMatchDto?> GetByIdAsync(int id)
     {
         var match = await _repository.GetByIdAsync(id);

@@ -19,6 +19,28 @@ public class ClubMatchService : IClubMatchService
     public async Task<IEnumerable<ClubMatchDto>> GetAllAsync()
         => (await _repository.GetAllAsync()).Select(ToDto);
 
+    public async Task<PagedResult<ClubMatchDto>> GetPageAsync(ClubMatchQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<ClubMatchDto>
+        {
+            Items = [.. items.Select(ToDto)],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<ClubMatchFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (competitions, seasons) = await _repository.GetFilterOptionsAsync();
+        return new ClubMatchFilterOptionsDto
+        {
+            Competitions = [.. competitions],
+            Seasons = [.. seasons]
+        };
+    }
+
     public async Task<ClubMatchDto?> GetByIdAsync(int id)
     {
         var match = await _repository.GetByIdAsync(id);

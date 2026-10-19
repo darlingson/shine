@@ -22,6 +22,16 @@ public class ClubMatchesController : ControllerBase
     public async Task<IActionResult> GetAll()
         => Ok(await _service.GetAllAsync());
 
+    [HttpGet("query")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Query([FromQuery] ClubMatchQuery query)
+        => Ok(await _service.GetPageAsync(query));
+
+    [HttpGet("filter-options")]
+    [AllowAnonymous]
+    public async Task<IActionResult> FilterOptions()
+        => Ok(await _service.GetFilterOptionsAsync());
+
     [HttpGet("{id:int}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
