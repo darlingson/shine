@@ -17,6 +17,28 @@ public class ClubService : IClubService
     public async Task<IEnumerable<Club>> GetAllAsync()
         => await _repository.GetAllAsync();
 
+    public async Task<PagedResult<Club>> GetPageAsync(ClubQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<Club>
+        {
+            Items = [.. items],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<ClubFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (cities, countries) = await _repository.GetFilterOptionsAsync();
+        return new ClubFilterOptionsDto
+        {
+            Cities = [.. cities],
+            Countries = [.. countries]
+        };
+    }
+
     public async Task<Club?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
