@@ -94,8 +94,12 @@ function NationalTeamMatchesListPage() {
 
   const { data: filterOptions } = useNationalTeamMatchFilterOptions();
   const { data: teams } = useNationalTeams();
+  // Only Malawi sides are filterable; opponents appear in the list but not in this picker.
   const teamOptions = useMemo(
-    () => [...(teams ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      (teams ?? [])
+        .filter((t) => t.country.toLowerCase() === "malawi")
+        .sort((a, b) => a.name.localeCompare(b.name)),
     [teams],
   );
 
