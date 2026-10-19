@@ -1,4 +1,7 @@
 import { apiJson } from "@/lib/api";
+import type { SortOrder } from "@/lib/sorting";
+
+export type { SortOrder };
 
 export interface Club {
   clubId: number;
@@ -19,8 +22,6 @@ export const CLUB_SORTS = [
 ] as const;
 
 export type ClubSort = (typeof CLUB_SORTS)[number];
-
-export type SortOrder = "asc" | "desc";
 
 export interface ClubQuery {
   q?: string;
