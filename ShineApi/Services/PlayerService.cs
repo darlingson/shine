@@ -17,6 +17,28 @@ public class PlayerService : IPlayerService
     public async Task<IEnumerable<Player>> GetAllAsync()
         => await _repository.GetAllAsync();
 
+    public async Task<PagedResult<Player>> GetPageAsync(PlayerQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<Player>
+        {
+            Items = [.. items],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<PlayerFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (nationalities, positions) = await _repository.GetFilterOptionsAsync();
+        return new PlayerFilterOptionsDto
+        {
+            Nationalities = [.. nationalities],
+            Positions = [.. positions]
+        };
+    }
+
     public async Task<Player?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
