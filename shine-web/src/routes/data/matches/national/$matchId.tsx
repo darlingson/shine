@@ -42,7 +42,15 @@ function NationalTeamMatchDetailPage() {
           {nationalTeamMatchLabel(m)}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {[m.matchDate, m.competition, m.season, m.venue]
+          {[
+            m.matchDate,
+            m.kickoffTime ? `${m.kickoffTime.slice(0, 5)} CAT` : null,
+            m.stage,
+            m.competition,
+            m.season,
+            m.venue,
+            m.isNeutral ? "Neutral" : null,
+          ]
             .filter(Boolean)
             .join(" · ")}
         </p>

@@ -275,7 +275,9 @@ function NationalTeamMatchesListPage() {
                     {nationalTeamMatchLabel(m)}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {[m.matchDate, m.competition].filter(Boolean).join(" · ")}
+                    {[m.matchDate, m.stage, m.competition]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 </Link>
               </li>
