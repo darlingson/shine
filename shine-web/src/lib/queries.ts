@@ -24,6 +24,12 @@ import {
   type NationalSquad,
 } from "@/lib/squads";
 import { listUsers, type ManagedUser } from "@/lib/users";
+import {
+  search,
+  SEARCH_MIN_LENGTH,
+  type SearchKind,
+  type SearchResponse,
+} from "@/lib/search";
 
 export const queryKeys = {
   players: ["players"] as const,
@@ -41,6 +47,8 @@ export const queryKeys = {
   clubSquads: ["clubSquads"] as const,
   nationalSquads: ["nationalSquads"] as const,
   users: ["users"] as const,
+  search: (q: string, kinds: string, limit: number) =>
+    ["search", q, kinds, limit] as const,
 };
 
 export function usePlayers(): UseQueryResult<Player[], Error> {
@@ -162,5 +170,18 @@ export function useUsers(enabled = true): UseQueryResult<ManagedUser[], Error> {
     queryKey: queryKeys.users,
     queryFn: listUsers,
     enabled,
+  });
+}
+
+export function useSearch(
+  q: string,
+  { kinds, limit = 10 }: { kinds?: readonly SearchKind[]; limit?: number } = {},
+): UseQueryResult<SearchResponse, Error> {
+  const term = q.trim();
+  const kindKey = kinds?.join(",") ?? "";
+  return useQuery({
+    queryKey: queryKeys.search(term, kindKey, limit),
+    queryFn: () => search(term, { kinds, limit }),
+    enabled: term.length >= SEARCH_MIN_LENGTH,
   });
 }
