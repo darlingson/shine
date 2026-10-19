@@ -369,6 +369,9 @@ namespace ShineApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("NationalTeamId"));
 
+                    b.Property<string>("Coach")
+                        .HasColumnType("text");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasColumnType("text");
@@ -384,6 +387,9 @@ namespace ShineApi.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nickname")
                         .HasColumnType("text");
 
                     b.Property<string>("ShortName")
@@ -414,6 +420,9 @@ namespace ShineApi.Migrations
                     b.Property<int?>("AwayNationalTeamId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("AwayPenaltyScore")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("AwayScore")
                         .HasColumnType("integer");
 
@@ -426,8 +435,17 @@ namespace ShineApi.Migrations
                     b.Property<int?>("HomeNationalTeamId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("HomePenaltyScore")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("HomeScore")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsNeutral")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeOnly?>("KickoffTime")
+                        .HasColumnType("time without time zone");
 
                     b.Property<DateOnly>("MatchDate")
                         .HasColumnType("date");
@@ -438,11 +456,17 @@ namespace ShineApi.Migrations
                     b.Property<string>("SourceUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("Stage")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Venue")
                         .HasColumnType("text");
+
+                    b.Property<bool>("WentToExtraTime")
+                        .HasColumnType("boolean");
 
                     b.HasKey("MatchId");
 

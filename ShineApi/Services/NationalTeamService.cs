@@ -30,8 +30,10 @@ public class NationalTeamService : INationalTeamService
         {
             Name = name,
             ShortName = dto.ShortName,
+            Nickname = dto.Nickname,
             Gender = dto.Gender,
             Level = dto.Level,
+            Coach = dto.Coach,
             Country = dto.Country,
             SourceUrl = dto.SourceUrl,
             CreatedAt = DateTime.UtcNow,
@@ -54,8 +56,10 @@ public class NationalTeamService : INationalTeamService
 
         nationalTeam.Name = name;
         nationalTeam.ShortName = dto.ShortName;
+        nationalTeam.Nickname = dto.Nickname;
         nationalTeam.Gender = dto.Gender;
         nationalTeam.Level = dto.Level;
+        nationalTeam.Coach = dto.Coach;
         nationalTeam.Country = dto.Country;
         nationalTeam.SourceUrl = dto.SourceUrl;
         nationalTeam.UpdatedAt = DateTime.UtcNow;

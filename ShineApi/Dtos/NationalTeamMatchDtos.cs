@@ -6,8 +6,10 @@ public class NationalTeamMatchDto
 {
     public int MatchId { get; set; }
     public DateOnly MatchDate { get; set; }
+    public TimeOnly? KickoffTime { get; set; }
     public string? Competition { get; set; }
     public string? Season { get; set; }
+    public string? Stage { get; set; }
     public int? HomeNationalTeamId { get; set; }
     public int? AwayNationalTeamId { get; set; }
     public string? HomeNationalTeamName { get; set; }
@@ -15,6 +17,10 @@ public class NationalTeamMatchDto
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
     public string? Venue { get; set; }
+    public bool IsNeutral { get; set; }
+    public bool WentToExtraTime { get; set; }
+    public int? HomePenaltyScore { get; set; }
+    public int? AwayPenaltyScore { get; set; }
     public string? SourceUrl { get; set; }
 }
 
@@ -71,13 +77,19 @@ public class CreateNationalTeamMatchDto
 {
     [Required]
     public DateOnly? MatchDate { get; set; }
+    public TimeOnly? KickoffTime { get; set; }
     public string? Competition { get; set; }
     public string? Season { get; set; }
+    public string? Stage { get; set; }
     public int? HomeNationalTeamId { get; set; }
     public int? AwayNationalTeamId { get; set; }
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
     public string? Venue { get; set; }
+    public bool IsNeutral { get; set; }
+    public bool WentToExtraTime { get; set; }
+    public int? HomePenaltyScore { get; set; }
+    public int? AwayPenaltyScore { get; set; }
     public string? SourceUrl { get; set; }
 }
 
@@ -85,13 +97,19 @@ public class UpdateNationalTeamMatchDto
 {
     [Required]
     public DateOnly? MatchDate { get; set; }
+    public TimeOnly? KickoffTime { get; set; }
     public string? Competition { get; set; }
     public string? Season { get; set; }
+    public string? Stage { get; set; }
     public int? HomeNationalTeamId { get; set; }
     public int? AwayNationalTeamId { get; set; }
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
     public string? Venue { get; set; }
+    public bool IsNeutral { get; set; }
+    public bool WentToExtraTime { get; set; }
+    public int? HomePenaltyScore { get; set; }
+    public int? AwayPenaltyScore { get; set; }
     public string? SourceUrl { get; set; }
 }
 
