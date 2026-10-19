@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ListSearch } from "@/components/list-search";
 import { clubMatchLabel } from "@/lib/clubMatches";
 import { useClubMatches } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
@@ -10,10 +11,20 @@ export const Route = createFileRoute("/data/matches/club/")({
 
 function ClubMatchesListPage() {
   const { data: matches = [], isLoading, error } = useClubMatches();
+  const [query, setQuery] = useState("");
   const sorted = useMemo(
     () => [...matches].sort((a, b) => b.matchDate.localeCompare(a.matchDate)),
     [matches],
   );
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return sorted;
+    return sorted.filter((m) =>
+      [clubMatchLabel(m), m.competition ?? "", m.venue ?? ""].some((field) =>
+        field.toLowerCase().includes(q),
+      ),
+    );
+  }, [sorted, query]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -23,15 +34,26 @@ function ClubMatchesListPage() {
         </h1>
         <p className="text-sm text-muted-foreground">Matches between two clubs.</p>
       </div>
+      <ListSearch
+        value={query}
+        onValueChange={setQuery}
+        placeholder="Search club matches"
+        aria-label="Search club matches"
+        className="max-w-sm"
+      />
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : error ? (
         <p className="text-sm text-destructive">{parseApiError(error)}</p>
       ) : sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No matches recorded yet.</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No matches match “{query.trim()}”.
+        </p>
       ) : (
         <ul className="flex flex-col rounded-2xl border border-border bg-card">
-          {sorted.map((m) => (
+          {filtered.map((m) => (
             <li key={m.matchId} className="border-b border-border last:border-b-0">
               <Link
                 to="/data/matches/club/$matchId"
