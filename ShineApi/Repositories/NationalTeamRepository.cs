@@ -110,7 +110,10 @@ public class NationalTeamRepository : INationalTeamRepository
         }
 
         if (!string.IsNullOrWhiteSpace(query.Country))
-            teams = teams.Where(t => t.Country == query.Country);
+        {
+            var country = query.Country.Trim().ToLower();
+            teams = teams.Where(t => t.Country.ToLower() == country);
+        }
 
         if (!string.IsNullOrWhiteSpace(query.Gender))
             teams = teams.Where(t => t.Gender == query.Gender);
