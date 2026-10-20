@@ -24,6 +24,7 @@ function SearchResultsPage() {
   // `null` means the box follows the URL; a string is the user's pending edit.
   const [draft, setDraft] = useState<string | null>(null);
   const timer = useRef<number | undefined>(undefined);
+  const pending = useRef(0);
   const input = draft ?? q;
   const term = q.trim();
   const enabled = term.length >= SEARCH_MIN_LENGTH;
@@ -36,6 +37,7 @@ function SearchResultsPage() {
   useEffect(() => {
     // A Back/Forward move wins over an edit still waiting to be committed.
     const onPopState = () => {
+      pending.current += 1;
       window.clearTimeout(timer.current);
       setDraft(null);
     };
@@ -49,6 +51,7 @@ function SearchResultsPage() {
   // Debounce edits into the URL so a search stays shareable. Once committed the
   // box follows `q` again, which keeps Back/Forward in step with the input.
   function change(value: string) {
+    const token = ++pending.current;
     setDraft(value);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
@@ -56,7 +59,9 @@ function SearchResultsPage() {
         to: "/data/search",
         search: { q: value.trim() },
         replace: true,
-      }).finally(() => setDraft(null));
+      }).finally(() => {
+        if (pending.current === token) setDraft(null);
+      });
     }, 300);
   }
 
