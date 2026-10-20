@@ -25,7 +25,9 @@ function NationalTeamDetailPage() {
   const team = useNationalTeam(nationalTeamId);
   const players = usePlayers();
   const squads = useNationalSquads();
-  const [page, setPage] = useState(1);
+  // Derive the page from the team id so switching teams starts at page one.
+  const [paging, setPaging] = useState({ teamId, page: 1 });
+  const page = paging.teamId === teamId ? paging.page : 1;
   const matches = useNationalTeamMatchPage({
     nationalTeamId: teamId,
     sort: "matchDate",
@@ -196,7 +198,7 @@ function NationalTeamDetailPage() {
               page={matches.data!.page}
               pageSize={matches.data!.pageSize}
               total={matches.data!.total}
-              onPageChange={setPage}
+              onPageChange={(next) => setPaging({ teamId, page: next })}
             />
           </>
         )}
