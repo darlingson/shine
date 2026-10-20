@@ -28,7 +28,7 @@ interface SearchBoxProps {
  */
 export function SearchBox({
   "aria-label": ariaLabel,
-  placeholder = "Search players, clubs and matches",
+  placeholder = "Search players, clubs, teams and matches",
   className,
   limit = 8,
   kinds = PUBLIC_SEARCH_KINDS,

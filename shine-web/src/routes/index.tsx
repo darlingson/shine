@@ -160,7 +160,7 @@ function LandingPage() {
               </p>
             )}
             <SearchBox
-              aria-label="Search players, clubs and matches"
+              aria-label="Search players, clubs, teams and matches"
               className="max-w-xl"
             />
           </div>

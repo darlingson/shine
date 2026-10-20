@@ -26,6 +26,7 @@ export interface SearchResponse {
 
 export interface SearchOptions {
   kinds?: readonly SearchKind[];
+  /** Maximum results per kind, not across all kinds. */
   limit?: number;
 }
 
@@ -50,13 +51,11 @@ export function search(
   return apiJson<SearchResponse>(`/api/search?${params.toString()}`);
 }
 
-/**
- * Kinds with a public page to land on. National teams are managed behind auth at
- * /manage/national-teams, so they are searchable over the API but not surfaced here.
- */
+/** Kinds with a public page to land on, in the order the results page groups them. */
 export const PUBLIC_SEARCH_KINDS = [
   "player",
   "club",
+  "nationalTeam",
   "clubMatch",
   "nationalTeamMatch",
 ] as const;

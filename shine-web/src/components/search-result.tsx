@@ -43,6 +43,17 @@ export function SearchResultLink({
           {children}
         </Link>
       );
+    case "nationalTeam":
+      return (
+        <Link
+          to="/data/national-teams/$nationalTeamId"
+          params={{ nationalTeamId: String(result.id) }}
+          className={className}
+          onClick={onClick}
+        >
+          {children}
+        </Link>
+      );
     case "clubMatch":
       return (
         <Link

@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { SearchResultRow } from "@/components/search-result";
-import { useDebouncedValue } from "@/hooks/use-debounce";
 import {
   PUBLIC_SEARCH_KINDS,
   SEARCH_KIND_LABELS,
@@ -22,8 +21,10 @@ export const Route = createFileRoute("/data/search")({
 function SearchResultsPage() {
   const { q } = Route.useSearch();
   const navigate = useNavigate();
-  const [input, setInput] = useState(q);
-  const debounced = useDebouncedValue(input.trim(), 300);
+  // `null` means the box follows the URL; a string is the user's pending edit.
+  const [draft, setDraft] = useState<string | null>(null);
+  const timer = useRef<number | undefined>(undefined);
+  const input = draft ?? q;
   const term = q.trim();
   const enabled = term.length >= SEARCH_MIN_LENGTH;
 
@@ -32,16 +33,32 @@ function SearchResultsPage() {
     limit: 50,
   });
 
-  // Keep the URL in step with the box so a search stays shareable.
   useEffect(() => {
-    if (debounced !== q) {
-      navigate({
+    // A Back/Forward move wins over an edit still waiting to be committed.
+    const onPopState = () => {
+      window.clearTimeout(timer.current);
+      setDraft(null);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.clearTimeout(timer.current);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, []);
+
+  // Debounce edits into the URL so a search stays shareable. Once committed the
+  // box follows `q` again, which keeps Back/Forward in step with the input.
+  function change(value: string) {
+    setDraft(value);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      void navigate({
         to: "/data/search",
-        search: { q: debounced },
+        search: { q: value.trim() },
         replace: true,
-      });
-    }
-  }, [debounced, q, navigate]);
+      }).finally(() => setDraft(null));
+    }, 300);
+  }
 
   const results = data?.results ?? [];
   const groups = PUBLIC_SEARCH_KINDS.map((kind) => ({
@@ -59,11 +76,11 @@ function SearchResultsPage() {
           <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => change(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Escape") setInput("");
+              if (e.key === "Escape") change("");
             }}
-            placeholder="Search players, clubs and matches"
+            placeholder="Search players, clubs, teams and matches"
             aria-label="Search the record"
             className="pl-9"
             autoFocus
