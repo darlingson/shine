@@ -118,6 +118,7 @@ Reads are public; writes require the listed permission (snapshotted in the acces
 
 - `/api/Clubs`, `/api/NationalTeams`, `/api/Players`, `/api/ClubMatches`, `/api/NationalTeamMatches`, `/api/PlayerClubs`, `/api/ClubMatchSquads`, `/api/NationalTeamMatchSquads` — REST (`GET` collection + item, `POST`/`PUT`/`DELETE` with `clubs:write`, `nationalteams:write`, `players:write`, `matches:write`, `squads:write`)
 - `/api/ClubMatches/{id}/teams`, `/api/NationalTeamMatches/{id}/teams` — `PATCH` (`matches:write`) to link or correct a match's two teams
+- `/api/Search?q=…&kinds=…&limit=…` — public keyword search across players, clubs, national teams and both match kinds; returns a flat list of `{ kind, id, title, subtitle, badge }` ranked best-first (`limit` caps results per kind)
 - `/api/Auth` — `register`, `login`, `refresh`, `revoke`, `logout`, `me`
 - `/api/Users` — list, role assign/remove (`users:manage`), permission grant/revoke (`permissions:grant`)
 
@@ -141,9 +142,9 @@ Swagger UI is only served in Development; in production use `/healthz` and the `
 
 ## Status and roadmap
 
-Implemented: Postgres-backed CRUD API for the six core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, club/national squads, users, and roles.
+Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, club/national squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser.
 
-Planned (per product description, not yet built): search/filter across player/club/match/competition/date/squad role, CSV/JSON export, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
+Planned (per product description, not yet built): squad-role filters, CSV/JSON export, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
 
 ## Contributing
 

@@ -1,14 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRightIcon,
-  MagnifyingGlassIcon,
-  TrophyIcon,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon, TrophyIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchBox } from "@/components/search-box";
 import { Separator } from "@/components/ui/separator";
 import { SiteNav } from "@/components/site-nav";
 import { type Player } from "@/lib/players";
@@ -41,7 +37,6 @@ function LandingPage() {
   const nationalMatchesQuery = useNationalTeamMatches();
   const clubSquadsQuery = useClubSquads();
   const nationalSquadsQuery = useNationalSquads();
-  const [query, setQuery] = useState("");
 
   const players = playersQuery.data ?? [];
   const loading = playersQuery.isLoading;
@@ -119,18 +114,6 @@ function LandingPage() {
     [players],
   );
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (q.length < 2) return [];
-    return players
-      .filter(
-        (p) =>
-          p.fullName.toLowerCase().includes(q) ||
-          (p.knownAs ?? "").toLowerCase().includes(q),
-      )
-      .slice(0, 6);
-  }, [players, query]);
-
   return (
     <div className="min-h-svh bg-background text-foreground">
       <SiteNav
@@ -176,53 +159,10 @@ function LandingPage() {
                 and women&apos;s internationals.
               </p>
             )}
-            <div className="relative max-w-xl">
-              <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setQuery("");
-                }}
-                placeholder="Search for a player"
-                aria-label="Search for a player"
-                aria-expanded={results.length > 0}
-                role="combobox"
-                aria-controls="player-search-results"
-                className="pl-9"
-              />
-              {results.length > 0 && (
-                <ul
-                  id="player-search-results"
-                  role="listbox"
-                  className="absolute z-10 mt-2 w-full rounded-xl border border-border bg-card p-1 shadow-md"
-                >  {results.map((p) => (
-                    <li key={p.playerId}>
-                      <Link
-                        to="/data/players/$playerId"
-                        params={{ playerId: String(p.playerId) }}
-                        className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <span className="font-medium">{displayName(p)}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {[p.positionPrimary, p.status]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                  <li>
-                    <Link
-                      to="/data/players"
-                      className="block rounded-lg px-3 py-2 text-center text-sm font-medium text-primary outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      Browse all players
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </div>
+            <SearchBox
+              aria-label="Search players, clubs, teams and matches"
+              className="max-w-xl"
+            />
           </div>
 
           {/* Contribute card */}

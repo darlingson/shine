@@ -1,4 +1,5 @@
 import { apiJson } from "@/lib/api";
+import type { SortOrder } from "@/lib/sorting";
 
 export interface ClubMatch {
   matchId: number;
@@ -13,6 +14,61 @@ export interface ClubMatch {
   awayScore?: number | null;
   venue?: string | null;
   sourceUrl?: string | null;
+}
+
+export const CLUB_MATCH_SORTS = [
+  "matchDate",
+  "competition",
+  "venue",
+  "createdAt",
+] as const;
+
+export type ClubMatchSort = (typeof CLUB_MATCH_SORTS)[number];
+
+export interface ClubMatchQuery {
+  q?: string;
+  /** Matches where the club is either the home or the away side. */
+  clubId?: number;
+  competition?: string;
+  season?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  sort?: ClubMatchSort;
+  order?: SortOrder;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ClubMatchPage {
+  items: ClubMatch[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ClubMatchFilterOptions {
+  competitions: string[];
+  seasons: string[];
+}
+
+/** Filtered, sorted, paged club-match list for the data browser. */
+export function queryClubMatches(query: ClubMatchQuery): Promise<ClubMatchPage> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.clubId != null) params.set("clubId", String(query.clubId));
+  if (query.competition) params.set("competition", query.competition);
+  if (query.season) params.set("season", query.season);
+  if (query.dateFrom) params.set("dateFrom", query.dateFrom);
+  if (query.dateTo) params.set("dateTo", query.dateTo);
+  if (query.sort) params.set("sort", query.sort);
+  if (query.order) params.set("order", query.order);
+  params.set("page", String(query.page ?? 1));
+  params.set("pageSize", String(query.pageSize ?? 25));
+  return apiJson<ClubMatchPage>(`/api/clubmatches/query?${params.toString()}`);
+}
+
+export function getClubMatchFilterOptions(): Promise<ClubMatchFilterOptions> {
+  return apiJson<ClubMatchFilterOptions>("/api/clubmatches/filter-options");
 }
 
 export interface ClubMatchForm {

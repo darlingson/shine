@@ -21,6 +21,28 @@ public class NationalTeamMatchService : INationalTeamMatchService
     public async Task<IEnumerable<NationalTeamMatchDto>> GetAllAsync()
         => (await _repository.GetAllAsync()).Select(ToDto);
 
+    public async Task<PagedResult<NationalTeamMatchDto>> GetPageAsync(NationalTeamMatchQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<NationalTeamMatchDto>
+        {
+            Items = [.. items.Select(ToDto)],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<NationalTeamMatchFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (competitions, seasons) = await _repository.GetFilterOptionsAsync();
+        return new NationalTeamMatchFilterOptionsDto
+        {
+            Competitions = [.. competitions],
+            Seasons = [.. seasons]
+        };
+    }
+
     public async Task<NationalTeamMatchDto?> GetByIdAsync(int id)
     {
         var match = await _repository.GetByIdAsync(id);
@@ -31,17 +53,25 @@ public class NationalTeamMatchService : INationalTeamMatchService
     {
         if (!await TeamsExistAsync(dto.HomeNationalTeamId, dto.AwayNationalTeamId, errors))
             return null;
+        if (!ShootoutIsValid(dto.HomePenaltyScore, dto.AwayPenaltyScore, errors))
+            return null;
 
         var match = new NationalTeamMatch
         {
             MatchDate = dto.MatchDate!.Value,
+            KickoffTime = dto.KickoffTime,
             Competition = dto.Competition,
             Season = dto.Season,
+            Stage = dto.Stage,
             HomeNationalTeamId = dto.HomeNationalTeamId,
             AwayNationalTeamId = dto.AwayNationalTeamId,
             HomeScore = dto.HomeScore,
             AwayScore = dto.AwayScore,
             Venue = dto.Venue,
+            IsNeutral = dto.IsNeutral,
+            WentToExtraTime = dto.WentToExtraTime,
+            HomePenaltyScore = dto.HomePenaltyScore,
+            AwayPenaltyScore = dto.AwayPenaltyScore,
             SourceUrl = dto.SourceUrl,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -59,15 +89,23 @@ public class NationalTeamMatchService : INationalTeamMatchService
 
         if (!await TeamsExistAsync(dto.HomeNationalTeamId, dto.AwayNationalTeamId, errors))
             return null;
+        if (!ShootoutIsValid(dto.HomePenaltyScore, dto.AwayPenaltyScore, errors))
+            return null;
 
         match.MatchDate = dto.MatchDate!.Value;
+        match.KickoffTime = dto.KickoffTime;
         match.Competition = dto.Competition;
         match.Season = dto.Season;
+        match.Stage = dto.Stage;
         match.HomeNationalTeamId = dto.HomeNationalTeamId;
         match.AwayNationalTeamId = dto.AwayNationalTeamId;
         match.HomeScore = dto.HomeScore;
         match.AwayScore = dto.AwayScore;
         match.Venue = dto.Venue;
+        match.IsNeutral = dto.IsNeutral;
+        match.WentToExtraTime = dto.WentToExtraTime;
+        match.HomePenaltyScore = dto.HomePenaltyScore;
+        match.AwayPenaltyScore = dto.AwayPenaltyScore;
         match.SourceUrl = dto.SourceUrl;
         match.UpdatedAt = DateTime.UtcNow;
 
@@ -103,13 +141,31 @@ public class NationalTeamMatchService : INationalTeamMatchService
         return true;
     }
 
+    private static bool ShootoutIsValid(int? home, int? away, List<string> errors)
+    {
+        if (home is null && away is null) return true;
+        if (home is null || away is null)
+        {
+            errors.Add("Set both penalty scores, or neither.");
+            return false;
+        }
+        if (home < 0 || away < 0)
+        {
+            errors.Add("Penalty scores cannot be negative.");
+            return false;
+        }
+        return true;
+    }
+
     private async Task<bool> TeamsExistAsync(int? homeId, int? awayId, List<string> errors)
     {
         var before = errors.Count;
-        if (homeId is int h && !await _nationalTeamRepository.ExistsAsync(h))
-            errors.Add($"Unknown homeNationalTeamId {h}.");
-        if (awayId is int a && !await _nationalTeamRepository.ExistsAsync(a))
-            errors.Add($"Unknown awayNationalTeamId {a}.");
+        if (homeId is not null && homeId == awayId)
+            errors.Add("A match cannot have the same team on both sides.");
+        if (homeId is int home && !await _nationalTeamRepository.ExistsAsync(home))
+            errors.Add($"Unknown homeNationalTeamId {home}.");
+        if (awayId is int away && !await _nationalTeamRepository.ExistsAsync(away))
+            errors.Add($"Unknown awayNationalTeamId {away}.");
         return errors.Count == before;
     }
 
@@ -117,8 +173,10 @@ public class NationalTeamMatchService : INationalTeamMatchService
     {
         MatchId = m.MatchId,
         MatchDate = m.MatchDate,
+        KickoffTime = m.KickoffTime,
         Competition = m.Competition,
         Season = m.Season,
+        Stage = m.Stage,
         HomeNationalTeamId = m.HomeNationalTeamId,
         AwayNationalTeamId = m.AwayNationalTeamId,
         HomeNationalTeamName = m.HomeNationalTeam?.Name,
@@ -126,6 +184,10 @@ public class NationalTeamMatchService : INationalTeamMatchService
         HomeScore = m.HomeScore,
         AwayScore = m.AwayScore,
         Venue = m.Venue,
+        IsNeutral = m.IsNeutral,
+        WentToExtraTime = m.WentToExtraTime,
+        HomePenaltyScore = m.HomePenaltyScore,
+        AwayPenaltyScore = m.AwayPenaltyScore,
         SourceUrl = m.SourceUrl,
     };
 }

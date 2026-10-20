@@ -154,8 +154,10 @@ function NationalTeamForm({
   const navigate = useNavigate();
   const [name, setName] = useState(initial?.name ?? "");
   const [shortName, setShortName] = useState(initial?.shortName ?? "");
+  const [nickname, setNickname] = useState(initial?.nickname ?? "");
   const [gender, setGender] = useState(initial?.gender ?? "");
   const [level, setLevel] = useState(initial?.level ?? "");
+  const [coach, setCoach] = useState(initial?.coach ?? "");
   const [country, setCountry] = useState(initial?.country ?? "Malawi");
   const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? "");
   const [busy, setBusy] = useState(false);
@@ -168,8 +170,10 @@ function NationalTeamForm({
     const dto: NationalTeamForm = {
       name: name.trim(),
       shortName: shortName.trim() || undefined,
+      nickname: nickname.trim() || undefined,
       gender: gender.trim() || undefined,
       level: level.trim() || undefined,
+      coach: coach.trim() || undefined,
       country: country.trim() || "Malawi",
       sourceUrl: sourceUrl.trim() || undefined,
     };
@@ -229,6 +233,14 @@ function NationalTeamForm({
                 placeholder="e.g. MWI"
               />
             </Field>
+            <Field label="Nickname" htmlFor="nt-nickname">
+              <Input
+                id="nt-nickname"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="e.g. The Scorchers"
+              />
+            </Field>
             <Field label="Gender" htmlFor="nt-gender">
               <OptionalSelect
                 id="nt-gender"
@@ -250,6 +262,14 @@ function NationalTeamForm({
                 id="nt-country"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
+              />
+            </Field>
+            <Field label="Coach" htmlFor="nt-coach">
+              <Input
+                id="nt-coach"
+                value={coach}
+                onChange={(e) => setCoach(e.target.value)}
+                placeholder="e.g. Lovemore Fazili"
               />
             </Field>
             <Field label="Source URL" htmlFor="nt-source">

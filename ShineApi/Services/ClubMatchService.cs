@@ -19,6 +19,28 @@ public class ClubMatchService : IClubMatchService
     public async Task<IEnumerable<ClubMatchDto>> GetAllAsync()
         => (await _repository.GetAllAsync()).Select(ToDto);
 
+    public async Task<PagedResult<ClubMatchDto>> GetPageAsync(ClubMatchQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<ClubMatchDto>
+        {
+            Items = [.. items.Select(ToDto)],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<ClubMatchFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (competitions, seasons) = await _repository.GetFilterOptionsAsync();
+        return new ClubMatchFilterOptionsDto
+        {
+            Competitions = [.. competitions],
+            Seasons = [.. seasons]
+        };
+    }
+
     public async Task<ClubMatchDto?> GetByIdAsync(int id)
     {
         var match = await _repository.GetByIdAsync(id);
@@ -104,10 +126,12 @@ public class ClubMatchService : IClubMatchService
     private async Task<bool> ClubsExistAsync(int? homeId, int? awayId, List<string> errors)
     {
         var before = errors.Count;
-        if (homeId is int h && !await _clubRepository.ExistsAsync(h))
-            errors.Add($"Unknown homeClubId {h}.");
-        if (awayId is int a && !await _clubRepository.ExistsAsync(a))
-            errors.Add($"Unknown awayClubId {a}.");
+        if (homeId is not null && homeId == awayId)
+            errors.Add("A match cannot have the same club on both sides.");
+        if (homeId is int home && !await _clubRepository.ExistsAsync(home))
+            errors.Add($"Unknown homeClubId {home}.");
+        if (awayId is int away && !await _clubRepository.ExistsAsync(away))
+            errors.Add($"Unknown awayClubId {away}.");
         return errors.Count == before;
     }
 

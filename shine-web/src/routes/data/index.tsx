@@ -5,17 +5,17 @@ export const Route = createFileRoute("/data/")({
 });
 
 const SECTIONS = [
+  { to: "/data/search", title: "Search", blurb: "Find a player, club or match by name." },
   { to: "/data/players", title: "Players", blurb: "Find a player, see their clubs." },
-  { to: "/data/clubs", title: "Clubs", blurb: "Find a club, see players and matches." },
   {
-    to: "/data/matches/club",
-    title: "Club matches",
-    blurb: "Find a club match, see the squad.",
+    to: "/data/clubs",
+    title: "Teams",
+    blurb: "Browse clubs and national teams.",
   },
   {
-    to: "/data/matches/national",
-    title: "National matches",
-    blurb: "Find a national team match, see the squad.",
+    to: "/data/matches/club",
+    title: "Matches",
+    blurb: "Browse club and national team matches.",
   },
 ] as const;
 

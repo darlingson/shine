@@ -17,6 +17,29 @@ public class NationalTeamService : INationalTeamService
     public async Task<IEnumerable<NationalTeam>> GetAllAsync()
         => await _repository.GetAllAsync();
 
+    public async Task<PagedResult<NationalTeam>> GetPageAsync(NationalTeamQuery query)
+    {
+        var (items, total) = await _repository.GetPageAsync(query);
+        return new PagedResult<NationalTeam>
+        {
+            Items = [.. items],
+            Total = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<NationalTeamFilterOptionsDto> GetFilterOptionsAsync()
+    {
+        var (countries, genders, levels) = await _repository.GetFilterOptionsAsync();
+        return new NationalTeamFilterOptionsDto
+        {
+            Countries = [.. countries],
+            Genders = [.. genders],
+            Levels = [.. levels]
+        };
+    }
+
     public async Task<NationalTeam?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
@@ -30,8 +53,10 @@ public class NationalTeamService : INationalTeamService
         {
             Name = name,
             ShortName = dto.ShortName,
+            Nickname = dto.Nickname,
             Gender = dto.Gender,
             Level = dto.Level,
+            Coach = dto.Coach,
             Country = dto.Country,
             SourceUrl = dto.SourceUrl,
             CreatedAt = DateTime.UtcNow,
@@ -54,8 +79,10 @@ public class NationalTeamService : INationalTeamService
 
         nationalTeam.Name = name;
         nationalTeam.ShortName = dto.ShortName;
+        nationalTeam.Nickname = dto.Nickname;
         nationalTeam.Gender = dto.Gender;
         nationalTeam.Level = dto.Level;
+        nationalTeam.Coach = dto.Coach;
         nationalTeam.Country = dto.Country;
         nationalTeam.SourceUrl = dto.SourceUrl;
         nationalTeam.UpdatedAt = DateTime.UtcNow;
