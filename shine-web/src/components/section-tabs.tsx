@@ -15,7 +15,11 @@ function Tab({ to, label }: { to: TabTo; label: string }) {
   const matchRoute = useMatchRoute();
   const active = Boolean(matchRoute({ to, fuzzy: false }));
   return (
-    <Link to={to} className={`${TAB_CLASS} ${active ? ACTIVE_CLASS : ""}`}>
+    <Link
+      to={to}
+      aria-current={active ? "page" : undefined}
+      className={`${TAB_CLASS} ${active ? ACTIVE_CLASS : ""}`}
+    >
       {label}
     </Link>
   );
