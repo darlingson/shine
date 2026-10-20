@@ -160,10 +160,12 @@ public class NationalTeamMatchService : INationalTeamMatchService
     private async Task<bool> TeamsExistAsync(int? homeId, int? awayId, List<string> errors)
     {
         var before = errors.Count;
-        if (homeId is int h && !await _nationalTeamRepository.ExistsAsync(h))
-            errors.Add($"Unknown homeNationalTeamId {h}.");
-        if (awayId is int a && !await _nationalTeamRepository.ExistsAsync(a))
-            errors.Add($"Unknown awayNationalTeamId {a}.");
+        if (homeId is not null && homeId == awayId)
+            errors.Add("A match cannot have the same team on both sides.");
+        if (homeId is int home && !await _nationalTeamRepository.ExistsAsync(home))
+            errors.Add($"Unknown homeNationalTeamId {home}.");
+        if (awayId is int away && !await _nationalTeamRepository.ExistsAsync(away))
+            errors.Add($"Unknown awayNationalTeamId {away}.");
         return errors.Count == before;
     }
 

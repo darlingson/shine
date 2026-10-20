@@ -126,10 +126,12 @@ public class ClubMatchService : IClubMatchService
     private async Task<bool> ClubsExistAsync(int? homeId, int? awayId, List<string> errors)
     {
         var before = errors.Count;
-        if (homeId is int h && !await _clubRepository.ExistsAsync(h))
-            errors.Add($"Unknown homeClubId {h}.");
-        if (awayId is int a && !await _clubRepository.ExistsAsync(a))
-            errors.Add($"Unknown awayClubId {a}.");
+        if (homeId is not null && homeId == awayId)
+            errors.Add("A match cannot have the same club on both sides.");
+        if (homeId is int home && !await _clubRepository.ExistsAsync(home))
+            errors.Add($"Unknown homeClubId {home}.");
+        if (awayId is int away && !await _clubRepository.ExistsAsync(away))
+            errors.Add($"Unknown awayClubId {away}.");
         return errors.Count == before;
     }
 
