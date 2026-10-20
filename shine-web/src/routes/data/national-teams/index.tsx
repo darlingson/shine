@@ -26,6 +26,7 @@ export const Route = createFileRoute("/data/national-teams/")({
 
 const PAGE_SIZE = 25;
 const ALL = "all";
+const COUNTRY = "Malawi";
 
 const SORT_OPTIONS: {
   value: string;
@@ -55,7 +56,6 @@ const DEFAULT_SORT = SORT_OPTIONS[0].value;
 function NationalTeamsListPage() {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query.trim(), 300);
-  const [country, setCountry] = useState("");
   const [gender, setGender] = useState("");
   const [level, setLevel] = useState("");
   const [sortValue, setSortValue] = useState(DEFAULT_SORT);
@@ -66,7 +66,7 @@ function NationalTeamsListPage() {
 
   const { data, isLoading, error } = useNationalTeamPage({
     q: debouncedQuery || undefined,
-    country: country || undefined,
+    country: COUNTRY,
     gender: gender || undefined,
     level: level || undefined,
     sort: sort.sort,
@@ -78,14 +78,14 @@ function NationalTeamsListPage() {
   const { data: filterOptions } = useNationalTeamFilterOptions();
 
   const teams = data?.items ?? [];
-  const hasFilters = Boolean(debouncedQuery || country || gender || level);
+  const hasFilters = Boolean(debouncedQuery || gender || level);
 
   return (
     <div className="flex flex-col gap-4">
       <TeamTabs />
 
       <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        National teams
+        Malawi national teams
       </h1>
 
       <div className="flex flex-wrap items-end gap-3">
@@ -101,27 +101,6 @@ function NationalTeamsListPage() {
             aria-label="Search national teams"
             className="w-64"
           />
-        </Field>
-        <Field label="Country" htmlFor="national-team-country">
-          <Select
-            value={country || ALL}
-            onValueChange={(value) => {
-              setCountry(value === ALL ? "" : (value ?? ""));
-              setPage(1);
-            }}
-          >
-            <SelectTrigger id="national-team-country" className="min-w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All countries</SelectItem>
-              {(filterOptions?.countries ?? []).map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </Field>
         <Field label="Gender" htmlFor="national-team-gender">
           <Select
@@ -218,12 +197,8 @@ function NationalTeamsListPage() {
                       </span>
                     )}
                   </span>
-                  <span className="shrink-0 text-right text-xs text-muted-foreground">
-                    {[
-                      t.country,
-                      t.gender,
-                      t.level && t.level !== "senior" ? t.level : null,
-                    ]
+                  <span className="shrink-0 text-right text-xs text-muted-foreground capitalize">
+                    {[t.gender, t.level && t.level !== "senior" ? t.level : null]
                       .filter(Boolean)
                       .join(" · ")}
                   </span>
