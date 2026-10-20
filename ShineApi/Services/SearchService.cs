@@ -22,6 +22,9 @@ public class SearchService(ShineDbContext db) : ISearchService
     /// <summary>Score at or above which a fuzzy-only candidate is worth showing.</summary>
     private const double FuzzyFloor = 0.45;
 
+    /// <summary>Upper bound on the fuzzy candidate scan so a typo never reads the whole table.</summary>
+    private const int MaxFuzzyCandidates = 500;
+
     private const double Exact = 1.0;
     private const double Prefix = 0.85;
     private const double Substring = 0.7;
@@ -33,6 +36,7 @@ public class SearchService(ShineDbContext db) : ISearchService
     {
         var raw = (query ?? "").Trim();
         var term = MatchRecordService.Normalize(raw);
+        // Each kind gets its own slice, so a broad search still shows every section.
         limit = Math.Clamp(limit, 1, MaxLimit);
 
         var selected = ResolveKinds(kinds);
@@ -80,6 +84,7 @@ public class SearchService(ShineDbContext db) : ISearchService
             var pool = await db.Player
                 .Where(p => p.FullName.Length >= lo
                     || (p.KnownAs != null && p.KnownAs.Length >= lo))
+                .Take(MaxFuzzyCandidates)
                 .ToListAsync();
 
             foreach (var s in Rank(pool.Where(p => !scored.ContainsKey(p.PlayerId)),
@@ -122,17 +127,19 @@ public class SearchService(ShineDbContext db) : ISearchService
         var hits = await db.NationalTeam
             .Where(n => EF.Functions.ILike(n.Name, pattern)
                 || (n.ShortName != null && EF.Functions.ILike(n.ShortName, pattern))
+                || (n.Nickname != null && EF.Functions.ILike(n.Nickname, pattern))
+                || (n.Coach != null && EF.Functions.ILike(n.Coach, pattern))
                 || (n.Level != null && EF.Functions.ILike(n.Level, pattern))
                 || (n.Gender != null && EF.Functions.ILike(n.Gender, pattern))
                 || EF.Functions.ILike(n.Country, pattern))
             .ToListAsync();
 
-        return Top(Rank(hits, n => TextScore(term, n.Name, n.ShortName, n.Level, n.Gender, n.Country), n => new SearchResultDto
+        return Top(Rank(hits, n => TextScore(term, n.Name, n.ShortName, n.Nickname, n.Coach, n.Level, n.Gender, n.Country), n => new SearchResultDto
         {
             Kind = SearchKinds.NationalTeam,
             Id = n.NationalTeamId,
             Title = n.Name,
-            Subtitle = string.Join(" · ", new[] { n.Gender, n.Level }
+            Subtitle = string.Join(" · ", new[] { n.Nickname, n.Gender, n.Level }
                 .Where(s => !string.IsNullOrWhiteSpace(s))),
             Badge = "National team",
         }), limit);
