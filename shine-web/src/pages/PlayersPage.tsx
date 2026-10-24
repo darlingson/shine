@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
+import { playerClubsExportHref } from "@/lib/playerclubs";
 import {
   deletePlayer,
   playersExportHref,
@@ -77,6 +78,19 @@ export function PlayersPage() {
             render={<a href={playersExportHref("json")} />}
           >
             <span>Export JSON</span>
+          </Button>
+          <Button
+            variant="outline"
+            render={<a href={playerClubsExportHref("csv")} />}
+          >
+            <DownloadSimpleIcon />
+            <span>Export careers CSV</span>
+          </Button>
+          <Button
+            variant="outline"
+            render={<a href={playerClubsExportHref("json")} />}
+          >
+            <span>Export careers JSON</span>
           </Button>
           {canWrite && (
             <Button render={<Link to="/manage/players/new" />}>
