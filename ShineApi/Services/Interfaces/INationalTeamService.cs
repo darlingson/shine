@@ -12,4 +12,5 @@ public interface INationalTeamService
     Task<NationalTeam?> CreateAsync(CreateNationalTeamDto dto);
     Task<NationalTeam?> UpdateAsync(int id, UpdateNationalTeamDto dto);
     Task<bool> DeleteAsync(int id);
+    Task<ExportFile?> ExportAsync(string format);
 }
