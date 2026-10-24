@@ -22,8 +22,8 @@ public class ClubMatchSquadRepository : IClubMatchSquadRepository
         => await _context.ClubMatchSquad
             .Include(x => x.Player)
             .Include(x => x.Club)
-            .Include(x => x.Match).ThenInclude(m => m.HomeClub)
-            .Include(x => x.Match).ThenInclude(m => m.AwayClub)
+            .Include(x => x.Match).ThenInclude(m => m!.HomeClub)
+            .Include(x => x.Match).ThenInclude(m => m!.AwayClub)
             .AsNoTracking()
             .ToListAsync();
 

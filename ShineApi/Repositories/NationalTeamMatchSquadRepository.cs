@@ -22,8 +22,8 @@ public class NationalTeamMatchSquadRepository : INationalTeamMatchSquadRepositor
         => await _context.NationalTeamMatchSquad
             .Include(x => x.Player)
             .Include(x => x.NationalTeam)
-            .Include(x => x.Match).ThenInclude(m => m.HomeNationalTeam)
-            .Include(x => x.Match).ThenInclude(m => m.AwayNationalTeam)
+            .Include(x => x.Match).ThenInclude(m => m!.HomeNationalTeam)
+            .Include(x => x.Match).ThenInclude(m => m!.AwayNationalTeam)
             .AsNoTracking()
             .ToListAsync();
 
