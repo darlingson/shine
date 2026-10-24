@@ -40,6 +40,18 @@ public class PlayersController : ControllerBase
         return player is null ? NotFound() : Ok(player);
     }
 
+    /// <summary>Full player list as a CSV or JSON download (format=csv|json).</summary>
+    [HttpGet("export")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Export([FromQuery] string format = "csv")
+    {
+        var file = await _service.ExportAsync(format);
+        if (file is null)
+            return BadRequest(new { errors = new[] { "format must be 'csv' or 'json'." } });
+
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
     [HttpPost]
     [HasPermission(Permissions.PlayersWrite)]
     public async Task<IActionResult> Create([FromBody] CreatePlayerDto dto)
