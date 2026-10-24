@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 
 export interface PlayerClub {
   playerClubId: number;
@@ -16,4 +16,9 @@ export interface PlayerClub {
 /** Minimal read client — listings for the public data pages. */
 export function listPlayerClubs(): Promise<PlayerClub[]> {
   return apiJson<PlayerClub[]>("/api/playerclubs");
+}
+
+/** Download URL for the full career history (format: csv or json). */
+export function playerClubsExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/playerclubs/export?format=${format}`;
 }
