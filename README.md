@@ -37,11 +37,13 @@ shine/
 │   ├── Authorization/    # Permissions, policies, role seeder
 │   ├── Controllers/      # Auth, Users, Clubs, NationalTeams, Players,
 │   │                     # ClubMatches, NationalTeamMatches, PlayerClubs,
-│   │                     # ClubMatchSquads, NationalTeamMatchSquads
+│   │                     # ClubMatchSquads, NationalTeamMatchSquads,
+│   │                     # MatchRecords, Search, Export
 │   ├── Dtos/
 │   ├── Models/           # Player, Club, NationalTeam, ClubMatch,
 │   │                     # NationalTeamMatch, PlayerClub, ClubMatchSquad,
-│   │                     # NationalTeamMatchSquad, RefreshToken, UserPermission
+│   │                     # NationalTeamMatchSquad, ReviewFlag,
+│   │                     # RefreshToken, UserPermission
 │   ├── Migrations/       # EF migrations (applied on startup)
 │   ├── Repositories/
 │   ├── Services/         # incl. Services/Auth/TokenService
@@ -49,7 +51,7 @@ shine/
 └── shine-web/
     ├── vercel.json       # SPA rewrite for history routing
     └── src/
-        ├── routes/       # / (landing), /manage/** (dashboard)
+        ├── routes/       # / (landing), /data/** (public browser), /manage/** (dashboard)
         ├── pages/        # Players, Matches, Squads, Users, Roles, …
         ├── auth/         # AuthContext, LoginForm, RequirePermission
         ├── lib/          # API clients per entity
@@ -65,7 +67,7 @@ shine/
 | `NationalTeam` | Canonical national side: name, short name, gender (`men`/`women`/`mixed`), level (`senior`/`U23`/`U20`/`U17`), country, `SourceUrl`. Squad entries reference this instead of free text |
 | `PlayerClub` | Player ↔ Club affiliation: start/end dates, `IsCurrent`, contract type (`permanent`/`loan`/`youth`/`trial`), shirt number, position at club |
 | `ClubMatch` | Club fixture: date, competition (e.g. Super League), season, optional home/away `Club` links (+ scores), venue, `SourceUrl`. Teams can be linked after the fact |
-| `NationalTeamMatch` | National-team fixture: same fields, with optional home/away `NationalTeam` links |
+| `NationalTeamMatch` | National-team fixture: same core fields, additionally kickoff time, round/stage (e.g. "Group C"), neutral venue, extra time and penalty-shootout scores, with optional home/away `NationalTeam` links |
 | `ClubMatchSquad` | Player participation in a club match: lineup status (`starter`/`substitute`/`unused_sub`/`reserve`/`suspended`/`injured`), minutes, goals, assists, cards, captaincy, notes |
 | `NationalTeamMatchSquad` | Same participation detail for national-team matches, keyed by `{MatchId, NationalTeamId, PlayerId}` |
 
@@ -118,9 +120,17 @@ Reads are public; writes require the listed permission (snapshotted in the acces
 
 - `/api/Clubs`, `/api/NationalTeams`, `/api/Players`, `/api/ClubMatches`, `/api/NationalTeamMatches`, `/api/PlayerClubs`, `/api/ClubMatchSquads`, `/api/NationalTeamMatchSquads` — REST (`GET` collection + item, `POST`/`PUT`/`DELETE` with `clubs:write`, `nationalteams:write`, `players:write`, `matches:write`, `squads:write`)
 - `/api/ClubMatches/{id}/teams`, `/api/NationalTeamMatches/{id}/teams` — `PATCH` (`matches:write`) to link or correct a match's two teams
+- `/api/MatchRecords` — `POST` (`matches:write`) to record a full match in one request (fixture, lineups and scorers); unmatched team references become review flags
+- `/api/MatchRecords/review-flags` — list, resolve and delete data-review flags (`matches:write`)
 - `/api/Search?q=…&kinds=…&limit=…` — public keyword search across players, clubs, national teams and both match kinds; returns a flat list of `{ kind, id, title, subtitle, badge }` ranked best-first (`limit` caps results per kind)
 - `/api/Auth` — `register`, `login`, `refresh`, `revoke`, `logout`, `me`
 - `/api/Users` — list, role assign/remove (`users:manage`), permission grant/revoke (`permissions:grant`)
+
+Exports — full-list downloads for analysts, journalists and integrations; reads stay public:
+
+- `/api/Players/export`, `/api/Clubs/export`, `/api/NationalTeams/export`, `/api/ClubMatches/export`, `/api/NationalTeamMatches/export`, `/api/PlayerClubs/export` — `GET ?format=csv|json` (default `csv`)
+- `/api/Export/appearances` — every squad appearance, club and national matches combined, one flat denormalized row per entry (player, team, opponent, match context, participation detail)
+- CSV files are UTF-8 with BOM (Excel-friendly), quoted per RFC 4180, ISO 8601 dates, resolved display names alongside IDs; JSON uses the same property names as the read endpoints
 
 ## Deploying
 
@@ -142,9 +152,9 @@ Swagger UI is only served in Development; in production use `/healthz` and the `
 
 ## Status and roadmap
 
-Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, club/national squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser.
+Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser; full-match recording that flags unmatched references for review; and CSV/JSON exports for every public entity plus a combined flat appearances export for club and national squad entries.
 
-Planned (per product description, not yet built): squad-role filters, CSV/JSON export, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
+Planned (per product description, not yet built): squad-role filters, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
 
 ## Contributing
 
