@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import { DownloadSimpleIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import { deleteClub } from "@/lib/clubs";
+import { clubsExportHref, deleteClub } from "@/lib/clubs";
 import { useClubs } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
@@ -61,12 +61,21 @@ export function ClubsPage() {
               : "Read-only access — editing needs the clubs:write permission."}
           </p>
         </div>
-        {canWrite && (
-          <Button nativeButton={false} render={<Link to="/manage/clubs/new" />}>
-            <PlusIcon />
-            <span>Add club</span>
+        <div className="flex gap-2">
+          <Button variant="outline" render={<a href={clubsExportHref("csv")} />}>
+            <DownloadSimpleIcon />
+            <span>Export CSV</span>
           </Button>
-        )}
+          <Button variant="outline" render={<a href={clubsExportHref("json")} />}>
+            <span>Export JSON</span>
+          </Button>
+          {canWrite && (
+            <Button nativeButton={false} render={<Link to="/manage/clubs/new" />}>
+              <PlusIcon />
+              <span>Add club</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>

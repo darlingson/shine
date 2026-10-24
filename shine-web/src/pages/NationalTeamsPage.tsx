@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import { DownloadSimpleIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import { deleteNationalTeam } from "@/lib/nationalTeams";
+import { deleteNationalTeam, nationalTeamsExportHref } from "@/lib/nationalTeams";
 import { useNationalTeams } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
@@ -63,15 +63,30 @@ export function NationalTeamsPage() {
               : "Read-only access — editing needs the nationalteams:write permission."}
           </p>
         </div>
-        {canWrite && (
+        <div className="flex gap-2">
           <Button
-            nativeButton={false}
-            render={<Link to="/manage/national-teams/new" />}
+            variant="outline"
+            render={<a href={nationalTeamsExportHref("csv")} />}
           >
-            <PlusIcon />
-            <span>Add national team</span>
+            <DownloadSimpleIcon />
+            <span>Export CSV</span>
           </Button>
-        )}
+          <Button
+            variant="outline"
+            render={<a href={nationalTeamsExportHref("json")} />}
+          >
+            <span>Export JSON</span>
+          </Button>
+          {canWrite && (
+            <Button
+              nativeButton={false}
+              render={<Link to="/manage/national-teams/new" />}
+            >
+              <PlusIcon />
+              <span>Add national team</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
