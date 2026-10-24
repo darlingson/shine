@@ -5,6 +5,7 @@ namespace ShineApi.Repositories.Interfaces;
 public interface IClubMatchSquadRepository
 {
     Task<IEnumerable<ClubMatchSquad>> GetAllAsync();
+    Task<IEnumerable<ClubMatchSquad>> GetAllForExportAsync();
     Task<ClubMatchSquad?> GetByIdAsync(int matchId, int clubId, int playerId);
     Task<ClubMatchSquad> AddAsync(ClubMatchSquad squad);
     void Update(ClubMatchSquad squad);

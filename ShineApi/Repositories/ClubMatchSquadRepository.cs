@@ -16,6 +16,17 @@ public class ClubMatchSquadRepository : IClubMatchSquadRepository
     public async Task<IEnumerable<ClubMatchSquad>> GetAllAsync()
         => await _context.ClubMatchSquad.AsNoTracking().ToListAsync();
 
+    /// <summary>All squad entries with player, club and match (incl. both sides)
+    /// resolved for export.</summary>
+    public async Task<IEnumerable<ClubMatchSquad>> GetAllForExportAsync()
+        => await _context.ClubMatchSquad
+            .Include(x => x.Player)
+            .Include(x => x.Club)
+            .Include(x => x.Match).ThenInclude(m => m.HomeClub)
+            .Include(x => x.Match).ThenInclude(m => m.AwayClub)
+            .AsNoTracking()
+            .ToListAsync();
+
     public async Task<ClubMatchSquad?> GetByIdAsync(int matchId, int clubId, int playerId)
         => await _context.ClubMatchSquad.FindAsync(matchId, clubId, playerId);
 
