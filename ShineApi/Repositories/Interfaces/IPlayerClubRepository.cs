@@ -5,6 +5,7 @@ namespace ShineApi.Repositories.Interfaces;
 public interface IPlayerClubRepository
 {
     Task<IEnumerable<PlayerClub>> GetAllAsync();
+    Task<IEnumerable<PlayerClub>> GetAllForExportAsync();
     Task<PlayerClub?> GetByIdAsync(int id);
     Task<PlayerClub> AddAsync(PlayerClub playerClub);
     void Update(PlayerClub playerClub);

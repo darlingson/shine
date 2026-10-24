@@ -10,4 +10,5 @@ public interface IPlayerClubService
     Task<PlayerClub> CreateAsync(CreatePlayerClubDto dto);
     Task<PlayerClub?> UpdateAsync(int id, UpdatePlayerClubDto dto);
     Task<bool> DeleteAsync(int id);
+    Task<ExportFile?> ExportAsync(string format);
 }

@@ -50,4 +50,17 @@ public class PlayerClubsController : ControllerBase
     [HasPermission(Permissions.PlayersWrite)]
     public async Task<IActionResult> Delete(int id)
         => await _service.DeleteAsync(id) ? NoContent() : NotFound();
+
+    /// <summary>Full career history as a CSV or JSON download (format=csv|json).
+    /// Player and club names are resolved; one row per club stint.</summary>
+    [HttpGet("export")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Export([FromQuery] string format = "csv")
+    {
+        var file = await _service.ExportAsync(format);
+        if (file is null)
+            return BadRequest(new { errors = new[] { "format must be 'csv' or 'json'." } });
+
+        return File(file.Content, file.ContentType, file.FileName);
+    }
 }
