@@ -12,4 +12,5 @@ public interface IClubService
     Task<Club> CreateAsync(CreateClubDto dto);
     Task<Club?> UpdateAsync(int id, UpdateClubDto dto);
     Task<bool> DeleteAsync(int id);
+    Task<ExportFile?> ExportAsync(string format);
 }

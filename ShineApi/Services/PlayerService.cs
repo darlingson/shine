@@ -129,8 +129,7 @@ public class PlayerService : IPlayerService
                 buffer.Append(',');
                 Csv.AppendEscaped(buffer, IsoDate(p.DateOfBirth));
                 buffer.Append(',');
-                Csv.AppendEscaped(buffer, p.Gender);
-                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.Gender);                buffer.Append(',');
                 Csv.AppendEscaped(buffer, p.Nationality);
                 buffer.Append(',');
                 Csv.AppendEscaped(buffer, p.PositionPrimary);
@@ -145,9 +144,9 @@ public class PlayerService : IPlayerService
                 buffer.Append(',');
                 Csv.AppendEscaped(buffer, p.SourceUrl);
                 buffer.Append(',');
-                Csv.AppendEscaped(buffer, IsoTimestamp(p.CreatedAt));
+                Csv.AppendEscaped(buffer, ExportFormats.IsoTimestamp(p.CreatedAt));
                 buffer.Append(',');
-                Csv.AppendEscaped(buffer, IsoTimestamp(p.UpdatedAt));
+                Csv.AppendEscaped(buffer, ExportFormats.IsoTimestamp(p.UpdatedAt));
             }
 
             // UTF-8 BOM so Excel detects the encoding when opened by double-click.
@@ -166,9 +165,4 @@ public class PlayerService : IPlayerService
 
     private static string? IsoDate(DateOnly? date)
         => date?.ToString("yyyy-MM-dd");
-
-    private static string IsoTimestamp(DateTime value)
-        => value.Kind == DateTimeKind.Utc
-            ? value.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
-            : value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
 }

@@ -21,6 +21,12 @@ public static class ExportFormats
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
+    /// <summary>ISO 8601 UTC timestamp, e.g. 2026-01-31T14:05:00Z.</summary>
+    public static string IsoTimestamp(DateTime value)
+        => value.Kind == DateTimeKind.Utc
+            ? value.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            : value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
     /// <summary>UTF-8 BOM so Excel detects the encoding when opened by double-click.</summary>
     public static byte[] WithUtf8Bom(StringBuilder csv)
         => new byte[] { 0xEF, 0xBB, 0xBF }
