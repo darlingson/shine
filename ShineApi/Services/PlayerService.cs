@@ -3,7 +3,6 @@ using ShineApi.Models;
 using ShineApi.Repositories.Interfaces;
 using ShineApi.Services.Interfaces;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace ShineApi.Services;
@@ -107,8 +106,7 @@ public class PlayerService : IPlayerService
     /// and timestamps are UTC.</summary>
     public async Task<ExportFile?> ExportAsync(string format)
     {
-        if (!string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
+        if (!ExportFormats.IsSupported(format))
             return null;
 
         var players = (await _repository.GetAllAsync())
@@ -116,7 +114,7 @@ public class PlayerService : IPlayerService
             .ThenBy(p => p.PlayerId)
             .ToList();
 
-        if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+        if (ExportFormats.IsCsv(format))
         {
             var buffer = new StringBuilder();
             buffer.Append("playerId,fullName,knownAs,dateOfBirth,gender,nationality,positionPrimary,positionSecondary,heightCm,foot,status,sourceUrl,createdAt,updatedAt");
@@ -153,19 +151,13 @@ public class PlayerService : IPlayerService
             }
 
             // UTF-8 BOM so Excel detects the encoding when opened by double-click.
-            var content = new byte[] { 0xEF, 0xBB, 0xBF }
-                .Concat(Encoding.UTF8.GetBytes(buffer.ToString()))
-                .ToArray();
+            var content = ExportFormats.WithUtf8Bom(buffer);
             return new ExportFile("players.csv", "text/csv; charset=utf-8", content);
         }
 
         var json = JsonSerializer.Serialize(
             players,
-            new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            });
+            ExportFormats.JsonOptions);
         return new ExportFile(
             "players.json",
             "application/json; charset=utf-8",
