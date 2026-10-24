@@ -129,7 +129,8 @@ public class PlayerService : IPlayerService
                 buffer.Append(',');
                 Csv.AppendEscaped(buffer, IsoDate(p.DateOfBirth));
                 buffer.Append(',');
-                Csv.AppendEscaped(buffer, p.Gender);                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.Gender);
+                buffer.Append(',');
                 Csv.AppendEscaped(buffer, p.Nationality);
                 buffer.Append(',');
                 Csv.AppendEscaped(buffer, p.PositionPrimary);
