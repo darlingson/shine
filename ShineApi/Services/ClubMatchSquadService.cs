@@ -39,6 +39,7 @@ public class ClubMatchSquadService : IClubMatchSquadService
             errors.Add($"Unknown clubId {dto.ClubId}.");
         if (!await _playerRepository.ExistsAsync(dto.PlayerId))
             errors.Add($"Unknown playerId {dto.PlayerId}.");
+        var position = Positions.NormalizeOrError(dto.Position, "position", errors);
         if (errors.Count != before) return null;
 
         if (await _repository.ExistsAsync(dto.MatchId, dto.ClubId, dto.PlayerId))
@@ -51,7 +52,8 @@ public class ClubMatchSquadService : IClubMatchSquadService
             PlayerId = dto.PlayerId,
             LineupStatus = dto.LineupStatus,
             ShirtNumber = dto.ShirtNumber,
-            Position = dto.Position,
+            Position = position?.Position,
+            Role = position?.Role,
             MinutesPlayed = dto.MinutesPlayed,
             Goals = dto.Goals,
             Assists = dto.Assists,
@@ -67,14 +69,18 @@ public class ClubMatchSquadService : IClubMatchSquadService
         return squad;
     }
 
-    public async Task<ClubMatchSquad?> UpdateAsync(int matchId, int clubId, int playerId, UpdateClubMatchSquadDto dto)
+    public async Task<ClubMatchSquad?> UpdateAsync(int matchId, int clubId, int playerId, UpdateClubMatchSquadDto dto, List<string> errors)
     {
         var squad = await _repository.GetByIdAsync(matchId, clubId, playerId);
         if (squad is null) return null;
 
+        var position = Positions.NormalizeOrError(dto.Position, "position", errors);
+        if (errors.Count > 0) return squad;
+
         squad.LineupStatus = dto.LineupStatus;
         squad.ShirtNumber = dto.ShirtNumber;
-        squad.Position = dto.Position;
+        squad.Position = position?.Position;
+        squad.Role = position?.Role;
         squad.MinutesPlayed = dto.MinutesPlayed;
         squad.Goals = dto.Goals;
         squad.Assists = dto.Assists;
