@@ -62,14 +62,14 @@ shine/
 
 | Entity | What it stores |
 |---|---|
-| `Player` | Full name, known-as, DOB, gender (`men`/`women`, empty = unknown), nationality (default `Malawi`), positions (canonical codes) with derived roles, height, foot, status (`active`/`retired`/`unknown`), `SourceUrl` |
+| `Player` | Full name, known-as, DOB, gender (`men`/`women`, empty = unknown), nationality (default `Malawi`), positions (canonical codes) with derived roles, height, foot (`left`/`right`/`both`, empty = unknown), status (`active`/`retired`/`unknown`, empty = keeps the stored value on update and defaults to `active` on create), `SourceUrl` |
 | `Club` | Name, short name, city, country (default `Malawi`), founded year, `SourceUrl` |
 | `NationalTeam` | Canonical national side: name, short name, gender (`men`/`women`/`mixed`), level (`senior`/`U23`/`U20`/`U17`), country, `SourceUrl`. Squad entries reference this instead of free text |
 | `PlayerClub` | Player ↔ Club affiliation: start/end dates, `IsCurrent`, contract type (`permanent`/`loan`/`youth`/`trial`), shirt number, position at club (canonical code with derived role) |
 | `ClubMatch` | Club fixture: date, competition (e.g. Super League), season, optional home/away `Club` links (+ scores), venue, `SourceUrl`. Teams can be linked after the fact |
 | `NationalTeamMatch` | National-team fixture: same core fields, additionally kickoff time, round/stage (e.g. "Group C"), neutral venue, extra time and penalty-shootout scores, with optional home/away `NationalTeam` links |
-| `ClubMatchSquad` | Player participation in a club match: lineup status (`starter`/`substitute`/`matchday_squad`/`unused_sub`/`reserve`/`suspended`/`injured`), minutes, goals, assists, cards, captaincy, notes |
-| `NationalTeamMatchSquad` | Same participation detail for national-team matches, keyed by `{MatchId, NationalTeamId, PlayerId}` |
+| `ClubMatchSquad` | Player participation in a club match: lineup status (`starter`/`substitute`/`matchday_squad`/`unused_sub`/`reserve`/`suspended`/`injured`, enforced on write together with `NationalTeamMatchSquad`), minutes, goals, assists, cards, captaincy, notes |
+| `NationalTeamMatchSquad` | Same participation detail and enforced lineup-status vocabulary for national-team matches, keyed by `{MatchId, NationalTeamId, PlayerId}` |
 
 ## Getting started
 
@@ -152,9 +152,11 @@ Swagger UI is only served in Development; in production use `/healthz` and the `
 
 ## Status and roadmap
 
-Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser; full-match recording that flags unmatched references for review; CSV/JSON exports for every public entity plus a combined flat appearances export for club and national squad entries; and a canonical position vocabulary (roles `GK`/`DF`/`MF`/`FW` with granular position codes) enforced on write across players, squads and club stints, surfaced as grouped pickers in the web forms and as extra columns in the player, appearance and career exports; and canonical gender values (`men`/`women`, aligned with the national-team vocabulary) enforced on write and backfilled across player records.
+Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser; full-match recording that flags unmatched references for review; CSV/JSON exports for every public entity plus a combined flat appearances export for club and national squad entries; and a canonical position vocabulary (roles `GK`/`DF`/`MF`/`FW` with granular position codes) enforced on write across players, squads and club stints, surfaced as grouped pickers in the web forms and as extra columns in the player, appearance and career exports; and canonical gender values (`men`/`women`, aligned with the national-team vocabulary) enforced on write (the gender backfill was a one-off update on the live database, so existing records carry canonical values without any runtime backfill); enforced canonical foot (`left`/`right`/`both`) and player status (`active`/`retired`/`unknown`) on player writes; enforced line-up-status vocabulary (`starter`/`substitute`/`matchday_squad`/`unused_sub`/`reserve`/`suspended`/`injured`) on club and national-team squad writes; and validated national-team gender (`men`/`women`/`mixed`) on write.
 
 Planned (per product description, not yet built): squad-role filters, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
+
+Left as free text on purpose for now: `NationalTeam.Level` (convention is `senior`/`U23`/`U20`/`U17` when a level is known), `PlayerClub.ContractType` (convention is `permanent`/`loan`/`youth`/`trial`), and match `competition`/`season` wording — a shared competitions table is the eventual fix for those.
 
 ## Contributing
 
