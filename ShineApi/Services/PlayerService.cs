@@ -49,6 +49,8 @@ public class PlayerService : IPlayerService
         var primary = Positions.NormalizeOrError(dto.PositionPrimary, "positionPrimary", errors);
         var secondary = Positions.NormalizeOrError(dto.PositionSecondary, "positionSecondary", errors);
         var gender = Genders.NormalizeOrError(dto.Gender, "gender", errors);
+        var foot = Feet.NormalizeOrError(dto.Foot, "foot", errors);
+        var status = PlayerStatuses.NormalizeOrError(dto.Status, "status", errors);
         if (errors.Count > 0) return null;
 
         var player = new Player
@@ -63,8 +65,8 @@ public class PlayerService : IPlayerService
             PositionSecondary = secondary?.Position,
             SecondaryRole = secondary?.Role,
             HeightCm = dto.HeightCm,
-            Foot = dto.Foot,
-            Status = dto.Status,
+            Foot = foot,
+            Status = status ?? PlayerStatuses.Active,
             SourceUrl = dto.SourceUrl,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -83,6 +85,8 @@ public class PlayerService : IPlayerService
         var primary = Positions.NormalizeOrError(dto.PositionPrimary, "positionPrimary", errors);
         var secondary = Positions.NormalizeOrError(dto.PositionSecondary, "positionSecondary", errors);
         var gender = Genders.NormalizeOrError(dto.Gender, "gender", errors);
+        var foot = Feet.NormalizeOrError(dto.Foot, "foot", errors);
+        var status = PlayerStatuses.NormalizeOrError(dto.Status, "status", errors);
         if (errors.Count > 0) return player;
 
         player.FullName = dto.FullName;
@@ -95,8 +99,8 @@ public class PlayerService : IPlayerService
         player.PositionSecondary = secondary?.Position;
         player.SecondaryRole = secondary?.Role;
         player.HeightCm = dto.HeightCm;
-        player.Foot = dto.Foot;
-        player.Status = dto.Status;
+        player.Foot = foot;
+        player.Status = status ?? player.Status;
         player.SourceUrl = dto.SourceUrl;
         player.UpdatedAt = DateTime.UtcNow;
 
