@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 import type { SortOrder } from "@/lib/sorting";
 
 export interface NationalTeam {
@@ -110,6 +110,11 @@ export function queryNationalTeams(
 
 export function getNationalTeamFilterOptions(): Promise<NationalTeamFilterOptions> {
   return apiJson<NationalTeamFilterOptions>("/api/nationalteams/filter-options");
+}
+
+/** Download URL for the full national team list (format: csv or json). */
+export function nationalTeamsExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/nationalteams/export?format=${format}`;
 }
 
 /** Human label: "Malawi Women (U20)" style, for pickers and tables. */

@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 import type { SortOrder } from "@/lib/sorting";
 
 export type { SortOrder };
@@ -101,4 +101,9 @@ export function updateClub(id: number, dto: ClubForm): Promise<Club> {
 
 export function deleteClub(id: number): Promise<void> {
   return apiJson<void>(`/api/clubs/${id}`, { method: "DELETE" });
+}
+
+/** Download URL for the full club list (format: csv or json). */
+export function clubsExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/clubs/export?format=${format}`;
 }

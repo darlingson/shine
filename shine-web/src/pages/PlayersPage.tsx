@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import { DownloadSimpleIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
+import { playerClubsExportHref } from "@/lib/playerclubs";
 import {
   deletePlayer,
+  playersExportHref,
 } from "@/lib/players";
 import { usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
@@ -63,12 +65,40 @@ export function PlayersPage() {
               : "Read-only access — editing needs the players:write permission."}
           </p>
         </div>
-        {canWrite && (
-          <Button render={<Link to="/manage/players/new" />}>
-            <PlusIcon />
-            <span>Add player</span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            render={<a href={playersExportHref("csv")} />}
+          >
+            <DownloadSimpleIcon />
+            <span>Export CSV</span>
           </Button>
-        )}
+          <Button
+            variant="outline"
+            render={<a href={playersExportHref("json")} />}
+          >
+            <span>Export JSON</span>
+          </Button>
+          <Button
+            variant="outline"
+            render={<a href={playerClubsExportHref("csv")} />}
+          >
+            <DownloadSimpleIcon />
+            <span>Export careers CSV</span>
+          </Button>
+          <Button
+            variant="outline"
+            render={<a href={playerClubsExportHref("json")} />}
+          >
+            <span>Export careers JSON</span>
+          </Button>
+          {canWrite && (
+            <Button render={<Link to="/manage/players/new" />}>
+              <PlusIcon />
+              <span>Add player</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>

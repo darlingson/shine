@@ -2,6 +2,8 @@ using ShineApi.Dtos;
 using ShineApi.Models;
 using ShineApi.Repositories.Interfaces;
 using ShineApi.Services.Interfaces;
+using System.Text;
+using System.Text.Json;
 
 namespace ShineApi.Services;
 
@@ -98,4 +100,70 @@ public class PlayerService : IPlayerService
         await _repository.SaveChangesAsync();
         return true;
     }
+
+    /// <summary>Full player list as a CSV or JSON download. CSV columns match the
+    /// JSON property names; blank cells mean the value is null. Dates are ISO 8601
+    /// and timestamps are UTC.</summary>
+    public async Task<ExportFile?> ExportAsync(string format)
+    {
+        if (!ExportFormats.IsSupported(format))
+            return null;
+
+        var players = (await _repository.GetAllAsync())
+            .OrderBy(p => p.FullName)
+            .ThenBy(p => p.PlayerId)
+            .ToList();
+
+        if (ExportFormats.IsCsv(format))
+        {
+            var buffer = new StringBuilder();
+            buffer.Append("playerId,fullName,knownAs,dateOfBirth,gender,nationality,positionPrimary,positionSecondary,heightCm,foot,status,sourceUrl,createdAt,updatedAt");
+            foreach (var p in players)
+            {
+                buffer.AppendLine();
+                Csv.AppendEscaped(buffer, p.PlayerId.ToString());
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.FullName);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.KnownAs);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, IsoDate(p.DateOfBirth));
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.Gender);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.Nationality);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.PositionPrimary);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.PositionSecondary);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.HeightCm?.ToString());
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.Foot);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.Status);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.SourceUrl);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, ExportFormats.IsoTimestamp(p.CreatedAt));
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, ExportFormats.IsoTimestamp(p.UpdatedAt));
+            }
+
+            // UTF-8 BOM so Excel detects the encoding when opened by double-click.
+            var content = ExportFormats.WithUtf8Bom(buffer);
+            return new ExportFile("players.csv", "text/csv; charset=utf-8", content);
+        }
+
+        var json = JsonSerializer.Serialize(
+            players,
+            ExportFormats.JsonOptions);
+        return new ExportFile(
+            "players.json",
+            "application/json; charset=utf-8",
+            Encoding.UTF8.GetBytes(json));
+    }
+
+    private static string? IsoDate(DateOnly? date)
+        => date?.ToString("yyyy-MM-dd");
 }

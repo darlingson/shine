@@ -5,6 +5,7 @@ namespace ShineApi.Repositories.Interfaces;
 public interface INationalTeamMatchSquadRepository
 {
     Task<IEnumerable<NationalTeamMatchSquad>> GetAllAsync();
+    Task<IEnumerable<NationalTeamMatchSquad>> GetAllForExportAsync();
     Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, int nationalTeamId, int playerId);
     Task<NationalTeamMatchSquad> AddAsync(NationalTeamMatchSquad squad);
     void Update(NationalTeamMatchSquad squad);

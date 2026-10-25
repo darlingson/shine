@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 import type { SortOrder } from "@/lib/sorting";
 
 export interface ClubMatch {
@@ -110,6 +110,11 @@ export function updateClubMatch(
 
 export function deleteClubMatch(id: number): Promise<void> {
   return apiJson<void>(`/api/clubmatches/${id}`, { method: "DELETE" });
+}
+
+/** Download URL for the full club match list (format: csv or json). */
+export function clubMatchesExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/clubmatches/export?format=${format}`;
 }
 
 /** "Home 2–1 Away" style label; "?" stands in for an unlinked club. */

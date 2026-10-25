@@ -16,6 +16,14 @@ public class PlayerClubRepository : IPlayerClubRepository
     public async Task<IEnumerable<PlayerClub>> GetAllAsync()
         => await _context.PlayerClub.AsNoTracking().ToListAsync();
 
+    /// <summary>All stints with related player and club resolved for export.</summary>
+    public async Task<IEnumerable<PlayerClub>> GetAllForExportAsync()
+        => await _context.PlayerClub
+            .Include(pc => pc.Player)
+            .Include(pc => pc.Club)
+            .AsNoTracking()
+            .ToListAsync();
+
     public async Task<PlayerClub?> GetByIdAsync(int id)
         => await _context.PlayerClub.FindAsync(id);
 

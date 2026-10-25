@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 
 export const LINEUP_STATUSES = [
   "starter",
@@ -139,4 +139,9 @@ export function deleteNationalSquad(
     `/api/nationalteammatchsquads/${matchId}/${nationalTeamId}/${playerId}`,
     { method: "DELETE" },
   );
+}
+
+/** Download URL for the combined appearances export (format: csv or json). */
+export function appearancesExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/export/appearances?format=${format}`;
 }

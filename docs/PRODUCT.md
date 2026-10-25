@@ -20,7 +20,7 @@ Data on Malawian football players is scattered across PDFs, social media posts, 
 A relational database with a small core set of entities and a clear path to extend them. The core entities are:
 
 - **Player** — identity and basic biographical details.
-- **Club** — team or club entity.
+- **Club** and **national team** — team entities, including men's, women's and youth national sides.
 - **Player–Club affiliation** — who played for which club, when, and in what capacity.
 - **Club match** and **national team match** — the events that squads attach to.
 - **Club match squad** — player participation in a club match.
@@ -30,17 +30,25 @@ Every record can carry provenance fields such as source URL, source type, confid
 
 ## Key capabilities
 
+Available today:
+
 - Player profiles with identity, position, status, and basic bio data.
 - Club registry with names, locations, and founding details.
+- National team registry (men, women and youth sides) with coach and level.
 - Affiliation history including permanent, loan, youth, and trial periods.
-- Match records with date, competition, teams, score, and venue.
-- Club match squads with lineups, substitutes, minutes, goals, assists, cards, and captaincy.
-- National team match squads with the same participation detail.
-- Source tracking and provenance for every fact where possible.
-- Search and filter by player, club, match, competition, date, or squad role.
-- Export to CSV or JSON.
+- Match records with date, competition, teams, score, and venue — national matches additionally track round/stage, kickoff time, neutral venues, extra time and penalty shootouts.
+- Club and national match squads with lineups, substitutes, minutes, goals, assists, cards, and captaincy.
+- Full-match recording that creates review flags for anything left unresolved.
+- Source tracking for every fact where possible.
+- Search and filter by player, club, match, competition, or date.
+- Export to CSV or JSON — per entity, plus a combined flat appearances export.
 - API access for developers, researchers, and media.
-- Role-based editing, moderation, and audit logging.
+
+Planned:
+
+- Search and filter by squad role (starter, substitute, bench).
+- Provenance enrichment: source type, confidence level, and last verified date.
+- Role-based moderation and audit logging beyond current permissions.
 - Bulk import and correction workflows.
 
 ## Intended users

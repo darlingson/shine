@@ -131,6 +131,7 @@ builder.Services.AddScoped<IClubMatchSquadService, ClubMatchSquadService>();
 builder.Services.AddScoped<INationalTeamMatchSquadService, NationalTeamMatchSquadService>();
 builder.Services.AddScoped<IMatchRecordService, MatchRecordService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<ShineApi.Services.Interfaces.IAppearanceExportService, ShineApi.Services.AppearanceExportService>();
 builder.Services.AddScoped<ShineApi.Services.Auth.ITokenService, ShineApi.Services.Auth.TokenService>();
 
 var app = builder.Build();

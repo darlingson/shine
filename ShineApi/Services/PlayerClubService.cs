@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using ShineApi.Dtos;
 using ShineApi.Models;
 using ShineApi.Repositories.Interfaces;
@@ -71,5 +73,68 @@ public class PlayerClubService : IPlayerClubService
         _repository.Delete(playerClub);
         await _repository.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>Full career history as a CSV or JSON download. One row per club
+    /// stint with player and club names resolved; blank cells mean null. Dates
+    /// are ISO 8601 and timestamps are UTC.</summary>
+    public async Task<ExportFile?> ExportAsync(string format)
+    {
+        if (!ExportFormats.IsSupported(format))
+            return null;
+
+        var rows = (await _repository.GetAllForExportAsync())
+            .OrderBy(pc => pc.Player?.FullName)
+            .ThenBy(pc => pc.StartDate?.ToString("yyyy-MM-dd") ?? string.Empty)
+            .ThenBy(pc => pc.PlayerClubId)
+            .ToList();
+
+        if (ExportFormats.IsCsv(format))
+        {
+            var csv = new StringBuilder();
+            csv.Append("playerClubId,playerId,playerName,clubId,clubName,startDate,endDate,isCurrent,contractType,shirtNumber,positionAtClub,sourceUrl,createdAt,updatedAt");
+            foreach (var pc in rows)
+            {
+                csv.AppendLine();
+                Csv.AppendEscaped(csv, pc.PlayerClubId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.PlayerId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.Player?.FullName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.ClubId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.Club?.Name);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.StartDate?.ToString("yyyy-MM-dd"));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.EndDate?.ToString("yyyy-MM-dd"));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.IsCurrent ? "true" : "false");
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.ContractType);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.ShirtNumber?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.PositionAtClub);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, pc.SourceUrl);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(pc.CreatedAt));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(pc.UpdatedAt));
+            }
+
+            return new ExportFile(
+                "player-career-history.csv",
+                "text/csv; charset=utf-8",
+                ExportFormats.WithUtf8Bom(csv));
+        }
+
+        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        return new ExportFile(
+            "player-career-history.json",
+            "application/json; charset=utf-8",
+            Encoding.UTF8.GetBytes(json));
     }
 }

@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import {
+  DownloadSimpleIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +30,7 @@ import { DeleteButton } from "@/components/data-ui";
 import { clubMatchLabel } from "@/lib/clubMatches";
 import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import {
+  appearancesExportHref,
   clubEntryKey,
   deleteClubSquad,
   deleteNationalSquad,
@@ -197,17 +202,32 @@ export function SquadsPage() {
               : "Read-only access — editing needs the squads:write permission."}
           </p>
         </div>
-        {canWrite && (
+        <div className="flex gap-2">
           <Button
-            nativeButton={false}
-            render={
-              <Link to={tab === "club" ? "/manage/squads/club/new" : "/manage/squads/national/new"} />
-            }
+            variant="outline"
+            render={<a href={appearancesExportHref("csv")} />}
           >
-            <PlusIcon />
-            <span>{tab === "club" ? "Add club entry" : "Add national entry"}</span>
+            <DownloadSimpleIcon />
+            <span>Export CSV</span>
           </Button>
-        )}
+          <Button
+            variant="outline"
+            render={<a href={appearancesExportHref("json")} />}
+          >
+            <span>Export JSON</span>
+          </Button>
+          {canWrite && (
+            <Button
+              nativeButton={false}
+              render={
+                <Link to={tab === "club" ? "/manage/squads/club/new" : "/manage/squads/national/new"} />
+              }
+            >
+              <PlusIcon />
+              <span>{tab === "club" ? "Add club entry" : "Add national entry"}</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-2" role="tablist" aria-label="Squad kind">

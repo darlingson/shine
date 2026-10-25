@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import { DownloadSimpleIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,10 +21,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
-import { clubMatchLabel, deleteClubMatch } from "@/lib/clubMatches";
+import { clubMatchLabel, clubMatchesExportHref, deleteClubMatch } from "@/lib/clubMatches";
 import {
   deleteNationalTeamMatch,
   nationalTeamMatchLabel,
+  nationalTeamMatchesExportHref,
 } from "@/lib/nationalTeamMatches";
 import { useClubMatches, useNationalTeamMatches } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
@@ -104,35 +105,66 @@ export function MatchesPage({ kind }: { kind: Kind }) {
               : "Read-only access — editing needs the matches:write permission."}
           </p>
         </div>
-        {canWrite && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={
-                <Link
-                  to={
-                    isClub
-                      ? "/manage/matches/club/new"
-                      : "/manage/matches/national/new"
-                  }
-                />
-              }
-            >
-              <PlusIcon />
-              <span>Add match</span>
-            </Button>
-            {isClub && (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            render={
+              <a
+                href={
+                  isClub
+                    ? clubMatchesExportHref("csv")
+                    : nationalTeamMatchesExportHref("csv")
+                }
+              />
+            }
+          >
+            <DownloadSimpleIcon />
+            <span>Export CSV</span>
+          </Button>
+          <Button
+            variant="outline"
+            render={
+              <a
+                href={
+                  isClub
+                    ? clubMatchesExportHref("json")
+                    : nationalTeamMatchesExportHref("json")
+                }
+              />
+            }
+          >
+            <span>Export JSON</span>
+          </Button>
+          {canWrite && (
+            <>
               <Button
+                variant="outline"
                 nativeButton={false}
-                render={<Link to="/manage/matches/club/record" />}
+                render={
+                  <Link
+                    to={
+                      isClub
+                        ? "/manage/matches/club/new"
+                        : "/manage/matches/national/new"
+                    }
+                  />
+                }
               >
                 <PlusIcon />
-                <span>Record full match</span>
+                <span>Add match</span>
               </Button>
-            )}
-          </div>
-        )}
+              {isClub && (
+                <Button
+                  nativeButton={false}
+                  render={<Link to="/manage/matches/club/record" />}
+                >
+                  <PlusIcon />
+                  <span>Record full match</span>
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <Card>

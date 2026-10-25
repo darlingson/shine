@@ -12,4 +12,5 @@ public interface IPlayerService
     Task<Player> CreateAsync(CreatePlayerDto dto);
     Task<Player?> UpdateAsync(int id, UpdatePlayerDto dto);
     Task<bool> DeleteAsync(int id);
+    Task<ExportFile?> ExportAsync(string format);
 }

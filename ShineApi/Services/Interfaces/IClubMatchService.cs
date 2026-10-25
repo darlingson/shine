@@ -12,4 +12,5 @@ public interface IClubMatchService
     Task<ClubMatchDto?> UpdateAsync(int id, UpdateClubMatchDto dto, List<string> errors);
     Task<ClubMatchDto?> LinkTeamsAsync(int id, LinkClubMatchTeamsDto dto, List<string> errors);
     Task<bool> DeleteAsync(int id);
+    Task<ExportFile?> ExportAsync(string format);
 }

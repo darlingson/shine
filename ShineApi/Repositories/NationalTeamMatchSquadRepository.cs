@@ -16,6 +16,17 @@ public class NationalTeamMatchSquadRepository : INationalTeamMatchSquadRepositor
     public async Task<IEnumerable<NationalTeamMatchSquad>> GetAllAsync()
         => await _context.NationalTeamMatchSquad.AsNoTracking().ToListAsync();
 
+    /// <summary>All squad entries with player, team and match (incl. both sides)
+    /// resolved for export.</summary>
+    public async Task<IEnumerable<NationalTeamMatchSquad>> GetAllForExportAsync()
+        => await _context.NationalTeamMatchSquad
+            .Include(x => x.Player)
+            .Include(x => x.NationalTeam)
+            .Include(x => x.Match).ThenInclude(m => m!.HomeNationalTeam)
+            .Include(x => x.Match).ThenInclude(m => m!.AwayNationalTeam)
+            .AsNoTracking()
+            .ToListAsync();
+
     public async Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, int nationalTeamId, int playerId)
         => await _context.NationalTeamMatchSquad.FindAsync(matchId, nationalTeamId, playerId);
 

@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 import type { SortOrder } from "@/lib/sorting";
 
 export interface NationalTeamMatch {
@@ -131,6 +131,11 @@ export function updateNationalTeamMatch(
 
 export function deleteNationalTeamMatch(id: number): Promise<void> {
   return apiJson<void>(`/api/nationalteammatches/${id}`, { method: "DELETE" });
+}
+
+/** Download URL for the full national team match list (format: csv or json). */
+export function nationalTeamMatchesExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/nationalteammatches/export?format=${format}`;
 }
 
 /** "Home 2–1 Away" style label, with "(AET)" and "(3–1 pens)" when recorded. */

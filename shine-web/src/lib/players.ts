@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 import type { SortOrder } from "@/lib/sorting";
 
 export interface Player {
@@ -118,4 +118,9 @@ export function updatePlayer(id: number, dto: PlayerForm): Promise<Player> {
 
 export function deletePlayer(id: number): Promise<void> {
   return apiJson<void>(`/api/players/${id}`, { method: "DELETE" });
+}
+
+/** Download URL for the full player list (format: csv or json). */
+export function playersExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/players/export?format=${format}`;
 }
