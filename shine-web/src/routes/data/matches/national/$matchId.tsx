@@ -8,16 +8,20 @@ import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import { useNationalSquads, useNationalTeamMatch, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 import type { NationalSquad } from "@/lib/squads";
+import { LINEUP_STATUSES } from "@/lib/squads";
 
 export const Route = createFileRoute("/data/matches/national/$matchId")({
   component: NationalTeamMatchDetailPage,
 });
 
-/** Status first (starters, subs, unused…), then shirt number, unknown last. */
+/** Status first (canonical LINEUP_STATUSES order, unknown last), then shirt number. */
 function squadSort(a: NationalSquad, b: NationalSquad): number {
-  const order: Record<string, number> = { starter: 0, substitute: 1 };
+  const rank = (status: string) => {
+    const i = LINEUP_STATUSES.indexOf(status);
+    return i === -1 ? LINEUP_STATUSES.length : i;
+  };
   return (
-    (order[a.lineupStatus] ?? 2) - (order[b.lineupStatus] ?? 2) ||
+    rank(a.lineupStatus) - rank(b.lineupStatus) ||
     (a.shirtNumber ?? 9999) - (b.shirtNumber ?? 9999)
   );
 }
