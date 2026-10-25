@@ -4,6 +4,7 @@ import { Fact } from "@/components/data-ui";
 import { Pagination } from "@/components/pagination";
 import { formatMatchDate } from "@/lib/dates";
 import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
+import { positionLabel } from "@/lib/positions";
 import {
   useNationalSquads,
   useNationalTeam,
@@ -139,7 +140,7 @@ function NationalTeamDetailPage() {
                       </Link>
                     </td>
                     <td className="px-2 py-2.5 text-xs text-muted-foreground">
-                      {names.get(row.playerId)?.positionPrimary ?? "—"}
+                      {positionLabel(names.get(row.playerId)?.positionPrimary)}
                     </td>
                     <td className="px-2 py-2.5 text-right tabular-nums">
                       {row.apps}

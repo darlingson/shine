@@ -59,6 +59,7 @@ export interface MatchRecordResult {
 export const SQUAD_STATUSES = [
   "starter",
   "substitute",
+  "matchday_squad",
   "unused_sub",
   "reserve",
   "suspended",
@@ -68,6 +69,7 @@ export const SQUAD_STATUSES = [
 export const SQUAD_STATUS_LABELS: Record<string, string> = {
   starter: "Starter",
   substitute: "Substitute",
+  matchday_squad: "Matchday squad",
   unused_sub: "Unused sub",
   reserve: "Reserve",
   suspended: "Suspended",

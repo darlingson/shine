@@ -27,6 +27,7 @@ import {
   deletePlayer,
   playersExportHref,
 } from "@/lib/players";
+import { positionLabel } from "@/lib/positions";
 import { usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
@@ -155,6 +156,7 @@ export function PlayersPage() {
                     <TableCell>
                       {[p.positionPrimary, p.positionSecondary]
                         .filter(Boolean)
+                        .map((code) => positionLabel(code))
                         .join(" · ") || (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}

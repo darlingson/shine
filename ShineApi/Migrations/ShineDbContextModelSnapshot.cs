@@ -343,6 +343,9 @@ namespace ShineApi.Migrations
                     b.Property<int>("RedCards")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Role")
+                        .HasColumnType("text");
+
                     b.Property<int?>("ShirtNumber")
                         .HasColumnType("integer");
 
@@ -513,6 +516,9 @@ namespace ShineApi.Migrations
                     b.Property<int>("RedCards")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Role")
+                        .HasColumnType("text");
+
                     b.Property<int?>("ShirtNumber")
                         .HasColumnType("integer");
 
@@ -571,6 +577,12 @@ namespace ShineApi.Migrations
                     b.Property<string>("PositionSecondary")
                         .HasColumnType("text");
 
+                    b.Property<string>("PrimaryRole")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SecondaryRole")
+                        .HasColumnType("text");
+
                     b.Property<string>("SourceUrl")
                         .HasColumnType("text");
 
@@ -613,6 +625,9 @@ namespace ShineApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("PositionAtClub")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleAtClub")
                         .HasColumnType("text");
 
                     b.Property<int?>("ShirtNumber")

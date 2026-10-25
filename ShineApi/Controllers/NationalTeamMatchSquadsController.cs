@@ -46,7 +46,10 @@ public class NationalTeamMatchSquadsController : ControllerBase
     [HasPermission(Permissions.SquadsWrite)]
     public async Task<IActionResult> Update(int matchId, int nationalTeamId, int playerId, [FromBody] UpdateNationalTeamMatchSquadDto dto)
     {
-        var squad = await _service.UpdateAsync(matchId, nationalTeamId, playerId, dto);
+        var errors = new List<string>();
+        var squad = await _service.UpdateAsync(matchId, nationalTeamId, playerId, dto, errors);
+        if (errors.Count > 0)
+            return BadRequest(new { errors });
         return squad is null ? NotFound() : Ok(squad);
     }
 

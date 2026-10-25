@@ -17,6 +17,7 @@ import {
   PLAYER_STATUSES,
   type PlayerSort,
 } from "@/lib/players";
+import { positionLabel } from "@/lib/positions";
 import { usePlayerFilterOptions, usePlayerPage } from "@/lib/queries";
 import type { SortOrder } from "@/lib/sorting";
 import { parseApiError } from "@/lib/users";
@@ -204,7 +205,7 @@ function PlayersListPage() {
               <SelectItem value={ALL}>All positions</SelectItem>
               {(filterOptions?.positions ?? []).map((option) => (
                 <SelectItem key={option} value={option}>
-                  {option}
+                  {positionLabel(option)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -291,7 +292,9 @@ function PlayersListPage() {
                     {p.knownAs || p.fullName}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {[p.positionPrimary, p.status].filter(Boolean).join(" · ")}
+                    {[positionLabel(p.positionPrimary), p.status]
+                      .filter((x) => x && x !== "—")
+                      .join(" · ")}
                   </span>
                 </Link>
               </li>

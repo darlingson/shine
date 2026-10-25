@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PositionSelect } from "@/components/PositionSelect";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -146,11 +147,10 @@ function SquadFieldsForm({
         />
       </Field>
       <Field label="Position" htmlFor={`${idPrefix}-pos`}>
-        <Input
+        <PositionSelect
           id={`${idPrefix}-pos`}
           value={value.position}
-          onChange={(e) => onChange({ position: e.target.value })}
-          placeholder="e.g. Forward"
+          onChange={(code) => onChange({ position: code })}
         />
       </Field>
       <Field label="Minutes played" htmlFor={`${idPrefix}-min`}>

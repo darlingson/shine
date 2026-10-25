@@ -6,11 +6,14 @@ public class ClubMatchSquad
     public int ClubId { get; set; }
     public int PlayerId { get; set; }
 
-    /// <summary>starter / substitute / unused_sub / reserve / suspended / injured</summary>
+    /// <summary>starter / substitute / matchday_squad / unused_sub / reserve / suspended / injured</summary>
     public string LineupStatus { get; set; } = string.Empty;
 
     public int? ShirtNumber { get; set; }
     public string? Position { get; set; }
+
+    /// <summary>Coarse pitch area derived from Position — GK / DF / MF / FW.</summary>
+    public string? Role { get; set; }
     public int? MinutesPlayed { get; set; }
     public int Goals { get; set; } = 0;
     public int Assists { get; set; } = 0;

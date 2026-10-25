@@ -15,6 +15,12 @@ public class Player
     public string Nationality { get; set; } = "Malawi";
     public string? PositionPrimary { get; set; }
     public string? PositionSecondary { get; set; }
+
+    /// <summary>Coarse pitch area derived from PositionPrimary — GK / DF / MF / FW.</summary>
+    public string? PrimaryRole { get; set; }
+
+    /// <summary>Coarse pitch area derived from PositionSecondary — GK / DF / MF / FW.</summary>
+    public string? SecondaryRole { get; set; }
     public int? HeightCm { get; set; }
 
     /// <summary>left / right / both</summary>

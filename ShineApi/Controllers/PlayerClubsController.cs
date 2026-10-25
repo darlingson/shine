@@ -34,7 +34,11 @@ public class PlayerClubsController : ControllerBase
     [HasPermission(Permissions.PlayersWrite)]
     public async Task<IActionResult> Create([FromBody] CreatePlayerClubDto dto)
     {
-        var playerClub = await _service.CreateAsync(dto);
+        var errors = new List<string>();
+        var playerClub = await _service.CreateAsync(dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
+        if (playerClub is null) return BadRequest(new { errors });
+
         return CreatedAtAction(nameof(GetById), new { id = playerClub.PlayerClubId }, playerClub);
     }
 
@@ -42,7 +46,10 @@ public class PlayerClubsController : ControllerBase
     [HasPermission(Permissions.PlayersWrite)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdatePlayerClubDto dto)
     {
-        var playerClub = await _service.UpdateAsync(id, dto);
+        var errors = new List<string>();
+        var playerClub = await _service.UpdateAsync(id, dto, errors);
+        if (errors.Count > 0)
+            return BadRequest(new { errors });
         return playerClub is null ? NotFound() : Ok(playerClub);
     }
 

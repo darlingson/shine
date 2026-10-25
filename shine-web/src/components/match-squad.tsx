@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
+import { positionLabel } from "@/lib/positions";
 import { LINEUP_STATUSES } from "@/lib/squads";
 
 export interface MatchSquadRow {
@@ -13,11 +14,33 @@ export interface MatchSquadRow {
 const GROUP_LABELS: Record<string, string> = {
   starter: "Starting XI",
   substitute: "Substitutes",
+  matchday_squad: "Matchday squad",
   unused_sub: "Unused substitutes",
   reserve: "Reserves",
   suspended: "Suspended",
   injured: "Injured",
 };
+
+/**
+ * One team's squad block: team name above its grouped squads. Two of these
+ * sit side by side on a match detail page so the two teams' squads stay apart.
+ */
+export function TeamSquad({
+  name,
+  rows,
+  playerName,
+}: {
+  name: string;
+  rows: MatchSquadRow[];
+  playerName: (playerId: number) => string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-3">
+      <h2 className="font-heading text-lg font-semibold tracking-tight">{name}</h2>
+      <MatchSquad squad={rows} playerName={playerName} />
+    </div>
+  );
+}
 
 /**
  * Squad list grouped by lineup status. Rows keep the player link and show the
@@ -79,7 +102,7 @@ export function MatchSquad({
                       </span>
                     </span>
                     <span className="shrink-0 text-xs text-muted-foreground">
-                      {row.position ?? ""}
+                      {positionLabel(row.position)}
                     </span>
                   </Link>
                 </li>

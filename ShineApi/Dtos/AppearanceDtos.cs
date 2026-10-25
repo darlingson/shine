@@ -37,6 +37,7 @@ public class MatchAppearanceDto
     public string? LineupStatus { get; set; }
     public int? ShirtNumber { get; set; }
     public string? Position { get; set; }
+    public string? Role { get; set; }
     public int? MinutesPlayed { get; set; }
     public int Goals { get; set; } = 0;
     public int Assists { get; set; } = 0;
@@ -45,4 +46,6 @@ public class MatchAppearanceDto
     public bool Captain { get; set; } = false;
     public string? Notes { get; set; }
     public string? SourceUrl { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

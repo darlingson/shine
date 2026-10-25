@@ -8,6 +8,7 @@ import { SearchBox } from "@/components/search-box";
 import { Separator } from "@/components/ui/separator";
 import { SiteNav } from "@/components/site-nav";
 import { type Player } from "@/lib/players";
+import { positionLabel } from "@/lib/positions";
 import {
   useClubMatches,
   useClubSquads,
@@ -241,8 +242,8 @@ function LandingPage() {
                       >
                         <span className="font-medium">{displayName(p)}</span>
                         <span className="text-xs text-muted-foreground">
-                          {[p.positionPrimary, p.nationality]
-                            .filter(Boolean)
+                          {[positionLabel(p.positionPrimary), p.nationality]
+                            .filter((x) => x && x !== "—")
                             .join(" · ")}
                         </span>
                       </li>

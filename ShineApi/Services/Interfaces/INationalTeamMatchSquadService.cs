@@ -8,6 +8,6 @@ public interface INationalTeamMatchSquadService
     Task<IEnumerable<NationalTeamMatchSquad>> GetAllAsync();
     Task<NationalTeamMatchSquad?> GetByIdAsync(int matchId, int nationalTeamId, int playerId);
     Task<NationalTeamMatchSquad?> CreateAsync(CreateNationalTeamMatchSquadDto dto, List<string> errors);
-    Task<NationalTeamMatchSquad?> UpdateAsync(int matchId, int nationalTeamId, int playerId, UpdateNationalTeamMatchSquadDto dto);
+    Task<NationalTeamMatchSquad?> UpdateAsync(int matchId, int nationalTeamId, int playerId, UpdateNationalTeamMatchSquadDto dto, List<string> errors);
     Task<bool> DeleteAsync(int matchId, int nationalTeamId, int playerId);
 }

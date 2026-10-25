@@ -33,6 +33,11 @@ export interface PlayerForm {
 }
 
 export const PLAYER_STATUSES = ["active", "retired", "unknown"];
+
+/** Canonical gender vocabulary — mirrors ShineApi/Services/Genders.cs. Same
+ * values the NationalTeam entity uses ("mixed" is a team concept only);
+ * leaving it unset means unknown. */
+export const PLAYER_GENDERS = ["men", "women"];
 export const PLAYER_FEET = ["left", "right", "both"];
 
 export const PLAYER_SORTS = [

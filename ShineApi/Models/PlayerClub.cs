@@ -14,6 +14,9 @@ public class PlayerClub
 
     public int? ShirtNumber { get; set; }
     public string? PositionAtClub { get; set; }
+
+    /// <summary>Coarse pitch area derived from PositionAtClub — GK / DF / MF / FW.</summary>
+    public string? RoleAtClub { get; set; }
     public string? SourceUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

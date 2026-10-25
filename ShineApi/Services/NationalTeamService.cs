@@ -45,9 +45,10 @@ public class NationalTeamService : INationalTeamService
     public async Task<NationalTeam?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
-    public async Task<NationalTeam?> CreateAsync(CreateNationalTeamDto dto)
+    public async Task<NationalTeam?> CreateAsync(CreateNationalTeamDto dto, List<string> errors)
     {
-        var name = dto.Name.Trim();
+        var gender = Genders.NormalizeTeamGenderOrError(dto.Gender, "gender", errors);
+        var name = dto.Name?.Trim() ?? string.Empty;
         if (name.Length == 0 || await _repository.NameExistsAsync(name))
             return null;
 
@@ -56,7 +57,7 @@ public class NationalTeamService : INationalTeamService
             Name = name,
             ShortName = dto.ShortName,
             Nickname = dto.Nickname,
-            Gender = dto.Gender,
+            Gender = gender,
             Level = dto.Level,
             Coach = dto.Coach,
             Country = dto.Country,
@@ -70,19 +71,21 @@ public class NationalTeamService : INationalTeamService
         return nationalTeam;
     }
 
-    public async Task<NationalTeam?> UpdateAsync(int id, UpdateNationalTeamDto dto)
+    public async Task<NationalTeam?> UpdateAsync(int id, UpdateNationalTeamDto dto, List<string> errors)
     {
         var nationalTeam = await _repository.GetByIdAsync(id);
         if (nationalTeam is null) return null;
 
+        var gender = Genders.NormalizeTeamGenderOrError(dto.Gender, "gender", errors);
         var name = dto.Name.Trim();
+        if (errors.Count > 0) return nationalTeam;
         if (name.Length == 0 || await _repository.NameExistsAsync(name, id))
             return null;
 
         nationalTeam.Name = name;
         nationalTeam.ShortName = dto.ShortName;
         nationalTeam.Nickname = dto.Nickname;
-        nationalTeam.Gender = dto.Gender;
+        nationalTeam.Gender = gender;
         nationalTeam.Level = dto.Level;
         nationalTeam.Coach = dto.Coach;
         nationalTeam.Country = dto.Country;

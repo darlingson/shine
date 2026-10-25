@@ -11,14 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OptionalSelect } from "@/components/OptionalSelect";
 import { Field, FormError } from "@/components/data-ui";
 import {
   NATIONAL_TEAM_GENDERS,
@@ -30,8 +24,6 @@ import {
 } from "@/lib/nationalTeams";
 import { useNationalTeam } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
-
-const NONE = "__none__";
 
 /** Shared add/edit form. Pass nationalTeamId to edit, omit to create. */
 export function NationalTeamFormPage({
@@ -106,41 +98,6 @@ export function NationalTeamFormPage({
       nationalTeamId={nationalTeamId}
       initial={editing ? (teamQuery.data as NationalTeam) : undefined}
     />
-  );
-}
-
-function OptionalSelect({
-  id,
-  value,
-  onChange,
-  options,
-}: {
-  id: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  return (
-    <Select
-      value={value || NONE}
-      onValueChange={(v) => onChange(!v || v === NONE ? "" : v)}
-    >
-      <SelectTrigger id={id} className="w-full">
-        <SelectValue>
-          {(v: unknown) =>
-            typeof v === "string" && v !== NONE && v !== "" ? v : "Not set"
-          }
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={NONE}>Not set</SelectItem>
-        {options.map((o) => (
-          <SelectItem key={o} value={o}>
-            {o}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   );
 }
 

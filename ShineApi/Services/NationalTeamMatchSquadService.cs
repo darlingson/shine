@@ -39,6 +39,8 @@ public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
             errors.Add($"Unknown nationalTeamId {dto.NationalTeamId}.");
         if (!await _playerRepository.ExistsAsync(dto.PlayerId))
             errors.Add($"Unknown playerId {dto.PlayerId}.");
+        var position = Positions.NormalizeOrError(dto.Position, "position", errors);
+        var status = LineupStatuses.NormalizeOrError(dto.LineupStatus, "lineupStatus", errors);
         if (errors.Count != before) return null;
 
         if (await _repository.ExistsAsync(dto.MatchId, dto.NationalTeamId, dto.PlayerId))
@@ -49,9 +51,10 @@ public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
             MatchId = dto.MatchId,
             NationalTeamId = dto.NationalTeamId,
             PlayerId = dto.PlayerId,
-            LineupStatus = dto.LineupStatus,
+            LineupStatus = status,
             ShirtNumber = dto.ShirtNumber,
-            Position = dto.Position,
+            Position = position?.Position,
+            Role = position?.Role,
             MinutesPlayed = dto.MinutesPlayed,
             Goals = dto.Goals,
             Assists = dto.Assists,
@@ -67,14 +70,19 @@ public class NationalTeamMatchSquadService : INationalTeamMatchSquadService
         return squad;
     }
 
-    public async Task<NationalTeamMatchSquad?> UpdateAsync(int matchId, int nationalTeamId, int playerId, UpdateNationalTeamMatchSquadDto dto)
+    public async Task<NationalTeamMatchSquad?> UpdateAsync(int matchId, int nationalTeamId, int playerId, UpdateNationalTeamMatchSquadDto dto, List<string> errors)
     {
         var squad = await _repository.GetByIdAsync(matchId, nationalTeamId, playerId);
         if (squad is null) return null;
 
-        squad.LineupStatus = dto.LineupStatus;
+        var position = Positions.NormalizeOrError(dto.Position, "position", errors);
+        var status = LineupStatuses.NormalizeOrError(dto.LineupStatus, "lineupStatus", errors);
+        if (errors.Count > 0) return squad;
+
+        squad.LineupStatus = status;
         squad.ShirtNumber = dto.ShirtNumber;
-        squad.Position = dto.Position;
+        squad.Position = position?.Position;
+        squad.Role = position?.Role;
         squad.MinutesPlayed = dto.MinutesPlayed;
         squad.Goals = dto.Goals;
         squad.Assists = dto.Assists;
