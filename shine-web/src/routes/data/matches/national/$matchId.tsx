@@ -1,16 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Fact } from "@/components/data-ui";
-import { MatchSquad } from "@/components/match-squad";
+import { TeamSquad } from "@/components/match-squad";
 import { Badge } from "@/components/ui/badge";
 import { formatMatchDate } from "@/lib/dates";
 import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import { useNationalSquads, useNationalTeamMatch, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
+import type { NationalSquad } from "@/lib/squads";
 
 export const Route = createFileRoute("/data/matches/national/$matchId")({
   component: NationalTeamMatchDetailPage,
 });
+
+/** Status first (starters, subs, unused…), then shirt number, unknown last. */
+function squadSort(a: NationalSquad, b: NationalSquad): number {
+  const order: Record<string, number> = { starter: 0, substitute: 1 };
+  return (
+    (order[a.lineupStatus] ?? 2) - (order[b.lineupStatus] ?? 2) ||
+    (a.shirtNumber ?? 9999) - (b.shirtNumber ?? 9999)
+  );
+}
 
 function NationalTeamMatchDetailPage() {
   const { matchId } = Route.useParams();
@@ -23,14 +33,19 @@ function NationalTeamMatchDetailPage() {
     [players.data],
   );
 
-  const squad = useMemo(() => {
-    if (!match.data || !squads.data) return [];
-    const order: Record<string, number> = { starter: 0, substitute: 1 };
-    return squads.data
+  const { homeRows, awayRows, otherRows } = useMemo(() => {
+    if (!match.data || !squads.data)
+      return { homeRows: [], awayRows: [], otherRows: [] };
+    const rows = squads.data
       .filter((s) => s.matchId === match.data.matchId)
-      .sort(
-        (a, b) => (order[a.lineupStatus] ?? 2) - (order[b.lineupStatus] ?? 2),
-      );
+      .sort(squadSort);
+    const isHome = (s: NationalSquad) => s.nationalTeamId === match.data!.homeNationalTeamId;
+    const isAway = (s: NationalSquad) => s.nationalTeamId === match.data!.awayNationalTeamId;
+    return {
+      homeRows: rows.filter(isHome),
+      awayRows: rows.filter(isAway),
+      otherRows: rows.filter((s) => !isHome(s) && !isAway(s)),
+    };
   }, [match.data, squads.data]);
 
   const error = match.error ?? players.error ?? squads.error;
@@ -72,10 +87,32 @@ function NationalTeamMatchDetailPage() {
         <Fact label="Venue">{m.venue ?? "—"}</Fact>
       </dl>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="font-heading text-lg font-semibold tracking-tight">Squad</h2>
-        <MatchSquad squad={squad} playerName={playerName} />
-      </section>
+      {homeRows.length === 0 && awayRows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No squads recorded.</p>
+      ) : (
+        <section className="grid gap-6 lg:grid-cols-2">
+          <TeamSquad
+            name={m.homeNationalTeamName || `Team ${m.homeNationalTeamId ?? "?"}`}
+            rows={homeRows}
+            playerName={playerName}
+          />
+          <TeamSquad
+            name={m.awayNationalTeamName || `Team ${m.awayNationalTeamId ?? "?"}`}
+            rows={awayRows}
+            playerName={playerName}
+          />
+        </section>
+      )}
+
+      {otherRows.length > 0 && (
+        <section>
+          <TeamSquad
+            name="Other squads"
+            rows={otherRows}
+            playerName={playerName}
+          />
+        </section>
+      )}
     </div>
   );
 }

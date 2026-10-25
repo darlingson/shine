@@ -21,6 +21,27 @@ const GROUP_LABELS: Record<string, string> = {
 };
 
 /**
+ * One team's squad block: team name above its grouped squads. Two of these
+ * sit side by side on a match detail page so the two teams' squads stay apart.
+ */
+export function TeamSquad({
+  name,
+  rows,
+  playerName,
+}: {
+  name: string;
+  rows: MatchSquadRow[];
+  playerName: (playerId: number) => string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-3">
+      <h2 className="font-heading text-lg font-semibold tracking-tight">{name}</h2>
+      <MatchSquad squad={rows} playerName={playerName} />
+    </div>
+  );
+}
+
+/**
  * Squad list grouped by lineup status. Rows keep the player link and show the
  * shirt number and position, since the group heading already says the status.
  */
