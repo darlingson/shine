@@ -40,6 +40,7 @@ public class ClubMatchSquadService : IClubMatchSquadService
         if (!await _playerRepository.ExistsAsync(dto.PlayerId))
             errors.Add($"Unknown playerId {dto.PlayerId}.");
         var position = Positions.NormalizeOrError(dto.Position, "position", errors);
+        var status = LineupStatuses.NormalizeOrError(dto.LineupStatus, "lineupStatus", errors);
         if (errors.Count != before) return null;
 
         if (await _repository.ExistsAsync(dto.MatchId, dto.ClubId, dto.PlayerId))
@@ -50,7 +51,7 @@ public class ClubMatchSquadService : IClubMatchSquadService
             MatchId = dto.MatchId,
             ClubId = dto.ClubId,
             PlayerId = dto.PlayerId,
-            LineupStatus = dto.LineupStatus,
+            LineupStatus = status,
             ShirtNumber = dto.ShirtNumber,
             Position = position?.Position,
             Role = position?.Role,
@@ -75,9 +76,10 @@ public class ClubMatchSquadService : IClubMatchSquadService
         if (squad is null) return null;
 
         var position = Positions.NormalizeOrError(dto.Position, "position", errors);
+        var status = LineupStatuses.NormalizeOrError(dto.LineupStatus, "lineupStatus", errors);
         if (errors.Count > 0) return squad;
 
-        squad.LineupStatus = dto.LineupStatus;
+        squad.LineupStatus = status;
         squad.ShirtNumber = dto.ShirtNumber;
         squad.Position = position?.Position;
         squad.Role = position?.Role;
