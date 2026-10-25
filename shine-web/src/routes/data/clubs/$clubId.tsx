@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { clubMatchLabel } from "@/lib/clubMatches";
+import { positionLabel } from "@/lib/positions";
 import { useClub, useClubMatches, usePlayerClubs, usePlayers } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
@@ -68,7 +69,7 @@ function ClubDetailPage() {
                 >
                   <span className="text-sm font-medium">{p.knownAs || p.fullName}</span>
                   <span className="text-xs text-muted-foreground">
-                    {p.positionPrimary ?? "—"}
+                    {positionLabel(p.positionPrimary)}
                   </span>
                 </Link>
               </li>

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { SQUAD_STATUS_LABELS } from "@/lib/matchRecords";
+import { positionLabel } from "@/lib/positions";
 import { LINEUP_STATUSES } from "@/lib/squads";
 
 export interface MatchSquadRow {
@@ -79,7 +80,7 @@ export function MatchSquad({
                       </span>
                     </span>
                     <span className="shrink-0 text-xs text-muted-foreground">
-                      {row.position ?? ""}
+                      {positionLabel(row.position)}
                     </span>
                   </Link>
                 </li>

@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { nationalTeamMatchLabel, type NationalTeamMatch } from "@/lib/nationalTeamMatches";
 import { nationalTeamLabel } from "@/lib/nationalTeams";
+import { positionLabel } from "@/lib/positions";
 import {
   useClubs,
   useNationalSquads,
@@ -69,7 +70,13 @@ function PlayerDetailPage() {
   const facts: Array<[string, string | undefined | null]> = [
     ["Known as", p.knownAs],
     ["Date of birth", p.dateOfBirth],
-    ["Position", [p.positionPrimary, p.positionSecondary].filter(Boolean).join(" / ") || null],
+    [
+      "Position",
+      [p.positionPrimary, p.positionSecondary]
+        .filter(Boolean)
+        .map((code) => positionLabel(code))
+        .join(" / ") || null,
+    ],
     ["Height", p.heightCm ? `${p.heightCm} cm` : null],
     ["Foot", p.foot],
     ["Status", p.status],
