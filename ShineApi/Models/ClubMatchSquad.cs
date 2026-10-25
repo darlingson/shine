@@ -11,6 +11,9 @@ public class ClubMatchSquad
 
     public int? ShirtNumber { get; set; }
     public string? Position { get; set; }
+
+    /// <summary>Coarse pitch area derived from Position — GK / DF / MF / FW.</summary>
+    public string? Role { get; set; }
     public int? MinutesPlayed { get; set; }
     public int Goals { get; set; } = 0;
     public int Assists { get; set; } = 0;
