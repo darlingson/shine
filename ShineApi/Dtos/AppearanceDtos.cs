@@ -46,4 +46,6 @@ public class MatchAppearanceDto
     public bool Captain { get; set; } = false;
     public string? Notes { get; set; }
     public string? SourceUrl { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

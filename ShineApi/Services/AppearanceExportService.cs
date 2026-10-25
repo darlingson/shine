@@ -64,6 +64,8 @@ public class AppearanceExportService : IAppearanceExportService
                     Captain = s.Captain,
                     Notes = s.Notes,
                     SourceUrl = s.SourceUrl,
+                    CreatedAt = s.Match?.CreatedAt,
+                    UpdatedAt = s.Match?.UpdatedAt,
                 };
             });
 
@@ -105,6 +107,8 @@ public class AppearanceExportService : IAppearanceExportService
                     Captain = s.Captain,
                     Notes = s.Notes,
                     SourceUrl = s.SourceUrl,
+                    CreatedAt = s.Match?.CreatedAt,
+                    UpdatedAt = s.Match?.UpdatedAt,
                 };
             });
 
@@ -120,7 +124,7 @@ public class AppearanceExportService : IAppearanceExportService
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
-            csv.Append("matchScope,matchId,matchDate,kickoffTime,competition,season,stage,teamId,teamName,opponentId,opponentName,homeScore,awayScore,isNeutral,wentToExtraTime,playerId,playerName,lineupStatus,shirtNumber,position,role,minutesPlayed,goals,assists,yellowCards,redCards,captain,notes,sourceUrl");
+            csv.Append("matchScope,matchId,matchDate,kickoffTime,competition,season,stage,teamId,teamName,opponentId,opponentName,homeScore,awayScore,isNeutral,wentToExtraTime,playerId,playerName,lineupStatus,shirtNumber,position,role,minutesPlayed,goals,assists,yellowCards,redCards,captain,notes,sourceUrl,createdAt,updatedAt");
             foreach (var r in rows)
             {
                 csv.AppendLine();
@@ -181,6 +185,10 @@ public class AppearanceExportService : IAppearanceExportService
                 Csv.AppendEscaped(csv, r.Notes);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, r.SourceUrl);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.CreatedAt is null ? null : ExportFormats.IsoTimestamp(r.CreatedAt.Value));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.UpdatedAt is null ? null : ExportFormats.IsoTimestamp(r.UpdatedAt.Value));
             }
 
             return new ExportFile(

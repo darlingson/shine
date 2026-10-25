@@ -127,13 +127,13 @@ public class ClubMatchService : IClubMatchService
 
     /// <summary>Full club match list as a CSV or JSON download. Columns match the
     /// JSON property names with club names resolved; blank cells mean null. Dates
-    /// are ISO 8601.</summary>
+    /// are ISO 8601 and timestamps are UTC.</summary>
     public async Task<ExportFile?> ExportAsync(string format)
     {
         if (!ExportFormats.IsSupported(format))
             return null;
 
-        var rows = (await GetAllAsync())
+        var rows = (await _repository.GetAllAsync())
             .OrderByDescending(m => m.MatchDate)
             .ThenByDescending(m => m.MatchId)
             .ToList();
@@ -141,7 +141,7 @@ public class ClubMatchService : IClubMatchService
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
-            csv.Append("matchId,matchDate,competition,season,homeClubId,homeClubName,awayClubId,awayClubName,homeScore,awayScore,venue,sourceUrl");
+            csv.Append("matchId,matchDate,competition,season,homeClubId,homeClubName,awayClubId,awayClubName,homeScore,awayScore,venue,sourceUrl,createdAt,updatedAt");
             foreach (var m in rows)
             {
                 csv.AppendLine();
@@ -155,11 +155,11 @@ public class ClubMatchService : IClubMatchService
                 csv.Append(',');
                 Csv.AppendEscaped(csv, m.HomeClubId?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomeClubName);
+                Csv.AppendEscaped(csv, m.HomeClub?.Name);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, m.AwayClubId?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayClubName);
+                Csv.AppendEscaped(csv, m.AwayClub?.Name);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, m.HomeScore?.ToString());
                 csv.Append(',');
@@ -168,6 +168,10 @@ public class ClubMatchService : IClubMatchService
                 Csv.AppendEscaped(csv, m.Venue);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, m.SourceUrl);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(m.CreatedAt));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(m.UpdatedAt));
             }
 
             return new ExportFile(
