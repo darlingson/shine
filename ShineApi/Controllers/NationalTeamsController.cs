@@ -44,7 +44,9 @@ public class NationalTeamsController : ControllerBase
     [HasPermission(Permissions.NationalTeamsWrite)]
     public async Task<IActionResult> Create([FromBody] CreateNationalTeamDto dto)
     {
-        var nationalTeam = await _service.CreateAsync(dto);
+        var errors = new List<string>();
+        var nationalTeam = await _service.CreateAsync(dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
         if (nationalTeam is null)
             return Conflict("A national team with that name already exists.");
         return CreatedAtAction(nameof(GetById), new { id = nationalTeam.NationalTeamId }, nationalTeam);
@@ -56,7 +58,9 @@ public class NationalTeamsController : ControllerBase
     {
         if (await _service.GetByIdAsync(id) is null) return NotFound();
 
-        var nationalTeam = await _service.UpdateAsync(id, dto);
+        var errors = new List<string>();
+        var nationalTeam = await _service.UpdateAsync(id, dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
         return nationalTeam is null
             ? Conflict("Another team already uses that name.")
             : Ok(nationalTeam);

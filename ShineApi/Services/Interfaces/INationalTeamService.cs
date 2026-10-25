@@ -9,8 +9,8 @@ public interface INationalTeamService
     Task<PagedResult<NationalTeam>> GetPageAsync(NationalTeamQuery query);
     Task<NationalTeamFilterOptionsDto> GetFilterOptionsAsync();
     Task<NationalTeam?> GetByIdAsync(int id);
-    Task<NationalTeam?> CreateAsync(CreateNationalTeamDto dto);
-    Task<NationalTeam?> UpdateAsync(int id, UpdateNationalTeamDto dto);
+    Task<NationalTeam?> CreateAsync(CreateNationalTeamDto dto, List<string> errors);
+    Task<NationalTeam?> UpdateAsync(int id, UpdateNationalTeamDto dto, List<string> errors);
     Task<bool> DeleteAsync(int id);
     Task<ExportFile?> ExportAsync(string format);
 }

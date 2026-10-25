@@ -8,8 +8,12 @@ public static class Genders
 {
     public const string Men = "men";
     public const string Women = "women";
+    public const string Mixed = "mixed";
 
     public static readonly IReadOnlyList<string> GendersList = [Men, Women];
+
+    /// <summary>National teams may additionally be <c>mixed</c>.</summary>
+    public static readonly IReadOnlyList<string> TeamGendersList = [Men, Women, Mixed];
 
     /// <summary>Accepted spellings (case-insensitive, trimmed) to canonical
     /// values — covers the free-text shorthands seen in the source data.</summary>
@@ -43,8 +47,30 @@ public static class Genders
         return null;
     }
 
+    /// <summary>Gender of a national team: players are men or women, but a
+    /// team may also be <c>mixed</c>. Empty is allowed — it means unknown.</summary>
+    public static string? NormalizeTeamGenderOrError(string? input, string field, List<string> errors)
+    {
+        var value = input?.Trim();
+        if (string.IsNullOrEmpty(value))
+            return null;
+
+        if (GenderByAlias.TryGetValue(value, out var gender))
+            return gender;
+        if (value == Mixed)
+            return Mixed;
+
+        errors.Add($"Unknown gender '{input}' for {field}. Allowed values: {TeamAllowedList}, or leave empty if unknown.");
+        return null;
+    }
+
     /// <summary>Canonical gender values joined as ", "-separated text, for
     /// validation error messages.</summary>
     public static string AllowedList
         => string.Join(", ", GendersList);
+
+    /// <summary>Canonical national-team gender values joined as ", "
+    /// -separated text, for validation error messages.</summary>
+    public static string TeamAllowedList
+        => string.Join(", ", TeamGendersList);
 }
