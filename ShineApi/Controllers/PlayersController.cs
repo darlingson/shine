@@ -56,7 +56,11 @@ public class PlayersController : ControllerBase
     [HasPermission(Permissions.PlayersWrite)]
     public async Task<IActionResult> Create([FromBody] CreatePlayerDto dto)
     {
-        var player = await _service.CreateAsync(dto);
+        var errors = new List<string>();
+        var player = await _service.CreateAsync(dto, errors);
+        if (errors.Count > 0)
+            return BadRequest(new { errors });
+
         return CreatedAtAction(nameof(GetById), new { id = player.PlayerId }, player);
     }
 
@@ -64,7 +68,10 @@ public class PlayersController : ControllerBase
     [HasPermission(Permissions.PlayersWrite)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdatePlayerDto dto)
     {
-        var player = await _service.UpdateAsync(id, dto);
+        var errors = new List<string>();
+        var player = await _service.UpdateAsync(id, dto, errors);
+        if (errors.Count > 0)
+            return BadRequest(new { errors });
         return player is null ? NotFound() : Ok(player);
     }
 

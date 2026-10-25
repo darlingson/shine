@@ -90,9 +90,14 @@ public class PlayerRepository : IPlayerRepository
         if (!string.IsNullOrWhiteSpace(query.Nationality))
             players = players.Where(p => p.Nationality == query.Nationality);
 
+        // A position filter matches granular codes ("CB") and the generic
+        // buckets ("DF") — checking the role columns covers both.
         if (!string.IsNullOrWhiteSpace(query.Position))
             players = players.Where(p =>
-                p.PositionPrimary == query.Position || p.PositionSecondary == query.Position);
+                p.PositionPrimary == query.Position
+                || p.PrimaryRole == query.Position
+                || p.PositionSecondary == query.Position
+                || p.SecondaryRole == query.Position);
 
         // Compare whole dates rather than extracting the year, so the predicate stays
         // a plain range on the column.

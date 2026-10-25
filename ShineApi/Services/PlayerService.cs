@@ -44,8 +44,11 @@ public class PlayerService : IPlayerService
     public async Task<Player?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
-    public async Task<Player> CreateAsync(CreatePlayerDto dto)
+    public async Task<Player> CreateAsync(CreatePlayerDto dto, List<string> errors)
     {
+        var primary = NormalizePosition(dto.PositionPrimary, "positionPrimary", errors);
+        var secondary = NormalizePosition(dto.PositionSecondary, "positionSecondary", errors);
+
         var player = new Player
         {
             FullName = dto.FullName,
@@ -53,8 +56,10 @@ public class PlayerService : IPlayerService
             DateOfBirth = dto.DateOfBirth,
             Gender = dto.Gender,
             Nationality = dto.Nationality,
-            PositionPrimary = dto.PositionPrimary,
-            PositionSecondary = dto.PositionSecondary,
+            PositionPrimary = primary?.Position,
+            PrimaryRole = primary?.Role,
+            PositionSecondary = secondary?.Position,
+            SecondaryRole = secondary?.Role,
             HeightCm = dto.HeightCm,
             Foot = dto.Foot,
             Status = dto.Status,
@@ -68,18 +73,24 @@ public class PlayerService : IPlayerService
         return player;
     }
 
-    public async Task<Player?> UpdateAsync(int id, UpdatePlayerDto dto)
+    public async Task<Player?> UpdateAsync(int id, UpdatePlayerDto dto, List<string> errors)
     {
         var player = await _repository.GetByIdAsync(id);
         if (player is null) return null;
+
+        var primary = NormalizePosition(dto.PositionPrimary, "positionPrimary", errors);
+        var secondary = NormalizePosition(dto.PositionSecondary, "positionSecondary", errors);
+        if (errors.Count > 0) return player;
 
         player.FullName = dto.FullName;
         player.KnownAs = dto.KnownAs;
         player.DateOfBirth = dto.DateOfBirth;
         player.Gender = dto.Gender;
         player.Nationality = dto.Nationality;
-        player.PositionPrimary = dto.PositionPrimary;
-        player.PositionSecondary = dto.PositionSecondary;
+        player.PositionPrimary = primary?.Position;
+        player.PrimaryRole = primary?.Role;
+        player.PositionSecondary = secondary?.Position;
+        player.SecondaryRole = secondary?.Role;
         player.HeightCm = dto.HeightCm;
         player.Foot = dto.Foot;
         player.Status = dto.Status;
@@ -89,6 +100,16 @@ public class PlayerService : IPlayerService
         _repository.Update(player);
         await _repository.SaveChangesAsync();
         return player;
+    }
+
+    /// <summary>Normalizes one position input into the canonical pair. Empty is
+    /// allowed (cleared); an unrecognized value adds a validation error.</summary>
+    private static Positions.Normalized? NormalizePosition(string? input, string field, List<string> errors)
+    {
+        var (result, known) = Positions.TryNormalize(input);
+        if (known) return result;
+        errors.Add($"Unknown position '{input}' for {field}. Allowed values: {Positions.AllowedList}.");
+        return null;
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -117,7 +138,7 @@ public class PlayerService : IPlayerService
         if (ExportFormats.IsCsv(format))
         {
             var buffer = new StringBuilder();
-            buffer.Append("playerId,fullName,knownAs,dateOfBirth,gender,nationality,positionPrimary,positionSecondary,heightCm,foot,status,sourceUrl,createdAt,updatedAt");
+            buffer.Append("playerId,fullName,knownAs,dateOfBirth,gender,nationality,positionPrimary,positionSecondary,primaryRole,secondaryRole,heightCm,foot,status,sourceUrl,createdAt,updatedAt");
             foreach (var p in players)
             {
                 buffer.AppendLine();
@@ -136,6 +157,10 @@ public class PlayerService : IPlayerService
                 Csv.AppendEscaped(buffer, p.PositionPrimary);
                 buffer.Append(',');
                 Csv.AppendEscaped(buffer, p.PositionSecondary);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.PrimaryRole);
+                buffer.Append(',');
+                Csv.AppendEscaped(buffer, p.SecondaryRole);
                 buffer.Append(',');
                 Csv.AppendEscaped(buffer, p.HeightCm?.ToString());
                 buffer.Append(',');
