@@ -62,7 +62,7 @@ shine/
 
 | Entity | What it stores |
 |---|---|
-| `Player` | Full name, known-as, DOB, gender, nationality (default `Malawi`), positions (canonical codes) with derived roles, height, foot, status (`active`/`retired`/`unknown`), `SourceUrl` |
+| `Player` | Full name, known-as, DOB, gender (`men`/`women`, empty = unknown), nationality (default `Malawi`), positions (canonical codes) with derived roles, height, foot, status (`active`/`retired`/`unknown`), `SourceUrl` |
 | `Club` | Name, short name, city, country (default `Malawi`), founded year, `SourceUrl` |
 | `NationalTeam` | Canonical national side: name, short name, gender (`men`/`women`/`mixed`), level (`senior`/`U23`/`U20`/`U17`), country, `SourceUrl`. Squad entries reference this instead of free text |
 | `PlayerClub` | Player ↔ Club affiliation: start/end dates, `IsCurrent`, contract type (`permanent`/`loan`/`youth`/`trial`), shirt number, position at club (canonical code with derived role) |
@@ -152,7 +152,7 @@ Swagger UI is only served in Development; in production use `/healthz` and the `
 
 ## Status and roadmap
 
-Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser; full-match recording that flags unmatched references for review; CSV/JSON exports for every public entity plus a combined flat appearances export for club and national squad entries; and a canonical position vocabulary (roles `GK`/`DF`/`MF`/`FW` with granular position codes) enforced on write across players, squads and club stints, surfaced as grouped pickers in the web forms and as extra columns in the player, appearance and career exports.
+Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser; full-match recording that flags unmatched references for review; CSV/JSON exports for every public entity plus a combined flat appearances export for club and national squad entries; and a canonical position vocabulary (roles `GK`/`DF`/`MF`/`FW` with granular position codes) enforced on write across players, squads and club stints, surfaced as grouped pickers in the web forms and as extra columns in the player, appearance and career exports; and canonical gender values (`men`/`women`, aligned with the national-team vocabulary) enforced on write and backfilled across player records.
 
 Planned (per product description, not yet built): squad-role filters, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
 
