@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PositionSelect } from "@/components/PositionSelect";
 import { Field, FormError } from "@/components/data-ui";
 import {
   Select,
@@ -539,12 +540,12 @@ export function RecordMatchPage() {
                 >
                   <TrashIcon />
                 </Button>
-                <Input
-                  aria-label="Position"
-                  value={r.position ?? ""}
-                  onChange={(e) => updateRow(r.key, { position: e.target.value })}
-                  placeholder="Position (optional)"
+                <PositionSelect
                   className="sm:col-span-2"
+                  id={`pos-${r.key}`}
+                  value={r.position ?? ""}
+                  onChange={(code) => updateRow(r.key, { position: code })}
+                  placeholder="Position (optional)"
                 />
                 <label
                   htmlFor={`cap-${r.key}`}

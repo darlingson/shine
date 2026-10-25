@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PositionSelect } from "@/components/PositionSelect";
 import {
   Select,
   SelectContent,
@@ -231,19 +232,17 @@ function PlayerForm({
               />
             </Field>
             <Field label="Primary position" htmlFor="player-pos1">
-              <Input
+              <PositionSelect
                 id="player-pos1"
                 value={form.positionPrimary ?? ""}
-                onChange={(e) => set("positionPrimary", e.target.value)}
-                placeholder="e.g. Forward"
+                onChange={(code) => set("positionPrimary", code)}
               />
             </Field>
             <Field label="Secondary position" htmlFor="player-pos2">
-              <Input
+              <PositionSelect
                 id="player-pos2"
                 value={form.positionSecondary ?? ""}
-                onChange={(e) => set("positionSecondary", e.target.value)}
-                placeholder="e.g. Winger"
+                onChange={(code) => set("positionSecondary", code)}
               />
             </Field>
             <Field label="Height (cm)" htmlFor="player-height">
