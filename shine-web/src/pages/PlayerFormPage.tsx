@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PositionSelect } from "@/components/PositionSelect";
+import { OptionalSelect } from "@/components/OptionalSelect";
 import {
   Select,
   SelectContent,
@@ -24,6 +25,7 @@ import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
 import {
   PLAYER_FEET,
+  PLAYER_GENDERS,
   PLAYER_STATUSES,
   createPlayer,
   updatePlayer,
@@ -217,11 +219,11 @@ function PlayerForm({
               />
             </Field>
             <Field label="Gender" htmlFor="player-gender">
-              <Input
+              <OptionalSelect
                 id="player-gender"
                 value={form.gender ?? ""}
-                onChange={(e) => set("gender", e.target.value)}
-                placeholder="e.g. M / F"
+                onChange={(v) => set("gender", v)}
+                options={PLAYER_GENDERS}
               />
             </Field>
             <Field label="Nationality" htmlFor="player-nationality">
