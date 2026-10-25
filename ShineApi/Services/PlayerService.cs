@@ -48,13 +48,14 @@ public class PlayerService : IPlayerService
     {
         var primary = Positions.NormalizeOrError(dto.PositionPrimary, "positionPrimary", errors);
         var secondary = Positions.NormalizeOrError(dto.PositionSecondary, "positionSecondary", errors);
+        var gender = Genders.NormalizeOrError(dto.Gender, "gender", errors);
 
         var player = new Player
         {
             FullName = dto.FullName,
             KnownAs = dto.KnownAs,
             DateOfBirth = dto.DateOfBirth,
-            Gender = dto.Gender,
+            Gender = gender,
             Nationality = dto.Nationality,
             PositionPrimary = primary?.Position,
             PrimaryRole = primary?.Role,
@@ -80,12 +81,13 @@ public class PlayerService : IPlayerService
 
         var primary = Positions.NormalizeOrError(dto.PositionPrimary, "positionPrimary", errors);
         var secondary = Positions.NormalizeOrError(dto.PositionSecondary, "positionSecondary", errors);
+        var gender = Genders.NormalizeOrError(dto.Gender, "gender", errors);
         if (errors.Count > 0) return player;
 
         player.FullName = dto.FullName;
         player.KnownAs = dto.KnownAs;
         player.DateOfBirth = dto.DateOfBirth;
-        player.Gender = dto.Gender;
+        player.Gender = gender;
         player.Nationality = dto.Nationality;
         player.PositionPrimary = primary?.Position;
         player.PrimaryRole = primary?.Role;
