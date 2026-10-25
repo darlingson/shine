@@ -44,11 +44,12 @@ public class PlayerService : IPlayerService
     public async Task<Player?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
-    public async Task<Player> CreateAsync(CreatePlayerDto dto, List<string> errors)
+    public async Task<Player?> CreateAsync(CreatePlayerDto dto, List<string> errors)
     {
         var primary = Positions.NormalizeOrError(dto.PositionPrimary, "positionPrimary", errors);
         var secondary = Positions.NormalizeOrError(dto.PositionSecondary, "positionSecondary", errors);
         var gender = Genders.NormalizeOrError(dto.Gender, "gender", errors);
+        if (errors.Count > 0) return null;
 
         var player = new Player
         {

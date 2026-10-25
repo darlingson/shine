@@ -22,9 +22,10 @@ public class PlayerClubService : IPlayerClubService
     public async Task<PlayerClub?> GetByIdAsync(int id)
         => await _repository.GetByIdAsync(id);
 
-    public async Task<PlayerClub> CreateAsync(CreatePlayerClubDto dto, List<string> errors)
+    public async Task<PlayerClub?> CreateAsync(CreatePlayerClubDto dto, List<string> errors)
     {
         var position = Positions.NormalizeOrError(dto.PositionAtClub, "positionAtClub", errors);
+        if (errors.Count > 0) return null;
 
         var playerClub = new PlayerClub
         {

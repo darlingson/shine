@@ -36,8 +36,8 @@ public class PlayerClubsController : ControllerBase
     {
         var errors = new List<string>();
         var playerClub = await _service.CreateAsync(dto, errors);
-        if (errors.Count > 0)
-            return BadRequest(new { errors });
+        if (errors.Count > 0) return BadRequest(new { errors });
+        if (playerClub is null) return BadRequest(new { errors });
 
         return CreatedAtAction(nameof(GetById), new { id = playerClub.PlayerClubId }, playerClub);
     }
