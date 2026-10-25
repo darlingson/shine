@@ -3,6 +3,7 @@ import { apiJson, getApiUrl } from "@/lib/api";
 export const LINEUP_STATUSES = [
   "starter",
   "substitute",
+  "matchday_squad",
   "unused_sub",
   "reserve",
   "suspended",

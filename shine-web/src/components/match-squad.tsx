@@ -14,6 +14,7 @@ export interface MatchSquadRow {
 const GROUP_LABELS: Record<string, string> = {
   starter: "Starting XI",
   substitute: "Substitutes",
+  matchday_squad: "Matchday squad",
   unused_sub: "Unused substitutes",
   reserve: "Reserves",
   suspended: "Suspended",
