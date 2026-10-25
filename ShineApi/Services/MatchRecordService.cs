@@ -9,7 +9,7 @@ namespace ShineApi.Services;
 public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
 {
     private static readonly string[] ValidStatuses =
-        ["starter", "substitute", "unused_sub", "reserve", "suspended", "injured"];
+        ["starter", "substitute", "matchday_squad", "unused_sub", "reserve", "suspended", "injured"];
 
     private const double AutoLinkThreshold = 0.85;
     private const double CreateThreshold = 0.5;

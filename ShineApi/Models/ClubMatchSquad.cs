@@ -6,7 +6,7 @@ public class ClubMatchSquad
     public int ClubId { get; set; }
     public int PlayerId { get; set; }
 
-    /// <summary>starter / substitute / unused_sub / reserve / suspended / injured</summary>
+    /// <summary>starter / substitute / matchday_squad / unused_sub / reserve / suspended / injured</summary>
     public string LineupStatus { get; set; } = string.Empty;
 
     public int? ShirtNumber { get; set; }

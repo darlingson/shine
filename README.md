@@ -68,7 +68,7 @@ shine/
 | `PlayerClub` | Player ↔ Club affiliation: start/end dates, `IsCurrent`, contract type (`permanent`/`loan`/`youth`/`trial`), shirt number, position at club (canonical code with derived role) |
 | `ClubMatch` | Club fixture: date, competition (e.g. Super League), season, optional home/away `Club` links (+ scores), venue, `SourceUrl`. Teams can be linked after the fact |
 | `NationalTeamMatch` | National-team fixture: same core fields, additionally kickoff time, round/stage (e.g. "Group C"), neutral venue, extra time and penalty-shootout scores, with optional home/away `NationalTeam` links |
-| `ClubMatchSquad` | Player participation in a club match: lineup status (`starter`/`substitute`/`unused_sub`/`reserve`/`suspended`/`injured`), minutes, goals, assists, cards, captaincy, notes |
+| `ClubMatchSquad` | Player participation in a club match: lineup status (`starter`/`substitute`/`matchday_squad`/`unused_sub`/`reserve`/`suspended`/`injured`), minutes, goals, assists, cards, captaincy, notes |
 | `NationalTeamMatchSquad` | Same participation detail for national-team matches, keyed by `{MatchId, NationalTeamId, PlayerId}` |
 
 ## Getting started
