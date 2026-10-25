@@ -141,6 +141,17 @@ public static class Positions
         return (null, false);
     }
 
+    /// <summary>Normalizes one position input: empty is allowed (cleared), a
+    /// known alias or code returns the canonical pair, and an unrecognized value
+    /// adds a validation error naming the field and allowed values.</summary>
+    public static Normalized? NormalizeOrError(string? input, string field, List<string> errors)
+    {
+        var (result, known) = TryNormalize(input);
+        if (known) return result;
+        errors.Add($"Unknown position '{input}' for {field}. Allowed values: {AllowedList}.");
+        return null;
+    }
+
     /// <summary>Canonical position codes joined as "; "-separated text, for
     /// validation error messages.</summary>
     public static string AllowedList

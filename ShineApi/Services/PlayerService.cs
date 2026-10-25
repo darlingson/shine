@@ -46,8 +46,8 @@ public class PlayerService : IPlayerService
 
     public async Task<Player> CreateAsync(CreatePlayerDto dto, List<string> errors)
     {
-        var primary = NormalizePosition(dto.PositionPrimary, "positionPrimary", errors);
-        var secondary = NormalizePosition(dto.PositionSecondary, "positionSecondary", errors);
+        var primary = Positions.NormalizeOrError(dto.PositionPrimary, "positionPrimary", errors);
+        var secondary = Positions.NormalizeOrError(dto.PositionSecondary, "positionSecondary", errors);
 
         var player = new Player
         {
@@ -78,8 +78,8 @@ public class PlayerService : IPlayerService
         var player = await _repository.GetByIdAsync(id);
         if (player is null) return null;
 
-        var primary = NormalizePosition(dto.PositionPrimary, "positionPrimary", errors);
-        var secondary = NormalizePosition(dto.PositionSecondary, "positionSecondary", errors);
+        var primary = Positions.NormalizeOrError(dto.PositionPrimary, "positionPrimary", errors);
+        var secondary = Positions.NormalizeOrError(dto.PositionSecondary, "positionSecondary", errors);
         if (errors.Count > 0) return player;
 
         player.FullName = dto.FullName;
@@ -100,16 +100,6 @@ public class PlayerService : IPlayerService
         _repository.Update(player);
         await _repository.SaveChangesAsync();
         return player;
-    }
-
-    /// <summary>Normalizes one position input into the canonical pair. Empty is
-    /// allowed (cleared); an unrecognized value adds a validation error.</summary>
-    private static Positions.Normalized? NormalizePosition(string? input, string field, List<string> errors)
-    {
-        var (result, known) = Positions.TryNormalize(input);
-        if (known) return result;
-        errors.Add($"Unknown position '{input}' for {field}. Allowed values: {Positions.AllowedList}.");
-        return null;
     }
 
     public async Task<bool> DeleteAsync(int id)
