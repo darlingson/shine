@@ -97,12 +97,6 @@ public static class Positions
             ["attacking midfielder"] = "AM",
             ["attacking midfield"] = "AM",
             ["attacking mid"] = "AM",
-            ["LM"] = "LM",
-            ["left midfielder"] = "LM",
-            ["left mid"] = "LM",
-            ["RM"] = "RM",
-            ["right midfielder"] = "RM",
-            ["right mid"] = "RM",
 
             // Forwards
             ["FW"] = "FW",

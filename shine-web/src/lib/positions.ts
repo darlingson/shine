@@ -31,8 +31,6 @@ export const POSITION_OPTIONS: PositionOption[] = [
   { code: "DM", label: "Defensive midfielder", role: "MF", roleLabel: "Midfielder" },
   { code: "CM", label: "Central midfielder", role: "MF", roleLabel: "Midfielder" },
   { code: "AM", label: "Attacking midfielder", role: "MF", roleLabel: "Midfielder" },
-  { code: "LM", label: "Left midfielder", role: "MF", roleLabel: "Midfielder" },
-  { code: "RM", label: "Right midfielder", role: "MF", roleLabel: "Midfielder" },
   { code: "FW", label: "Forward (unspecified)", role: "FW", roleLabel: "Forward" },
   { code: "LW", label: "Left winger", role: "FW", roleLabel: "Forward" },
   { code: "RW", label: "Right winger", role: "FW", roleLabel: "Forward" },
