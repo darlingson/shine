@@ -159,65 +159,87 @@ public class NationalTeamMatchService : INationalTeamMatchService
         return true;
     }
 
-    /// <summary>Full national team match list as a CSV or JSON download. Columns
-    /// match the JSON property names with team names resolved; blank cells mean
-    /// null. Dates and times are ISO 8601 and timestamps are UTC.</summary>
+    /// <summary>Full national team match list as a CSV or JSON download. Both
+    /// formats use the NationalTeamMatchRow columns with team names resolved;
+    /// blank cells mean null. Dates and times are ISO 8601 and timestamps are
+    /// UTC.</summary>
     public async Task<ExportFile?> ExportAsync(string format)
     {
         if (!ExportFormats.IsSupported(format))
             return null;
 
-        var rows = (await _repository.GetAllAsync())
+        var matchRows = (await _repository.GetAllAsync())
             .OrderByDescending(m => m.MatchDate)
             .ThenByDescending(m => m.MatchId)
+            .Select(m => new NationalTeamMatchRow(
+                m.MatchId,
+                m.MatchDate.ToString("yyyy-MM-dd"),
+                m.KickoffTime?.ToString("HH:mm"),
+                m.Competition,
+                m.Season,
+                m.Stage,
+                m.HomeNationalTeamId,
+                m.HomeNationalTeam?.Name,
+                m.AwayNationalTeamId,
+                m.AwayNationalTeam?.Name,
+                m.HomeScore,
+                m.AwayScore,
+                m.Venue,
+                m.IsNeutral,
+                m.WentToExtraTime,
+                m.HomePenaltyScore,
+                m.AwayPenaltyScore,
+                m.SourceUrl,
+                m.CreatedAt,
+                m.UpdatedAt))
             .ToList();
 
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
             csv.Append("matchId,matchDate,kickoffTime,competition,season,stage,homeNationalTeamId,homeNationalTeamName,awayNationalTeamId,awayNationalTeamName,homeScore,awayScore,venue,isNeutral,wentToExtraTime,homePenaltyScore,awayPenaltyScore,sourceUrl,createdAt,updatedAt");
-            foreach (var m in rows)
+            foreach (var r in matchRows)
             {
                 csv.AppendLine();
-                Csv.AppendEscaped(csv, m.MatchId.ToString());
+                Csv.AppendEscaped(csv, r.MatchId.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.MatchDate.ToString("yyyy-MM-dd"));
+                Csv.AppendEscaped(csv, r.MatchDate);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.KickoffTime?.ToString("HH:mm"));
+                Csv.AppendEscaped(csv, r.KickoffTime);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.Competition);
+                Csv.AppendEscaped(csv, r.Competition);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.Season);
+                Csv.AppendEscaped(csv, r.Season);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.Stage);
+                Csv.AppendEscaped(csv, r.Stage);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomeNationalTeamId?.ToString());
+                Csv.AppendEscaped(csv, r.HomeNationalTeamId?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomeNationalTeam?.Name);
+                Csv.AppendEscaped(csv, r.HomeNationalTeamName);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayNationalTeamId?.ToString());
+                Csv.AppendEscaped(csv, r.AwayNationalTeamId?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayNationalTeam?.Name);
+                Csv.AppendEscaped(csv, r.AwayNationalTeamName);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomeScore?.ToString());
+                Csv.AppendEscaped(csv, r.HomeScore?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayScore?.ToString());
+                Csv.AppendEscaped(csv, r.AwayScore?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.Venue);
+                Csv.AppendEscaped(csv, r.Venue);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.IsNeutral ? "true" : "false");
+                Csv.AppendEscaped(csv, r.IsNeutral ? "true" : "false");
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.WentToExtraTime ? "true" : "false");
+                Csv.AppendEscaped(csv, r.WentToExtraTime ? "true" : "false");
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomePenaltyScore?.ToString());
+                Csv.AppendEscaped(csv, r.HomePenaltyScore?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayPenaltyScore?.ToString());
+                Csv.AppendEscaped(csv, r.AwayPenaltyScore?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.SourceUrl);
+                Csv.AppendEscaped(csv, r.SourceUrl);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(m.CreatedAt));
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.CreatedAt));
                 csv.Append(',');
-                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(m.UpdatedAt));
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.UpdatedAt));
             }
 
             return new ExportFile(
@@ -226,7 +248,7 @@ public class NationalTeamMatchService : INationalTeamMatchService
                 ExportFormats.WithUtf8Bom(csv));
         }
 
-        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        var json = JsonSerializer.Serialize(matchRows, ExportFormats.JsonOptions);
         return new ExportFile(
             "national-team-matches.json",
             "application/json; charset=utf-8",

@@ -91,48 +91,64 @@ public class PlayerClubService : IPlayerClubService
         if (!ExportFormats.IsSupported(format))
             return null;
 
-        var rows = (await _repository.GetAllForExportAsync())
+        var stints = (await _repository.GetAllForExportAsync())
             .OrderBy(pc => pc.Player?.FullName)
             .ThenBy(pc => pc.StartDate?.ToString("yyyy-MM-dd") ?? string.Empty)
             .ThenBy(pc => pc.PlayerClubId)
+            .Select(pc => new PlayerCareerStintRow(
+                pc.PlayerClubId,
+                pc.PlayerId,
+                pc.Player?.FullName,
+                pc.ClubId,
+                pc.Club?.Name,
+                pc.StartDate?.ToString("yyyy-MM-dd"),
+                pc.EndDate?.ToString("yyyy-MM-dd"),
+                pc.IsCurrent,
+                pc.ContractType,
+                pc.ShirtNumber,
+                pc.PositionAtClub,
+                pc.RoleAtClub,
+                pc.SourceUrl,
+                pc.CreatedAt,
+                pc.UpdatedAt))
             .ToList();
 
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
             csv.Append("stintId,playerId,playerName,clubId,clubName,startDate,endDate,isCurrent,contractType,shirtNumber,positionAtClub,roleAtClub,sourceUrl,createdAt,updatedAt");
-            foreach (var pc in rows)
+            foreach (var r in stints)
             {
                 csv.AppendLine();
-                Csv.AppendEscaped(csv, pc.PlayerClubId.ToString());
+                Csv.AppendEscaped(csv, r.StintId.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.PlayerId.ToString());
+                Csv.AppendEscaped(csv, r.PlayerId.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.Player?.FullName);
+                Csv.AppendEscaped(csv, r.PlayerName);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.ClubId.ToString());
+                Csv.AppendEscaped(csv, r.ClubId.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.Club?.Name);
+                Csv.AppendEscaped(csv, r.ClubName);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.StartDate?.ToString("yyyy-MM-dd"));
+                Csv.AppendEscaped(csv, r.StartDate);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.EndDate?.ToString("yyyy-MM-dd"));
+                Csv.AppendEscaped(csv, r.EndDate);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.IsCurrent ? "true" : "false");
+                Csv.AppendEscaped(csv, r.IsCurrent ? "true" : "false");
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.ContractType);
+                Csv.AppendEscaped(csv, r.ContractType);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.ShirtNumber?.ToString());
+                Csv.AppendEscaped(csv, r.ShirtNumber?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.PositionAtClub);
+                Csv.AppendEscaped(csv, r.PositionAtClub);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.RoleAtClub);
+                Csv.AppendEscaped(csv, r.RoleAtClub);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, pc.SourceUrl);
+                Csv.AppendEscaped(csv, r.SourceUrl);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(pc.CreatedAt));
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.CreatedAt));
                 csv.Append(',');
-                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(pc.UpdatedAt));
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.UpdatedAt));
             }
 
             return new ExportFile(
@@ -141,7 +157,7 @@ public class PlayerClubService : IPlayerClubService
                 ExportFormats.WithUtf8Bom(csv));
         }
 
-        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        var json = JsonSerializer.Serialize(stints, ExportFormats.JsonOptions);
         return new ExportFile(
             "player-career-history.json",
             "application/json; charset=utf-8",

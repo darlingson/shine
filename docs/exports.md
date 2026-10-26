@@ -6,6 +6,9 @@ the [README](README.md#api) (`?format=csv|json`, default `csv`).
 
 ## Reading the files together
 
+CSV and JSON exports of the same file are identical in shape: same column
+names, same values, same row order — pick either format.
+
 Every ID column joins two files in the set:
 
 | Join key | Present in | Points at |

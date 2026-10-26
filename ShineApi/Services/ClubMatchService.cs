@@ -133,45 +133,60 @@ public class ClubMatchService : IClubMatchService
         if (!ExportFormats.IsSupported(format))
             return null;
 
-        var rows = (await _repository.GetAllAsync())
+        var matchRows = (await _repository.GetAllAsync())
             .OrderByDescending(m => m.MatchDate)
             .ThenByDescending(m => m.MatchId)
+            .Select(m => new ClubMatchRow(
+                m.MatchId,
+                m.MatchDate.ToString("yyyy-MM-dd"),
+                m.Competition,
+                m.Season,
+                m.HomeClubId,
+                m.HomeClub?.Name,
+                m.AwayClubId,
+                m.AwayClub?.Name,
+                m.HomeScore,
+                m.AwayScore,
+                m.Venue,
+                m.SourceUrl,
+                m.CreatedAt,
+                m.UpdatedAt))
             .ToList();
 
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
             csv.Append("matchId,matchDate,competition,season,homeClubId,homeClubName,awayClubId,awayClubName,homeScore,awayScore,venue,sourceUrl,createdAt,updatedAt");
-            foreach (var m in rows)
+            foreach (var r in matchRows)
             {
                 csv.AppendLine();
-                Csv.AppendEscaped(csv, m.MatchId.ToString());
+                Csv.AppendEscaped(csv, r.MatchId.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.MatchDate.ToString("yyyy-MM-dd"));
+                Csv.AppendEscaped(csv, r.MatchDate);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.Competition);
+                Csv.AppendEscaped(csv, r.Competition);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.Season);
+                Csv.AppendEscaped(csv, r.Season);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomeClubId?.ToString());
+                Csv.AppendEscaped(csv, r.HomeClubId?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomeClub?.Name);
+                Csv.AppendEscaped(csv, r.HomeClubName);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayClubId?.ToString());
+                Csv.AppendEscaped(csv, r.AwayClubId?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayClub?.Name);
+                Csv.AppendEscaped(csv, r.AwayClubName);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.HomeScore?.ToString());
+                Csv.AppendEscaped(csv, r.HomeScore?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.AwayScore?.ToString());
+                Csv.AppendEscaped(csv, r.AwayScore?.ToString());
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.Venue);
+                Csv.AppendEscaped(csv, r.Venue);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, m.SourceUrl);
+                Csv.AppendEscaped(csv, r.SourceUrl);
                 csv.Append(',');
-                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(m.CreatedAt));
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.CreatedAt));
                 csv.Append(',');
-                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(m.UpdatedAt));
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.UpdatedAt));
             }
 
             return new ExportFile(
@@ -180,7 +195,7 @@ public class ClubMatchService : IClubMatchService
                 ExportFormats.WithUtf8Bom(csv));
         }
 
-        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        var json = JsonSerializer.Serialize(matchRows, ExportFormats.JsonOptions);
         return new ExportFile(
             "club-matches.json",
             "application/json; charset=utf-8",
