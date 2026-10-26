@@ -131,6 +131,7 @@ Exports — full-list downloads for analysts, journalists and integrations; read
 - `/api/Players/export`, `/api/Clubs/export`, `/api/NationalTeams/export`, `/api/ClubMatches/export`, `/api/NationalTeamMatches/export`, `/api/PlayerClubs/export` — `GET ?format=csv|json` (default `csv`)
 - `/api/Export/appearances` — every squad appearance, club and national matches combined, one flat denormalized row per entry (player, team, opponent, match context, participation detail)
 - CSV files are UTF-8 with BOM (Excel-friendly), quoted per RFC 4180, ISO 8601 dates, resolved display names alongside IDs; JSON uses the same property names as the read endpoints
+- [docs/exports.md](docs/exports.md) is the data dictionary: what each column means, the ID semantics between files, and the canonical value vocabularies — paste it beside any published export
 
 ## Deploying
 

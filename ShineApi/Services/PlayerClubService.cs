@@ -100,7 +100,7 @@ public class PlayerClubService : IPlayerClubService
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
-            csv.Append("playerClubId,playerId,playerName,clubId,clubName,startDate,endDate,isCurrent,contractType,shirtNumber,positionAtClub,roleAtClub,sourceUrl,createdAt,updatedAt");
+            csv.Append("stintId,playerId,playerName,clubId,clubName,startDate,endDate,isCurrent,contractType,shirtNumber,positionAtClub,roleAtClub,sourceUrl,createdAt,updatedAt");
             foreach (var pc in rows)
             {
                 csv.AppendLine();
