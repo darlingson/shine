@@ -125,6 +125,12 @@ public class ClubMatchService : IClubMatchService
         return true;
     }
 
+    // CSV header — the camelCase ClubMatchRow property names in order, so the
+    // CSV names each column exactly as the JSON serialized from that record
+    // does.
+    private static readonly string CsvHeader =
+        "matchId,matchDate,competition,season,homeClubId,homeClubName,awayClubId,awayClubName,homeScore,awayScore,venue,sourceUrl,createdAt,updatedAt";
+
     /// <summary>Full club match list as a CSV or JSON download. Columns match the
     /// JSON property names with club names resolved; blank cells mean null. Dates
     /// are ISO 8601 and timestamps are UTC.</summary>
@@ -156,7 +162,7 @@ public class ClubMatchService : IClubMatchService
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
-            csv.Append("matchId,matchDate,competition,season,homeClubId,homeClubName,awayClubId,awayClubName,homeScore,awayScore,venue,sourceUrl,createdAt,updatedAt");
+            csv.Append(CsvHeader);
             foreach (var r in matchRows)
             {
                 csv.AppendLine();

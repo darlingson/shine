@@ -83,6 +83,12 @@ public class PlayerClubService : IPlayerClubService
         return true;
     }
 
+    // CSV header — the camelCase PlayerCareerStintRow property names in order,
+    // so the CSV names each column exactly as the JSON serialized from that
+    // record does.
+    private static readonly string CsvHeader =
+        "stintId,playerId,playerName,clubId,clubName,startDate,endDate,isCurrent,contractType,shirtNumber,positionAtClub,roleAtClub,sourceUrl,createdAt,updatedAt";
+
     /// <summary>Full career history as a CSV or JSON download. One row per club
     /// stint with player and club names resolved; blank cells mean null. Dates
     /// are ISO 8601 and timestamps are UTC.</summary>
@@ -116,7 +122,7 @@ public class PlayerClubService : IPlayerClubService
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
-            csv.Append("stintId,playerId,playerName,clubId,clubName,startDate,endDate,isCurrent,contractType,shirtNumber,positionAtClub,roleAtClub,sourceUrl,createdAt,updatedAt");
+            csv.Append(CsvHeader);
             foreach (var r in stints)
             {
                 csv.AppendLine();

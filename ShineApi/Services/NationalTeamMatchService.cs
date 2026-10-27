@@ -159,6 +159,12 @@ public class NationalTeamMatchService : INationalTeamMatchService
         return true;
     }
 
+    // CSV header — the camelCase NationalTeamMatchRow property names in order,
+    // so the CSV names each column exactly as the JSON serialized from that
+    // record does.
+    private static readonly string CsvHeader =
+        "matchId,matchDate,kickoffTime,competition,season,stage,homeNationalTeamId,homeNationalTeamName,awayNationalTeamId,awayNationalTeamName,homeScore,awayScore,venue,isNeutral,wentToExtraTime,homePenaltyScore,awayPenaltyScore,sourceUrl,createdAt,updatedAt";
+
     /// <summary>Full national team match list as a CSV or JSON download. Both
     /// formats use the NationalTeamMatchRow columns with team names resolved;
     /// blank cells mean null. Dates and times are ISO 8601 and timestamps are
@@ -197,7 +203,7 @@ public class NationalTeamMatchService : INationalTeamMatchService
         if (ExportFormats.IsCsv(format))
         {
             var csv = new StringBuilder();
-            csv.Append("matchId,matchDate,kickoffTime,competition,season,stage,homeNationalTeamId,homeNationalTeamName,awayNationalTeamId,awayNationalTeamName,homeScore,awayScore,venue,isNeutral,wentToExtraTime,homePenaltyScore,awayPenaltyScore,sourceUrl,createdAt,updatedAt");
+            csv.Append(CsvHeader);
             foreach (var r in matchRows)
             {
                 csv.AppendLine();
