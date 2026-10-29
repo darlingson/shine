@@ -12,6 +12,7 @@ public class ShineDbContext : IdentityDbContext
     public DbSet<Club> Club { get; set; } = null!;
     public DbSet<ClubMatch> ClubMatch { get; set; } = null!;
     public DbSet<ClubMatchSquad> ClubMatchSquad { get; set; } = null!;
+    public DbSet<Competition> Competition { get; set; } = null!;
     public DbSet<NationalTeam> NationalTeam { get; set; } = null!;
     public DbSet<NationalTeamMatch> NationalTeamMatch { get; set; } = null!;
     public DbSet<NationalTeamMatchSquad> NationalTeamMatchSquad { get; set; } = null!;
@@ -27,6 +28,11 @@ public class ShineDbContext : IdentityDbContext
 
         modelBuilder.Entity<ClubMatchSquad>()
             .HasKey(x => new { x.MatchId, x.ClubId, x.PlayerId });
+
+        modelBuilder.Entity<Competition>(entity =>
+        {
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
 
         modelBuilder.Entity<ClubMatch>(entity =>
         {
