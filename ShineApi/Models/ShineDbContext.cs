@@ -13,6 +13,7 @@ public class ShineDbContext : IdentityDbContext
     public DbSet<ClubMatch> ClubMatch { get; set; } = null!;
     public DbSet<ClubMatchSquad> ClubMatchSquad { get; set; } = null!;
     public DbSet<Competition> Competition { get; set; } = null!;
+    public DbSet<CompetitionSeason> CompetitionSeason { get; set; } = null!;
     public DbSet<NationalTeam> NationalTeam { get; set; } = null!;
     public DbSet<NationalTeamMatch> NationalTeamMatch { get; set; } = null!;
     public DbSet<NationalTeamMatchSquad> NationalTeamMatchSquad { get; set; } = null!;
@@ -32,6 +33,16 @@ public class ShineDbContext : IdentityDbContext
         modelBuilder.Entity<Competition>(entity =>
         {
             entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<CompetitionSeason>(entity =>
+        {
+            entity.HasKey(x => x.SeasonId);
+            entity.HasOne(x => x.Competition)
+                .WithMany()
+                .HasForeignKey(x => x.CompetitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.CompetitionId, x.Label }).IsUnique();
         });
 
         modelBuilder.Entity<ClubMatch>(entity =>

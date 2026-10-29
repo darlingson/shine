@@ -409,6 +409,46 @@ namespace ShineApi.Migrations
                     b.ToTable("Competition");
                 });
 
+            modelBuilder.Entity("ShineApi.Models.CompetitionSeason", b =>
+                {
+                    b.Property<int>("SeasonId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SeasonId"));
+
+                    b.Property<int>("CompetitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Label")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("SeasonId");
+
+                    b.HasIndex("CompetitionId", "Label")
+                        .IsUnique();
+
+                    b.ToTable("CompetitionSeason");
+                });
+
             modelBuilder.Entity("ShineApi.Models.NationalTeam", b =>
                 {
                     b.Property<int>("NationalTeamId")
@@ -889,6 +929,17 @@ namespace ShineApi.Migrations
                     b.Navigation("Match");
 
                     b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("ShineApi.Models.CompetitionSeason", b =>
+                {
+                    b.HasOne("ShineApi.Models.Competition", "Competition")
+                        .WithMany()
+                        .HasForeignKey("CompetitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Competition");
                 });
 
             modelBuilder.Entity("ShineApi.Models.NationalTeamMatch", b =>

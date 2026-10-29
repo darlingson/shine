@@ -114,6 +114,44 @@ public class CompetitionRepository : ICompetitionRepository
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 
+    // ── Seasons ─────────────────────────────────────────────────────────
+
+    /// <summary>Editions of one competition, newest known first.</summary>
+    public async Task<IEnumerable<CompetitionSeason>> GetSeasonsAsync(int competitionId)
+        => await _context.CompetitionSeason.AsNoTracking()
+            .Where(s => s.CompetitionId == competitionId)
+            .OrderByDescending(s => s.StartDate)
+            .ThenByDescending(s => s.Label ?? "")
+            .ThenByDescending(s => s.SeasonId)
+            .ToListAsync();
+
+    /// <summary>Tracked lookup — the caller may mutate the result and save.</summary>
+    public async Task<CompetitionSeason?> GetSeasonAsync(int competitionId, int seasonId)
+        => await _context.CompetitionSeason
+            .FirstOrDefaultAsync(s => s.CompetitionId == competitionId && s.SeasonId == seasonId);
+
+    public async Task<CompetitionSeason> AddSeasonAsync(CompetitionSeason season)
+    {
+        await _context.CompetitionSeason.AddAsync(season);
+        return season;
+    }
+
+    public void UpdateSeason(CompetitionSeason season)
+        => _context.CompetitionSeason.Update(season);
+
+    public void DeleteSeason(CompetitionSeason season)
+        => _context.CompetitionSeason.Remove(season);
+
+    public async Task<bool> SeasonLabelInUseAsync(int competitionId, string label, int? excludeSeasonId = null)
+    {
+        var normalized = label.Trim().ToLower();
+        return await _context.CompetitionSeason.AnyAsync(s =>
+            s.CompetitionId == competitionId &&
+            s.Label != null &&
+            s.Label.ToLower() == normalized &&
+            (excludeSeasonId == null || s.SeasonId != excludeSeasonId));
+    }
+
     private static IQueryable<Competition> Filter(IQueryable<Competition> competitions, CompetitionQuery query)
     {
         if (!string.IsNullOrWhiteSpace(query.Q))

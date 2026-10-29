@@ -15,4 +15,12 @@ public interface ICompetitionRepository
     Task<bool> ExistsAsync(int id);
     Task<bool> NameExistsAsync(string name, int? excludeId = null);
     Task SaveChangesAsync();
+
+    // Seasons — children of a competition ("FDH Premiership 2026" of "Super League").
+    Task<IEnumerable<CompetitionSeason>> GetSeasonsAsync(int competitionId);
+    Task<CompetitionSeason?> GetSeasonAsync(int competitionId, int seasonId);
+    Task<CompetitionSeason> AddSeasonAsync(CompetitionSeason season);
+    void UpdateSeason(CompetitionSeason season);
+    void DeleteSeason(CompetitionSeason season);
+    Task<bool> SeasonLabelInUseAsync(int competitionId, string label, int? excludeSeasonId = null);
 }

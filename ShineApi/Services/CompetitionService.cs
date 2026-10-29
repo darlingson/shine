@@ -125,4 +125,95 @@ public class CompetitionService : ICompetitionService
         await _repository.SaveChangesAsync();
         return true;
     }
+
+    // ── Seasons ─────────────────────────────────────────────────────────
+
+    public async Task<IEnumerable<CompetitionSeason>> GetSeasonsAsync(int competitionId)
+        => await _repository.GetSeasonsAsync(competitionId);
+
+    public async Task<CompetitionSeason?> GetSeasonAsync(int competitionId, int seasonId)
+        => await _repository.GetSeasonAsync(competitionId, seasonId);
+
+    public async Task<CompetitionSeason?> CreateSeasonAsync(
+        int competitionId, CreateCompetitionSeasonDto dto, List<string> errors)
+    {
+        var label = TrimOrNull(dto.Label);
+        var name = TrimOrNull(dto.Name);
+        if (label is null && name is null)
+            errors.Add("A season needs at least a label (e.g. \"2026\") or a name.");
+
+        if (dto.StartDate is not null && dto.EndDate is not null && dto.EndDate < dto.StartDate)
+            errors.Add("A season cannot end before it starts.");
+
+        // Rejected before persisting — a validation failure must not write a row.
+        if (errors.Count > 0) return null;
+
+        if (label is not null && await _repository.SeasonLabelInUseAsync(competitionId, label))
+            return null;
+
+        var season = new CompetitionSeason
+        {
+            CompetitionId = competitionId,
+            Label = label,
+            Name = name,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            SourceUrl = dto.SourceUrl,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _repository.AddSeasonAsync(season);
+        await _repository.SaveChangesAsync();
+        return season;
+    }
+
+    public async Task<CompetitionSeason?> UpdateSeasonAsync(
+        int competitionId, int seasonId, UpdateCompetitionSeasonDto dto, List<string> errors)
+    {
+        var season = await _repository.GetSeasonAsync(competitionId, seasonId);
+        if (season is null) return null;
+
+        var label = TrimOrNull(dto.Label);
+        var name = TrimOrNull(dto.Name);
+        if (label is null && name is null)
+            errors.Add("A season needs at least a label (e.g. \"2026\") or a name.");
+
+        if (dto.StartDate is not null && dto.EndDate is not null && dto.EndDate < dto.StartDate)
+            errors.Add("A season cannot end before it starts.");
+
+        if (errors.Count > 0)
+        {
+            // Rejected before persisting — leave the loaded season untouched.
+            return season;
+        }
+
+        if (label is not null &&
+            await _repository.SeasonLabelInUseAsync(competitionId, label, seasonId))
+            return null;
+
+        season.Label = label;
+        season.Name = name;
+        season.StartDate = dto.StartDate;
+        season.EndDate = dto.EndDate;
+        season.SourceUrl = dto.SourceUrl;
+        season.UpdatedAt = DateTime.UtcNow;
+
+        _repository.UpdateSeason(season);
+        await _repository.SaveChangesAsync();
+        return season;
+    }
+
+    public async Task<bool> DeleteSeasonAsync(int competitionId, int seasonId)
+    {
+        var season = await _repository.GetSeasonAsync(competitionId, seasonId);
+        if (season is null) return false;
+
+        _repository.DeleteSeason(season);
+        await _repository.SaveChangesAsync();
+        return true;
+    }
+
+    private static string? TrimOrNull(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

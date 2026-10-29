@@ -93,3 +93,35 @@ public class CompetitionFilterOptionsDto
     public List<string> Scopes { get; set; } = [];
     public List<string> Regions { get; set; } = [];
 }
+
+public class CreateCompetitionSeasonDto
+{
+    /// <summary>Year designation as used by the competition, e.g. "2026",
+    /// "2025/26". May stay empty for editions whose year is unknown — but a
+    /// season needs a label or a name.</summary>
+    public string? Label { get; set; }
+
+    /// <summary>Display name of this edition, sponsor included, e.g.
+    /// "FDH Premiership 2026". Falls back to Label when empty.</summary>
+    public string? Name { get; set; }
+
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+    public string? SourceUrl { get; set; }
+}
+
+public class UpdateCompetitionSeasonDto
+{
+    /// <summary>Year designation as used by the competition, e.g. "2026",
+    /// "2025/26". May stay empty for editions whose year is unknown — but a
+    /// season needs a label or a name.</summary>
+    public string? Label { get; set; }
+
+    /// <summary>Display name of this edition, sponsor included, e.g.
+    /// "FDH Premiership 2026". Falls back to Label when empty.</summary>
+    public string? Name { get; set; }
+
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+    public string? SourceUrl { get; set; }
+}
