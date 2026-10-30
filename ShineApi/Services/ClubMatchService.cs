@@ -11,11 +11,16 @@ public class ClubMatchService : IClubMatchService
 {
     private readonly IClubMatchRepository _repository;
     private readonly IClubRepository _clubRepository;
+    private readonly ICompetitionRepository _competitionRepository;
 
-    public ClubMatchService(IClubMatchRepository repository, IClubRepository clubRepository)
+    public ClubMatchService(
+        IClubMatchRepository repository,
+        IClubRepository clubRepository,
+        ICompetitionRepository competitionRepository)
     {
         _repository = repository;
         _clubRepository = clubRepository;
+        _competitionRepository = competitionRepository;
     }
 
     public async Task<IEnumerable<ClubMatchDto>> GetAllAsync()
@@ -53,12 +58,16 @@ public class ClubMatchService : IClubMatchService
     {
         if (!await ClubsExistAsync(dto.HomeClubId, dto.AwayClubId, errors))
             return null;
+        if (!await CompetitionLinksValidAsync(dto.CompetitionId, dto.SeasonId, errors))
+            return null;
 
         var match = new ClubMatch
         {
             MatchDate = dto.MatchDate!.Value,
             Competition = dto.Competition,
             Season = dto.Season,
+            CompetitionId = dto.CompetitionId,
+            SeasonId = dto.SeasonId,
             HomeClubId = dto.HomeClubId,
             AwayClubId = dto.AwayClubId,
             HomeScore = dto.HomeScore,
@@ -81,10 +90,14 @@ public class ClubMatchService : IClubMatchService
 
         if (!await ClubsExistAsync(dto.HomeClubId, dto.AwayClubId, errors))
             return null;
+        if (!await CompetitionLinksValidAsync(dto.CompetitionId, dto.SeasonId, errors))
+            return null;
 
         match.MatchDate = dto.MatchDate!.Value;
         match.Competition = dto.Competition;
         match.Season = dto.Season;
+        match.CompetitionId = dto.CompetitionId;
+        match.SeasonId = dto.SeasonId;
         match.HomeClubId = dto.HomeClubId;
         match.AwayClubId = dto.AwayClubId;
         match.HomeScore = dto.HomeScore;
@@ -108,6 +121,23 @@ public class ClubMatchService : IClubMatchService
 
         match.HomeClubId = dto.HomeClubId;
         match.AwayClubId = dto.AwayClubId;
+        match.UpdatedAt = DateTime.UtcNow;
+
+        _repository.Update(match);
+        await _repository.SaveChangesAsync();
+        return (await GetByIdAsync(id))!;
+    }
+
+    public async Task<ClubMatchDto?> LinkCompetitionAsync(int id, LinkClubMatchCompetitionDto dto, List<string> errors)
+    {
+        var match = await _repository.GetByIdAsync(id);
+        if (match is null) return null;
+
+        if (!await CompetitionLinksValidAsync(dto.CompetitionId, dto.SeasonId, errors))
+            return null;
+
+        match.CompetitionId = dto.CompetitionId;
+        match.SeasonId = dto.SeasonId;
         match.UpdatedAt = DateTime.UtcNow;
 
         _repository.Update(match);
@@ -220,12 +250,45 @@ public class ClubMatchService : IClubMatchService
         return errors.Count == before;
     }
 
+    /// <summary>Validates competition/season link input on match writes: an
+    /// unknown competition, an unknown season, a season from another
+    /// competition, or a season without its competition are all errors.</summary>
+    private async Task<bool> CompetitionLinksValidAsync(int? competitionId, int? seasonId, List<string> errors)
+    {
+        var before = errors.Count;
+        if (competitionId is not null && seasonId is not null)
+        {
+            if (competitionId <= 0 || !await _competitionRepository.ExistsAsync(competitionId.Value))
+                errors.Add($"Unknown competitionId {competitionId}.");
+
+            var season = seasonId > 0 ? await _competitionRepository.GetSeasonByIdAsync(seasonId.Value) : null;
+            if (season is null)
+                errors.Add($"Unknown seasonId {seasonId}.");
+            else if (competitionId > 0 && season.CompetitionId != competitionId)
+                errors.Add($"Season {seasonId} belongs to competition {season.CompetitionId}, not competition {competitionId}.");
+        }
+        else if (competitionId is not null)
+        {
+            if (competitionId <= 0 || !await _competitionRepository.ExistsAsync(competitionId.Value))
+                errors.Add($"Unknown competitionId {competitionId}.");
+        }
+        else if (seasonId is not null)
+        {
+            errors.Add("A seasonId cannot be set without its competitionId.");
+        }
+        return errors.Count == before;
+    }
+
     private static ClubMatchDto ToDto(ClubMatch m) => new()
     {
         MatchId = m.MatchId,
         MatchDate = m.MatchDate,
         Competition = m.Competition,
         Season = m.Season,
+        CompetitionId = m.CompetitionId,
+        SeasonId = m.SeasonId,
+        CompetitionName = m.CompetitionRef?.Name,
+        SeasonName = m.SeasonRef is null ? null : (m.SeasonRef.Name ?? m.SeasonRef.Label),
         HomeClubId = m.HomeClubId,
         AwayClubId = m.AwayClubId,
         HomeClubName = m.HomeClub?.Name,

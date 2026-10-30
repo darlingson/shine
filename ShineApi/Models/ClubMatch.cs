@@ -22,7 +22,15 @@ public class ClubMatch
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>The competition this match belongs to, once identified. SetNull
+    /// so deleting a competition only detaches it — the free-text columns keep
+    /// what the source said at the time.</summary>
+    public int? CompetitionId { get; set; }
+    public int? SeasonId { get; set; }
+
     // Navigation properties
     public Club? HomeClub { get; set; }
     public Club? AwayClub { get; set; }
+    public Competition? CompetitionRef { get; set; }
+    public CompetitionSeason? SeasonRef { get; set; }
 }

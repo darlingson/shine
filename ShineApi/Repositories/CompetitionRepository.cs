@@ -130,6 +130,10 @@ public class CompetitionRepository : ICompetitionRepository
         => await _context.CompetitionSeason
             .FirstOrDefaultAsync(s => s.CompetitionId == competitionId && s.SeasonId == seasonId);
 
+    public async Task<CompetitionSeason?> GetSeasonByIdAsync(int seasonId)
+        => await _context.CompetitionSeason.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.SeasonId == seasonId);
+
     public async Task<CompetitionSeason> AddSeasonAsync(CompetitionSeason season)
     {
         await _context.CompetitionSeason.AddAsync(season);

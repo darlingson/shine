@@ -11,6 +11,7 @@ public interface INationalTeamMatchService
     Task<NationalTeamMatchDto?> CreateAsync(CreateNationalTeamMatchDto dto, List<string> errors);
     Task<NationalTeamMatchDto?> UpdateAsync(int id, UpdateNationalTeamMatchDto dto, List<string> errors);
     Task<NationalTeamMatchDto?> LinkTeamsAsync(int id, LinkNationalTeamMatchTeamsDto dto, List<string> errors);
+    Task<NationalTeamMatchDto?> LinkCompetitionAsync(int id, LinkNationalTeamMatchCompetitionDto dto, List<string> errors);
     Task<bool> DeleteAsync(int id);
     Task<ExportFile?> ExportAsync(string format);
 }

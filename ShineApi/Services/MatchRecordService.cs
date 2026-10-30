@@ -26,6 +26,8 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
         if (home is null) errors.Add($"Unknown homeClubId {dto.Match.HomeClubId}.");
         if (away is null) errors.Add($"Unknown awayClubId {dto.Match.AwayClubId}.");
         if (home is null || away is null) return null;
+        await ValidateCompetitionLinkAsync(dto.Match.CompetitionId, dto.Match.SeasonId, errors);
+        if (errors.Count > 0) return null;
 
         var players = await db.Player.ToListAsync();
         var currentAffils = await db.PlayerClub
@@ -40,6 +42,8 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
                 MatchDate = dto.Match.MatchDate,
                 Competition = dto.Match.Competition,
                 Season = dto.Match.Season,
+                CompetitionId = dto.Match.CompetitionId,
+                SeasonId = dto.Match.SeasonId,
                 HomeClubId = home.ClubId,
                 AwayClubId = away.ClubId,
                 HomeScore = dto.Match.HomeScore,
@@ -245,6 +249,35 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
         db.ReviewFlag.Remove(flag);
         await db.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>Validates the optional competition/season link on a recorded
+    /// match: unknown ids, a season without its competition, or a season from
+    /// another competition are all errors.</summary>
+    private async Task ValidateCompetitionLinkAsync(int? competitionId, int? seasonId, List<string> errors)
+    {
+        if (competitionId is null && seasonId is null)
+            return;
+
+        if (seasonId is not null && (competitionId is null || competitionId <= 0))
+        {
+            errors.Add("A seasonId cannot be set without its competitionId.");
+            return;
+        }
+
+        if (competitionId > 0 && !await db.Competition.AnyAsync(c => c.CompetitionId == competitionId))
+            errors.Add($"Unknown competitionId {competitionId}.");
+
+        if (seasonId is not null)
+        {
+            var season = seasonId > 0
+                ? await db.CompetitionSeason.AsNoTracking().FirstOrDefaultAsync(s => s.SeasonId == seasonId)
+                : null;
+            if (season is null)
+                errors.Add($"Unknown seasonId {seasonId}.");
+            else if (competitionId is { } cid && season.CompetitionId != cid)
+                errors.Add($"Season {seasonId} belongs to competition {season.CompetitionId}, not competition {cid}.");
+        }
     }
 
     private static bool Validate(CreateMatchRecordDto dto, List<string> errors)

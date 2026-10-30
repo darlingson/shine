@@ -274,6 +274,9 @@ namespace ShineApi.Migrations
                     b.Property<string>("Competition")
                         .HasColumnType("text");
 
+                    b.Property<int?>("CompetitionId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -289,6 +292,9 @@ namespace ShineApi.Migrations
                     b.Property<string>("Season")
                         .HasColumnType("text");
 
+                    b.Property<int?>("SeasonId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("SourceUrl")
                         .HasColumnType("text");
 
@@ -302,7 +308,11 @@ namespace ShineApi.Migrations
 
                     b.HasIndex("AwayClubId");
 
+                    b.HasIndex("CompetitionId");
+
                     b.HasIndex("HomeClubId");
+
+                    b.HasIndex("SeasonId");
 
                     b.ToTable("ClubMatch");
                 });
@@ -517,6 +527,9 @@ namespace ShineApi.Migrations
                     b.Property<string>("Competition")
                         .HasColumnType("text");
 
+                    b.Property<int?>("CompetitionId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -541,6 +554,9 @@ namespace ShineApi.Migrations
                     b.Property<string>("Season")
                         .HasColumnType("text");
 
+                    b.Property<int?>("SeasonId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("SourceUrl")
                         .HasColumnType("text");
 
@@ -560,7 +576,11 @@ namespace ShineApi.Migrations
 
                     b.HasIndex("AwayNationalTeamId");
 
+                    b.HasIndex("CompetitionId");
+
                     b.HasIndex("HomeNationalTeamId");
+
+                    b.HasIndex("SeasonId");
 
                     b.ToTable("NationalTeamMatch");
                 });
@@ -894,14 +914,28 @@ namespace ShineApi.Migrations
                         .HasForeignKey("AwayClubId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ShineApi.Models.Competition", "CompetitionRef")
+                        .WithMany()
+                        .HasForeignKey("CompetitionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ShineApi.Models.Club", "HomeClub")
                         .WithMany()
                         .HasForeignKey("HomeClubId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ShineApi.Models.CompetitionSeason", "SeasonRef")
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("AwayClub");
 
+                    b.Navigation("CompetitionRef");
+
                     b.Navigation("HomeClub");
+
+                    b.Navigation("SeasonRef");
                 });
 
             modelBuilder.Entity("ShineApi.Models.ClubMatchSquad", b =>
@@ -949,14 +983,28 @@ namespace ShineApi.Migrations
                         .HasForeignKey("AwayNationalTeamId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ShineApi.Models.Competition", "CompetitionRef")
+                        .WithMany()
+                        .HasForeignKey("CompetitionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ShineApi.Models.NationalTeam", "HomeNationalTeam")
                         .WithMany()
                         .HasForeignKey("HomeNationalTeamId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ShineApi.Models.CompetitionSeason", "SeasonRef")
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("AwayNationalTeam");
 
+                    b.Navigation("CompetitionRef");
+
                     b.Navigation("HomeNationalTeam");
+
+                    b.Navigation("SeasonRef");
                 });
 
             modelBuilder.Entity("ShineApi.Models.NationalTeamMatchSquad", b =>

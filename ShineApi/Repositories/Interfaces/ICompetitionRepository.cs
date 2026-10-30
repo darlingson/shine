@@ -19,6 +19,10 @@ public interface ICompetitionRepository
     // Seasons — children of a competition ("FDH Premiership 2026" of "Super League").
     Task<IEnumerable<CompetitionSeason>> GetSeasonsAsync(int competitionId);
     Task<CompetitionSeason?> GetSeasonAsync(int competitionId, int seasonId);
+
+    /// <summary>Season lookup without a competition context — used when
+    /// validating match links ("does this season exist, and whose is it?").</summary>
+    Task<CompetitionSeason?> GetSeasonByIdAsync(int seasonId);
     Task<CompetitionSeason> AddSeasonAsync(CompetitionSeason season);
     void UpdateSeason(CompetitionSeason season);
     void DeleteSeason(CompetitionSeason season);

@@ -56,6 +56,14 @@ public class ShineDbContext : IdentityDbContext
                 .WithMany()
                 .HasForeignKey(x => x.AwayClubId)
                 .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.CompetitionRef)
+                .WithMany()
+                .HasForeignKey(x => x.CompetitionId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.SeasonRef)
+                .WithMany()
+                .HasForeignKey(x => x.SeasonId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<NationalTeam>(entity =>
@@ -73,6 +81,14 @@ public class ShineDbContext : IdentityDbContext
             entity.HasOne(x => x.AwayNationalTeam)
                 .WithMany()
                 .HasForeignKey(x => x.AwayNationalTeamId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.CompetitionRef)
+                .WithMany()
+                .HasForeignKey(x => x.CompetitionId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.SeasonRef)
+                .WithMany()
+                .HasForeignKey(x => x.SeasonId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

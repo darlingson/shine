@@ -11,13 +11,16 @@ public class NationalTeamMatchService : INationalTeamMatchService
 {
     private readonly INationalTeamMatchRepository _repository;
     private readonly INationalTeamRepository _nationalTeamRepository;
+    private readonly ICompetitionRepository _competitionRepository;
 
     public NationalTeamMatchService(
         INationalTeamMatchRepository repository,
-        INationalTeamRepository nationalTeamRepository)
+        INationalTeamRepository nationalTeamRepository,
+        ICompetitionRepository competitionRepository)
     {
         _repository = repository;
         _nationalTeamRepository = nationalTeamRepository;
+        _competitionRepository = competitionRepository;
     }
 
     public async Task<IEnumerable<NationalTeamMatchDto>> GetAllAsync()
@@ -57,6 +60,8 @@ public class NationalTeamMatchService : INationalTeamMatchService
             return null;
         if (!ShootoutIsValid(dto.HomePenaltyScore, dto.AwayPenaltyScore, errors))
             return null;
+        if (!await CompetitionLinksValidAsync(dto.CompetitionId, dto.SeasonId, errors))
+            return null;
 
         var match = new NationalTeamMatch
         {
@@ -65,6 +70,8 @@ public class NationalTeamMatchService : INationalTeamMatchService
             Competition = dto.Competition,
             Season = dto.Season,
             Stage = dto.Stage,
+            CompetitionId = dto.CompetitionId,
+            SeasonId = dto.SeasonId,
             HomeNationalTeamId = dto.HomeNationalTeamId,
             AwayNationalTeamId = dto.AwayNationalTeamId,
             HomeScore = dto.HomeScore,
@@ -93,12 +100,16 @@ public class NationalTeamMatchService : INationalTeamMatchService
             return null;
         if (!ShootoutIsValid(dto.HomePenaltyScore, dto.AwayPenaltyScore, errors))
             return null;
+        if (!await CompetitionLinksValidAsync(dto.CompetitionId, dto.SeasonId, errors))
+            return null;
 
         match.MatchDate = dto.MatchDate!.Value;
         match.KickoffTime = dto.KickoffTime;
         match.Competition = dto.Competition;
         match.Season = dto.Season;
         match.Stage = dto.Stage;
+        match.CompetitionId = dto.CompetitionId;
+        match.SeasonId = dto.SeasonId;
         match.HomeNationalTeamId = dto.HomeNationalTeamId;
         match.AwayNationalTeamId = dto.AwayNationalTeamId;
         match.HomeScore = dto.HomeScore;
@@ -126,6 +137,23 @@ public class NationalTeamMatchService : INationalTeamMatchService
 
         match.HomeNationalTeamId = dto.HomeNationalTeamId;
         match.AwayNationalTeamId = dto.AwayNationalTeamId;
+        match.UpdatedAt = DateTime.UtcNow;
+
+        _repository.Update(match);
+        await _repository.SaveChangesAsync();
+        return (await GetByIdAsync(id))!;
+    }
+
+    public async Task<NationalTeamMatchDto?> LinkCompetitionAsync(int id, LinkNationalTeamMatchCompetitionDto dto, List<string> errors)
+    {
+        var match = await _repository.GetByIdAsync(id);
+        if (match is null) return null;
+
+        if (!await CompetitionLinksValidAsync(dto.CompetitionId, dto.SeasonId, errors))
+            return null;
+
+        match.CompetitionId = dto.CompetitionId;
+        match.SeasonId = dto.SeasonId;
         match.UpdatedAt = DateTime.UtcNow;
 
         _repository.Update(match);
@@ -273,6 +301,35 @@ public class NationalTeamMatchService : INationalTeamMatchService
         return errors.Count == before;
     }
 
+    /// <summary>Validates competition/season link input on match writes: an
+    /// unknown competition, an unknown season, a season from another
+    /// competition, or a season without its competition are all errors.</summary>
+    private async Task<bool> CompetitionLinksValidAsync(int? competitionId, int? seasonId, List<string> errors)
+    {
+        var before = errors.Count;
+        if (competitionId is not null && seasonId is not null)
+        {
+            if (competitionId <= 0 || !await _competitionRepository.ExistsAsync(competitionId.Value))
+                errors.Add($"Unknown competitionId {competitionId}.");
+
+            var season = seasonId > 0 ? await _competitionRepository.GetSeasonByIdAsync(seasonId.Value) : null;
+            if (season is null)
+                errors.Add($"Unknown seasonId {seasonId}.");
+            else if (competitionId > 0 && season.CompetitionId != competitionId)
+                errors.Add($"Season {seasonId} belongs to competition {season.CompetitionId}, not competition {competitionId}.");
+        }
+        else if (competitionId is not null)
+        {
+            if (competitionId <= 0 || !await _competitionRepository.ExistsAsync(competitionId.Value))
+                errors.Add($"Unknown competitionId {competitionId}.");
+        }
+        else if (seasonId is not null)
+        {
+            errors.Add("A seasonId cannot be set without its competitionId.");
+        }
+        return errors.Count == before;
+    }
+
     private static NationalTeamMatchDto ToDto(NationalTeamMatch m) => new()
     {
         MatchId = m.MatchId,
@@ -281,6 +338,10 @@ public class NationalTeamMatchService : INationalTeamMatchService
         Competition = m.Competition,
         Season = m.Season,
         Stage = m.Stage,
+        CompetitionId = m.CompetitionId,
+        SeasonId = m.SeasonId,
+        CompetitionName = m.CompetitionRef?.Name,
+        SeasonName = m.SeasonRef is null ? null : (m.SeasonRef.Name ?? m.SeasonRef.Label),
         HomeNationalTeamId = m.HomeNationalTeamId,
         AwayNationalTeamId = m.AwayNationalTeamId,
         HomeNationalTeamName = m.HomeNationalTeam?.Name,
