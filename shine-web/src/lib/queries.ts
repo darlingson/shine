@@ -51,6 +51,18 @@ import {
 } from "@/lib/players";
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
 import {
+  getCompetition,
+  getCompetitionFilterOptions,
+  listCompetitionSeasons,
+  listCompetitions,
+  queryCompetitions,
+  type Competition,
+  type CompetitionFilterOptions,
+  type CompetitionPage,
+  type CompetitionQuery,
+  type CompetitionSeason,
+} from "@/lib/competitions";
+import {
   listClubSquads,
   listNationalSquads,
   type ClubSquad,
@@ -78,6 +90,13 @@ export const queryKeys = {
   nationalTeamPage: (query: NationalTeamQuery) =>
     ["nationalTeams", "page", query] as const,
   nationalTeamFilterOptions: ["nationalTeams", "filterOptions"] as const,
+  competitions: ["competitions"] as const,
+  competition: (id: number | string) => ["competitions", String(id)] as const,
+  competitionPage: (query: CompetitionQuery) =>
+    ["competitions", "page", query] as const,
+  competitionFilterOptions: ["competitions", "filterOptions"] as const,
+  competitionSeasons: (id: number | string) =>
+    ["competitions", String(id), "seasons"] as const,
   clubMatches: ["clubMatches"] as const,
   clubMatch: (id: number | string) => ["clubMatches", String(id)] as const,
   clubMatchPage: (query: ClubMatchQuery) =>
@@ -202,6 +221,58 @@ export function useNationalTeamFilterOptions(): UseQueryResult<
   return useQuery({
     queryKey: queryKeys.nationalTeamFilterOptions,
     queryFn: getNationalTeamFilterOptions,
+  });
+}
+
+export function useCompetitions(
+  enabled = true,
+): UseQueryResult<Competition[], Error> {
+  return useQuery({
+    queryKey: queryKeys.competitions,
+    queryFn: listCompetitions,
+    enabled,
+  });
+}
+
+export function useCompetition(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<Competition, Error> {
+  return useQuery({
+    queryKey: queryKeys.competition(id),
+    queryFn: () => getCompetition(Number(id)),
+    enabled,
+  });
+}
+
+export function useCompetitionPage(
+  query: CompetitionQuery,
+): UseQueryResult<CompetitionPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.competitionPage(query),
+    queryFn: () => queryCompetitions(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCompetitionFilterOptions(): UseQueryResult<
+  CompetitionFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.competitionFilterOptions,
+    queryFn: getCompetitionFilterOptions,
+  });
+}
+
+export function useCompetitionSeasons(
+  competitionId: number | string,
+  enabled = true,
+): UseQueryResult<CompetitionSeason[], Error> {
+  return useQuery({
+    queryKey: queryKeys.competitionSeasons(competitionId),
+    queryFn: () => listCompetitionSeasons(Number(competitionId)),
+    enabled,
   });
 }
 
