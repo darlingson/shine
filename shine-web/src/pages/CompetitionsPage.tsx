@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import {
+  DownloadSimpleIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { DeleteButton } from "@/components/data-ui";
 import {
+  competitionsExportHref,
   deleteCompetition,
 } from "@/lib/competitions";
 import { useCompetitions } from "@/lib/queries";
@@ -66,15 +71,30 @@ export function CompetitionsPage() {
               : "Read-only access — editing needs the competitions:write permission."}
           </p>
         </div>
-        {canWrite && (
+        <div className="flex flex-wrap gap-2">
           <Button
-            nativeButton={false}
-            render={<Link to="/manage/competitions/new" />}
+            variant="outline"
+            render={<a href={competitionsExportHref("csv")} />}
           >
-            <PlusIcon />
-            <span>Add competition</span>
+            <DownloadSimpleIcon />
+            <span>Export CSV</span>
           </Button>
-        )}
+          <Button
+            variant="outline"
+            render={<a href={competitionsExportHref("json")} />}
+          >
+            <span>Export JSON</span>
+          </Button>
+          {canWrite && (
+            <Button
+              nativeButton={false}
+              render={<Link to="/manage/competitions/new" />}
+            >
+              <PlusIcon />
+              <span>Add competition</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>

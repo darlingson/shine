@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, DownloadSimpleIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,7 @@ import {
   COMPETITION_SCOPES,
   createCompetition,
   createCompetitionSeason,
+  competitionSeasonsExportHref,
   deleteCompetitionSeason,
   seasonLabel,
   updateCompetition,
@@ -360,7 +361,26 @@ function SeasonsEditor({ competitionId }: { competitionId: number }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Seasons ({seasons.length})</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle>Seasons ({seasons.length})</CardTitle>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              render={<a href={competitionSeasonsExportHref("csv")} />}
+            >
+              <DownloadSimpleIcon />
+              <span>CSV</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              render={<a href={competitionSeasonsExportHref("json")} />}
+            >
+              JSON
+            </Button>
+          </div>
+        </div>
         <CardDescription>
           The names people actually used — “TNM Super League 2025”, “FDH
           Premiership 2026”, or a yearless edition nobody has dated yet.

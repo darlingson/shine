@@ -1,4 +1,4 @@
-import { apiJson } from "@/lib/api";
+import { apiJson, getApiUrl } from "@/lib/api";
 import type { SortOrder } from "@/lib/sorting";
 
 export interface Competition {
@@ -85,6 +85,16 @@ export function updateCompetition(
 
 export function deleteCompetition(id: number): Promise<void> {
   return apiJson<void>(`/api/competitions/${id}`, { method: "DELETE" });
+}
+
+/** Download URL for the full competition list (format: csv or json). */
+export function competitionsExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/competitions/export?format=${format}`;
+}
+
+/** Download URL for every edition of every competition (format: csv or json). */
+export function competitionSeasonsExportHref(format: "csv" | "json"): string {
+  return `${getApiUrl()}/api/competitions/seasons/export?format=${format}`;
 }
 
 export function listCompetitionSeasons(
