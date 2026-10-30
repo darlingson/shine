@@ -120,6 +120,8 @@ builder.Services.AddScoped<IPlayerClubRepository, PlayerClubRepository>();
 builder.Services.AddScoped<IClubMatchSquadRepository, ClubMatchSquadRepository>();
 builder.Services.AddScoped<INationalTeamMatchSquadRepository, NationalTeamMatchSquadRepository>();
 builder.Services.AddScoped<ICompetitionRepository, CompetitionRepository>();
+builder.Services.AddScoped<IStaffMemberRepository, StaffMemberRepository>();
+builder.Services.AddScoped<IStaffAppointmentRepository, StaffAppointmentRepository>();
 
 // Service interfaces
 builder.Services.AddScoped<IClubService, ClubService>();
@@ -128,6 +130,8 @@ builder.Services.AddScoped<IClubMatchService, ClubMatchService>();
 builder.Services.AddScoped<INationalTeamMatchService, NationalTeamMatchService>();
 builder.Services.AddScoped<INationalTeamService, NationalTeamService>();
 builder.Services.AddScoped<ICompetitionService, CompetitionService>();
+builder.Services.AddScoped<IStaffMemberService, StaffMemberService>();
+builder.Services.AddScoped<IStaffAppointmentService, StaffAppointmentService>();
 builder.Services.AddScoped<IPlayerClubService, PlayerClubService>();
 builder.Services.AddScoped<IClubMatchSquadService, ClubMatchSquadService>();
 builder.Services.AddScoped<INationalTeamMatchSquadService, NationalTeamMatchSquadService>();

@@ -15,7 +15,6 @@ public class CreateNationalTeamDto
     /// <summary>senior / U23 / U20 / U17</summary>
     public string? Level { get; set; }
 
-    public string? Coach { get; set; }
     public string Country { get; set; } = "Malawi";
     public string? SourceUrl { get; set; }
 }
@@ -28,7 +27,6 @@ public class UpdateNationalTeamDto
     public string? Nickname { get; set; }
     public string? Gender { get; set; }
     public string? Level { get; set; }
-    public string? Coach { get; set; }
     public string Country { get; set; } = "Malawi";
     public string? SourceUrl { get; set; }
 }

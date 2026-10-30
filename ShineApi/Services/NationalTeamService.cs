@@ -59,7 +59,8 @@ public class NationalTeamService : INationalTeamService
             Nickname = dto.Nickname,
             Gender = gender,
             Level = dto.Level,
-            Coach = dto.Coach,
+            // Coach is deprecated on writes: the coach of record comes from
+            // staff appointments now, and new teams simply stay null here.
             Country = dto.Country,
             SourceUrl = dto.SourceUrl,
             CreatedAt = DateTime.UtcNow,
@@ -87,7 +88,8 @@ public class NationalTeamService : INationalTeamService
         nationalTeam.Nickname = dto.Nickname;
         nationalTeam.Gender = gender;
         nationalTeam.Level = dto.Level;
-        nationalTeam.Coach = dto.Coach;
+        // Coach is deprecated on writes — deliberately not touched here, so
+        // the legacy value survives edits until appointments take over.
         nationalTeam.Country = dto.Country;
         nationalTeam.SourceUrl = dto.SourceUrl;
         nationalTeam.UpdatedAt = DateTime.UtcNow;

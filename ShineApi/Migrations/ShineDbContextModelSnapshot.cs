@@ -838,6 +838,91 @@ namespace ShineApi.Migrations
                     b.ToTable("ReviewFlag");
                 });
 
+            modelBuilder.Entity("ShineApi.Models.StaffAppointment", b =>
+                {
+                    b.Property<int>("StaffAppointmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StaffAppointmentId"));
+
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("NationalTeamId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("StaffMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("StaffAppointmentId");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("NationalTeamId");
+
+                    b.HasIndex("StaffMemberId");
+
+                    b.ToTable("StaffAppointment");
+                });
+
+            modelBuilder.Entity("ShineApi.Models.StaffMember", b =>
+                {
+                    b.Property<int>("StaffMemberId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StaffMemberId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("KnownAs")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nationality")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("PlayerId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("StaffMemberId");
+
+                    b.HasIndex("PlayerId");
+
+                    b.ToTable("StaffMember");
+                });
+
             modelBuilder.Entity("ShineApi.Models.UserPermission", b =>
                 {
                     b.Property<string>("UserId")
@@ -1051,6 +1136,46 @@ namespace ShineApi.Migrations
                     b.Navigation("Club");
 
                     b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("ShineApi.Models.StaffAppointment", b =>
+                {
+                    b.HasOne("ShineApi.Models.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ShineApi.Models.NationalTeam", "NationalTeam")
+                        .WithMany()
+                        .HasForeignKey("NationalTeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ShineApi.Models.StaffMember", "StaffMember")
+                        .WithMany("Appointments")
+                        .HasForeignKey("StaffMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Club");
+
+                    b.Navigation("NationalTeam");
+
+                    b.Navigation("StaffMember");
+                });
+
+            modelBuilder.Entity("ShineApi.Models.StaffMember", b =>
+                {
+                    b.HasOne("ShineApi.Models.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("ShineApi.Models.StaffMember", b =>
+                {
+                    b.Navigation("Appointments");
                 });
 #pragma warning restore 612, 618
         }
