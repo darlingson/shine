@@ -6,6 +6,10 @@ export interface ClubMatch {
   matchDate: string;
   competition?: string | null;
   season?: string | null;
+  competitionId?: number | null;
+  seasonId?: number | null;
+  competitionName?: string | null;
+  seasonName?: string | null;
   homeClubId?: number | null;
   awayClubId?: number | null;
   homeClubName?: string | null;
@@ -31,6 +35,9 @@ export interface ClubMatchQuery {
   clubId?: number;
   competition?: string;
   season?: string;
+  /** Registry link filters — by competition or edition record. */
+  competitionId?: number;
+  seasonId?: number;
   dateFrom?: string;
   dateTo?: string;
   sort?: ClubMatchSort;
@@ -58,6 +65,9 @@ export function queryClubMatches(query: ClubMatchQuery): Promise<ClubMatchPage> 
   if (query.clubId != null) params.set("clubId", String(query.clubId));
   if (query.competition) params.set("competition", query.competition);
   if (query.season) params.set("season", query.season);
+  if (query.competitionId != null)
+    params.set("competitionId", String(query.competitionId));
+  if (query.seasonId != null) params.set("seasonId", String(query.seasonId));
   if (query.dateFrom) params.set("dateFrom", query.dateFrom);
   if (query.dateTo) params.set("dateTo", query.dateTo);
   if (query.sort) params.set("sort", query.sort);
@@ -75,6 +85,9 @@ export interface ClubMatchForm {
   matchDate: string;
   competition?: string;
   season?: string;
+  /** Registry links — null/omitted unlinks a match from the registry. */
+  competitionId?: number | null;
+  seasonId?: number | null;
   homeClubId?: number | null;
   awayClubId?: number | null;
   homeScore?: number | null;

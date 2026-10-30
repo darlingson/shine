@@ -21,6 +21,9 @@ export interface MatchRecordPayload {
     matchDate: string;
     competition?: string;
     season?: string;
+    /** Registry links — omitted leaves the match unlinked. */
+    competitionId?: number;
+    seasonId?: number;
     homeClubId: number;
     awayClubId: number;
     homeScore?: number | null;

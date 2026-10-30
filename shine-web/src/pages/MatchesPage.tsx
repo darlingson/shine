@@ -36,8 +36,27 @@ interface MatchRow {
   matchId: number;
   matchDate: string;
   competition?: string | null;
+  competitionId?: number | null;
+  competitionName?: string | null;
+  seasonName?: string | null;
   venue?: string | null;
   label: string;
+}
+
+/** Primary text is the recorded provenance; a linked registry record gets a
+ * muted second line so the normalized name is visible next to what the
+ * source actually wrote. */
+function competitionCell(m: MatchRow): { primary: string; note?: string } {
+  const hasLink = m.competitionId != null;
+  if (!hasLink) return { primary: m.competition ?? "" };
+  const noteParts: string[] = [];
+  if (m.competitionName && m.competitionName !== m.competition)
+    noteParts.push(m.competitionName);
+  if (m.seasonName) noteParts.push(m.seasonName);
+  return {
+    primary: m.competition || m.competitionName || "",
+    note: noteParts.join(" · ") || undefined,
+  };
 }
 
 export function MatchesPage({ kind }: { kind: Kind }) {
@@ -60,6 +79,9 @@ export function MatchesPage({ kind }: { kind: Kind }) {
           matchId: m.matchId,
           matchDate: m.matchDate,
           competition: m.competition,
+          competitionId: m.competitionId,
+          competitionName: m.competitionName,
+          seasonName: m.seasonName,
           venue: m.venue,
           label: clubMatchLabel(m),
         }))
@@ -67,6 +89,9 @@ export function MatchesPage({ kind }: { kind: Kind }) {
           matchId: m.matchId,
           matchDate: m.matchDate,
           competition: m.competition,
+          competitionId: m.competitionId,
+          competitionName: m.competitionName,
+          seasonName: m.seasonName,
           venue: m.venue,
           label: nationalTeamMatchLabel(m),
         }));
@@ -219,9 +244,21 @@ export function MatchesPage({ kind }: { kind: Kind }) {
                       </TableCell>
                       <TableCell>{m.label}</TableCell>
                       <TableCell>
-                        {m.competition || (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
+                        {(() => {
+                          const c = competitionCell(m);
+                          return c.primary ? (
+                            <div>
+                              <div>{c.primary}</div>
+                              {c.note && (
+                                <div className="text-xs text-muted-foreground">
+                                  {c.note}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         {m.venue || (
