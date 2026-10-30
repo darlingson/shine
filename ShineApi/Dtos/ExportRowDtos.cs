@@ -34,6 +34,32 @@ public record CompetitionRow(
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
+public record StaffMemberRow(
+    int StaffMemberId,
+    string FullName,
+    string? KnownAs,
+    string Nationality,
+    int? PlayerId,
+    string? PlayerName,
+    string? SourceUrl,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
+public record StaffAppointmentRow(
+    int StaffAppointmentId,
+    int StaffMemberId,
+    string? StaffMemberName,
+    string Role,
+    int? ClubId,
+    string? ClubName,
+    int? NationalTeamId,
+    string? NationalTeamName,
+    string? StartDate,
+    string? EndDate,
+    string? SourceUrl,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
 public record CompetitionSeasonRow(
     int SeasonId,
     int CompetitionId,

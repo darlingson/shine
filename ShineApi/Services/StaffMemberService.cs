@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using ShineApi.Dtos;
 using ShineApi.Models;
 using ShineApi.Repositories.Interfaces;
@@ -111,5 +113,66 @@ public class StaffMemberService : IStaffMemberService
         _repository.Delete(staffMember);
         await _repository.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>Full staff list as a CSV or JSON download. Columns match the
+    /// JSON property names; blank cells mean null. Timestamps are UTC.</summary>
+    public async Task<ExportFile?> ExportAsync(string format)
+    {
+        if (!ExportFormats.IsSupported(format))
+            return null;
+
+        var rows = (await _repository.GetAllForExportAsync())
+            .OrderBy(m => m.FullName)
+            .ThenBy(m => m.StaffMemberId)
+            .Select(m => new StaffMemberRow(
+                m.StaffMemberId,
+                m.FullName,
+                m.KnownAs,
+                m.Nationality,
+                m.PlayerId,
+                m.Player?.KnownAs ?? m.Player?.FullName,
+                m.SourceUrl,
+                m.CreatedAt,
+                m.UpdatedAt))
+            .ToList();
+
+        if (ExportFormats.IsCsv(format))
+        {
+            var csv = new StringBuilder();
+            csv.Append("staffMemberId,fullName,knownAs,nationality,playerId,playerName,sourceUrl,createdAt,updatedAt");
+            foreach (var r in rows)
+            {
+                csv.AppendLine();
+                Csv.AppendEscaped(csv, r.StaffMemberId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.FullName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.KnownAs);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Nationality);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.PlayerId?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.PlayerName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SourceUrl);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.CreatedAt));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.UpdatedAt));
+            }
+
+            return new ExportFile(
+                "staff-members.csv",
+                "text/csv; charset=utf-8",
+                ExportFormats.WithUtf8Bom(csv));
+        }
+
+        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        return new ExportFile(
+            "staff-members.json",
+            "application/json; charset=utf-8",
+            Encoding.UTF8.GetBytes(json));
     }
 }

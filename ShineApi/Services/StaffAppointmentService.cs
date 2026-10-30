@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using ShineApi.Dtos;
 using ShineApi.Models;
 using ShineApi.Repositories.Interfaces;
@@ -14,8 +16,8 @@ public class StaffAppointmentService : IStaffAppointmentService
         _repository = repository;
     }
 
-    public async Task<IEnumerable<StaffAppointment>> GetAllAsync()
-        => await _repository.GetAllAsync();
+    public async Task<IEnumerable<StaffAppointmentDto>> GetAllAsync()
+        => [.. (await _repository.GetAllAsync()).Select(ToDto)];
 
     public async Task<PagedResult<StaffAppointmentDto>> GetPageAsync(StaffAppointmentQuery query)
     {
@@ -107,6 +109,83 @@ public class StaffAppointmentService : IStaffAppointmentService
         _repository.Delete(appointment);
         await _repository.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>Every appointment as a CSV or JSON download, grouped under
+    /// the team by name, newest known dates first. Columns match the JSON
+    /// property names; blank cells mean null. Dates are ISO 8601 and
+    /// timestamps are UTC.</summary>
+    public async Task<ExportFile?> ExportAsync(string format)
+    {
+        if (!ExportFormats.IsSupported(format))
+            return null;
+
+        var rows = (await _repository.GetAllForExportAsync())
+            .OrderBy(a => a.Club?.Name ?? a.NationalTeam?.Name ?? "")
+            .ThenBy(a => a.StartDate == null)
+            .ThenByDescending(a => a.StartDate)
+            .ThenByDescending(a => a.StaffAppointmentId)
+            .Select(a => new StaffAppointmentRow(
+                a.StaffAppointmentId,
+                a.StaffMemberId,
+                a.StaffMember?.KnownAs ?? a.StaffMember?.FullName,
+                a.Role,
+                a.ClubId,
+                a.Club?.Name,
+                a.NationalTeamId,
+                a.NationalTeam?.Name,
+                a.StartDate?.ToString("yyyy-MM-dd"),
+                a.EndDate?.ToString("yyyy-MM-dd"),
+                a.SourceUrl,
+                a.CreatedAt,
+                a.UpdatedAt))
+            .ToList();
+
+        if (ExportFormats.IsCsv(format))
+        {
+            var csv = new StringBuilder();
+            csv.Append("staffAppointmentId,staffMemberId,staffMemberName,role,clubId,clubName,nationalTeamId,nationalTeamName,startDate,endDate,sourceUrl,createdAt,updatedAt");
+            foreach (var r in rows)
+            {
+                csv.AppendLine();
+                Csv.AppendEscaped(csv, r.StaffAppointmentId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.StaffMemberId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.StaffMemberName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Role);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.ClubId?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.ClubName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.NationalTeamId?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.NationalTeamName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.StartDate);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.EndDate);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SourceUrl);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.CreatedAt));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.UpdatedAt));
+            }
+
+            return new ExportFile(
+                "staff-appointments.csv",
+                "text/csv; charset=utf-8",
+                ExportFormats.WithUtf8Bom(csv));
+        }
+
+        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        return new ExportFile(
+            "staff-appointments.json",
+            "application/json; charset=utf-8",
+            Encoding.UTF8.GetBytes(json));
     }
 
     /// <summary>The team choice rules: the appointment needs exactly one team.

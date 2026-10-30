@@ -12,4 +12,8 @@ public interface IStaffMemberService
     Task<StaffMember?> CreateAsync(CreateStaffMemberDto dto, List<string> errors);
     Task<StaffMember?> UpdateAsync(int id, UpdateStaffMemberDto dto, List<string> errors);
     Task<bool> DeleteAsync(int id);
+
+    /// <summary>Full staff list as a CSV or JSON download, player link
+    /// resolved beside each row.</summary>
+    Task<ExportFile?> ExportAsync(string format);
 }

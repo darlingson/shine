@@ -119,6 +119,8 @@ pnpm dev
 Reads are public; writes require the listed permission (snapshotted in the access token, refreshed on token refresh):
 
 - `/api/Clubs`, `/api/NationalTeams`, `/api/Players`, `/api/ClubMatches`, `/api/NationalTeamMatches`, `/api/PlayerClubs`, `/api/ClubMatchSquads`, `/api/NationalTeamMatchSquads` — REST (`GET` collection + item, `POST`/`PUT`/`DELETE` with `clubs:write`, `nationalteams:write`, `players:write`, `matches:write`, `squads:write`)
+- `/api/Competitions` (+ `/api/Competitions/{id}/seasons` nested) — competition registry and its season editions (`GET` collection + item + `query`, `POST`/`PUT`/`DELETE` with `competitions:write`)
+- `/api/StaffMembers`, `/api/StaffAppointments` — staff registry and dated team roles; the appointment needs exactly one of `clubId` / `nationalTeamId` (`GET` collection + item + `query`, `POST`/`PUT`/`DELETE` with `staff:write`)
 - `/api/ClubMatches/{id}/teams`, `/api/NationalTeamMatches/{id}/teams` — `PATCH` (`matches:write`) to link or correct a match's two teams
 - `/api/MatchRecords` — `POST` (`matches:write`) to record a full match in one request (fixture, lineups and scorers); unmatched team references become review flags
 - `/api/MatchRecords/review-flags` — list, resolve and delete data-review flags (`matches:write`)
@@ -128,7 +130,7 @@ Reads are public; writes require the listed permission (snapshotted in the acces
 
 Exports — full-list downloads for analysts, journalists and integrations; reads stay public:
 
-- `/api/Players/export`, `/api/Clubs/export`, `/api/NationalTeams/export`, `/api/Competitions/export`, `/api/Competitions/seasons/export`, `/api/ClubMatches/export`, `/api/NationalTeamMatches/export`, `/api/PlayerClubs/export` — `GET ?format=csv|json` (default `csv`)
+- `/api/Players/export`, `/api/Clubs/export`, `/api/NationalTeams/export`, `/api/Competitions/export`, `/api/Competitions/seasons/export`, `/api/StaffMembers/export`, `/api/StaffAppointments/export`, `/api/ClubMatches/export`, `/api/NationalTeamMatches/export`, `/api/PlayerClubs/export` — `GET ?format=csv|json` (default `csv`)
 - `/api/Export/appearances` — every squad appearance, club and national matches combined, one flat denormalized row per entry (player, team, opponent, match context, participation detail)
 - CSV files are UTF-8 with BOM (Excel-friendly), quoted per RFC 4180, ISO 8601 dates, resolved display names alongside IDs; the JSON download of the same file carries exactly the CSV column names as property names, in the same order
 - [docs/exports.md](docs/exports.md) is the data dictionary: what each column means, the ID semantics between files, and the canonical value vocabularies — paste it beside any published export

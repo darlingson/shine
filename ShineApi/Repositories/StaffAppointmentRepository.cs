@@ -15,9 +15,21 @@ public class StaffAppointmentRepository : IStaffAppointmentRepository
     }
 
     public async Task<IEnumerable<StaffAppointment>> GetAllAsync()
-        => await _context.StaffAppointment.AsNoTracking()
+        => await _context.StaffAppointment
+            .Include(a => a.StaffMember)
+            .Include(a => a.Club)
+            .Include(a => a.NationalTeam)
+            .AsNoTracking()
             .OrderByDescending(a => a.StartDate)
             .ThenBy(a => a.StaffAppointmentId)
+            .ToListAsync();
+
+    public async Task<IEnumerable<StaffAppointment>> GetAllForExportAsync()
+        => await _context.StaffAppointment
+            .Include(a => a.StaffMember)
+            .Include(a => a.Club)
+            .Include(a => a.NationalTeam)
+            .AsNoTracking()
             .ToListAsync();
 
     public async Task<StaffAppointment?> GetWithTeamsByIdAsync(int id)

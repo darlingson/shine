@@ -6,6 +6,11 @@ namespace ShineApi.Repositories.Interfaces;
 public interface IStaffMemberRepository
 {
     Task<IEnumerable<StaffMember>> GetAllAsync();
+
+    /// <summary>All members with the optional player link resolved, for the
+    /// staff-members export.</summary>
+    Task<IEnumerable<StaffMember>> GetAllForExportAsync();
+
     Task<(IReadOnlyList<StaffMember> Items, int Total)> GetPageAsync(StaffMemberQuery query);
     Task<IReadOnlyList<string>> GetNationalitiesAsync();
     Task<StaffMember?> GetByIdAsync(int id);

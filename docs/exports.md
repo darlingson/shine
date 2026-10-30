@@ -19,6 +19,7 @@ Every ID column joins two files in the set:
 | `matchId` | club-matches / national-team-matches, match-appearances | the match that owns the appearance |
 | `competitionId` | competitions, club-matches / national-team-matches, competition-seasons | competitions.csv |
 | `seasonId` | competition-seasons, club-matches / national-team-matches | competition-seasons.csv |
+| `staffMemberId` | staff-members, staff-appointments | staff-members.csv |
 
 A row always names the entity it IDs (`playerId` sits beside `playerName`,
 `clubId` beside `clubName`, …), so the files are readable standalone — the
@@ -137,6 +138,45 @@ One row per national side (men's, women's, youth as separate sides).
 | `gender` | `men` / `women` / `mixed` |
 | `level` | Free text; convention is `senior` / `U23` / `U20` / `U17` |
 | `coach`, `country` | As sourced |
+
+The `coach` column is a legacy residue: the coach of record now lives in
+staff-appointments (role `head_coach`, ongoing rows for the team). The
+column stays for teams not yet backfilled to appointments and is no longer
+written by the API.
+
+## staff-members.csv
+
+One row per **staff person** — coaches, managers, technical directors — in
+one registry shared by clubs and national teams.
+
+| Column | Meaning |
+|---|---|
+| `staffMemberId` | Join key for appointments |
+| `fullName`, `knownAs` | Registered name and the name used publicly (blank = same as full name) |
+| `nationality` | Defaults to `Malawi` |
+| `playerId`, `playerName` | The player-registry row for player-coaches; blank for everyone else |
+
+## staff-appointments.csv
+
+One row per **dated role at one team** — "Mario Marinica, head_coach of
+Malawi, 2023–2025". Exactly one team link is set per row: a `clubId` for
+club appointments, a `nationalTeamId` for national ones (a person serving
+both stacks over time produces rows on both sides). `endDate` blank = still
+ongoing. A caretaker stint or a one-off guest coach is a short window like
+any other appointment.
+
+| Column | Meaning |
+|---|---|
+| `staffAppointmentId` | Stable ID of the appointment itself (referenced by nothing else) |
+| `staffMemberId`, `staffMemberName` | The person |
+| `role` | Canonical code: `head_coach`, `manager`, `assistant_coach`, `goalkeeper_coach`, `fitness_coach`, `caretaker`, `technical_director`, `other` |
+| `clubId`, `clubName` | Set for club appointments |
+| `nationalTeamId`, `nationalTeamName` | Set for national-team appointments |
+| `startDate`, `endDate` | Role window; `endDate` blank = ongoing |
+
+"Who was the coach" resolves by role priority among ongoing rows:
+`head_coach` → `manager` → `caretaker`; historic questions resolve by date
+window instead.
 
 ## national-team-matches.csv
 

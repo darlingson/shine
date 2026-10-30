@@ -6,6 +6,11 @@ namespace ShineApi.Repositories.Interfaces;
 public interface IStaffAppointmentRepository
 {
     Task<IEnumerable<StaffAppointment>> GetAllAsync();
+
+    /// <summary>All appointments with person and both team names resolved,
+    /// for the staff-appointments export.</summary>
+    Task<IEnumerable<StaffAppointment>> GetAllForExportAsync();
+
     Task<(IReadOnlyList<StaffAppointment> Items, int Total)> GetPageAsync(StaffAppointmentQuery query);
     Task<StaffAppointment?> GetByIdAsync(int id);
 

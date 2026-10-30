@@ -17,6 +17,12 @@ public class StaffMemberRepository : IStaffMemberRepository
     public async Task<IEnumerable<StaffMember>> GetAllAsync()
         => await _context.StaffMember.AsNoTracking().OrderBy(x => x.FullName).ToListAsync();
 
+    public async Task<IEnumerable<StaffMember>> GetAllForExportAsync()
+        => await _context.StaffMember
+            .Include(x => x.Player)
+            .AsNoTracking()
+            .ToListAsync();
+
     public async Task<(IReadOnlyList<StaffMember> Items, int Total)> GetPageAsync(StaffMemberQuery query)
     {
         var members = Filter(_context.StaffMember.AsNoTracking(), query);

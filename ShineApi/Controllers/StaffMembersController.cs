@@ -66,4 +66,17 @@ public class StaffMembersController : ControllerBase
     [HasPermission(Permissions.StaffWrite)]
     public async Task<IActionResult> Delete(int id)
         => await _service.DeleteAsync(id) ? NoContent() : NotFound();
+
+    /// <summary>Full staff list as a CSV or JSON download (format=csv|json),
+    /// with the optional player link resolved.</summary>
+    [HttpGet("export")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Export([FromQuery] string format = "csv")
+    {
+        var file = await _service.ExportAsync(format);
+        if (file is null)
+            return BadRequest(new { errors = new[] { "format must be 'csv' or 'json'." } });
+
+        return File(file.Content, file.ContentType, file.FileName);
+    }
 }
