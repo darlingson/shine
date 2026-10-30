@@ -51,6 +51,16 @@ import {
 } from "@/lib/players";
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
 import {
+  getStaffMember,
+  listStaffAppointments,
+  listStaffMembers,
+  queryStaffAppointments,
+  type StaffAppointment,
+  type StaffAppointmentPage,
+  type StaffAppointmentQuery,
+  type StaffMember,
+} from "@/lib/staff";
+import {
   getCompetition,
   getCompetitionFilterOptions,
   listCompetitionSeasons,
@@ -111,6 +121,11 @@ export const queryKeys = {
   playerClubs: ["playerClubs"] as const,
   clubSquads: ["clubSquads"] as const,
   nationalSquads: ["nationalSquads"] as const,
+  staffMembers: ["staffMembers"] as const,
+  staffMember: (id: number | string) => ["staffMembers", String(id)] as const,
+  staffAppointments: ["staffAppointments"] as const,
+  staffAppointmentPage: (query: StaffAppointmentQuery) =>
+    ["staffAppointments", "page", query] as const,
   users: ["users"] as const,
   search: (q: string, kinds: string, limit: number) =>
     ["search", q, kinds, limit] as const,
@@ -221,6 +236,49 @@ export function useNationalTeamFilterOptions(): UseQueryResult<
   return useQuery({
     queryKey: queryKeys.nationalTeamFilterOptions,
     queryFn: getNationalTeamFilterOptions,
+  });
+}
+
+export function useStaffMembers(
+  enabled = true,
+): UseQueryResult<StaffMember[], Error> {
+  return useQuery({
+    queryKey: queryKeys.staffMembers,
+    queryFn: listStaffMembers,
+    enabled,
+  });
+}
+
+export function useStaffMember(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<StaffMember, Error> {
+  return useQuery({
+    queryKey: queryKeys.staffMember(id),
+    queryFn: () => getStaffMember(Number(id)),
+    enabled,
+  });
+}
+
+export function useStaffAppointments(
+  enabled = true,
+): UseQueryResult<StaffAppointment[], Error> {
+  return useQuery({
+    queryKey: queryKeys.staffAppointments,
+    queryFn: listStaffAppointments,
+    enabled,
+  });
+}
+
+export function useStaffAppointmentPage(
+  query: StaffAppointmentQuery,
+  enabled = true,
+): UseQueryResult<StaffAppointmentPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.staffAppointmentPage(query),
+    queryFn: () => queryStaffAppointments(query),
+    enabled,
+    placeholderData: keepPreviousData,
   });
 }
 

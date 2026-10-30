@@ -22,7 +22,8 @@ import {
   type NationalTeam,
   type NationalTeamForm,
 } from "@/lib/nationalTeams";
-import { useNationalTeam } from "@/lib/queries";
+import { derivedCoach } from "@/lib/staff";
+import { useNationalTeam, useStaffAppointmentPage } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 /** Shared add/edit form. Pass nationalTeamId to edit, omit to create. */
@@ -109,12 +110,26 @@ function NationalTeamForm({
   initial?: NationalTeam;
 }) {
   const navigate = useNavigate();
+  /** The coach of record is a fact of ongoing appointments now — head_coach
+   * beats manager beats caretaker. The legacy coach text is only the
+   * fallback until the team's appointments exist. */
+  const appointmentsQuery = useStaffAppointmentPage(
+    {
+      nationalTeamId:
+        nationalTeamId !== undefined ? Number(nationalTeamId) : undefined,
+      ongoing: true,
+      pageSize: 100,
+    },
+    nationalTeamId !== undefined,
+  );
+  const coachOfRecord =
+    derivedCoach(appointmentsQuery.data?.items) ??
+    (nationalTeamId !== undefined ? (initial?.coach ?? undefined) : undefined);
   const [name, setName] = useState(initial?.name ?? "");
   const [shortName, setShortName] = useState(initial?.shortName ?? "");
   const [nickname, setNickname] = useState(initial?.nickname ?? "");
   const [gender, setGender] = useState(initial?.gender ?? "");
   const [level, setLevel] = useState(initial?.level ?? "");
-  const [coach, setCoach] = useState(initial?.coach ?? "");
   const [country, setCountry] = useState(initial?.country ?? "Malawi");
   const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? "");
   const [busy, setBusy] = useState(false);
@@ -130,7 +145,6 @@ function NationalTeamForm({
       nickname: nickname.trim() || undefined,
       gender: gender.trim() || undefined,
       level: level.trim() || undefined,
-      coach: coach.trim() || undefined,
       country: country.trim() || "Malawi",
       sourceUrl: sourceUrl.trim() || undefined,
     };
@@ -221,14 +235,6 @@ function NationalTeamForm({
                 onChange={(e) => setCountry(e.target.value)}
               />
             </Field>
-            <Field label="Coach" htmlFor="nt-coach">
-              <Input
-                id="nt-coach"
-                value={coach}
-                onChange={(e) => setCoach(e.target.value)}
-                placeholder="e.g. Lovemore Fazili"
-              />
-            </Field>
             <Field label="Source URL" htmlFor="nt-source">
               <Input
                 id="nt-source"
@@ -256,6 +262,23 @@ function NationalTeamForm({
               </Button>
             </div>
           </form>
+          {editing && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Coach of record:{" "}
+              <span className="font-medium text-foreground">
+                {coachOfRecord ?? "none yet"}
+              </span>{" "}
+              — derived from this side's ongoing staff appointments (head coach
+              → manager → caretaker). Manage those under{" "}
+              <Link
+                to="/manage/staff"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Manage → Staff
+              </Link>
+              ; the old coach text field is retired.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

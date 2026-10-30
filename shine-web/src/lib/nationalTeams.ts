@@ -8,6 +8,9 @@ export interface NationalTeam {
   nickname?: string | null;
   gender?: string | null;
   level?: string | null;
+
+  /** Legacy residue: the coach of record now comes from staff appointments
+   * (see lib/staff derivedCoach) and the API no longer writes this. */
   coach?: string | null;
   country: string;
   sourceUrl?: string | null;
@@ -19,7 +22,6 @@ export interface NationalTeamForm {
   nickname?: string;
   gender?: string;
   level?: string;
-  coach?: string;
   country: string;
   sourceUrl?: string;
 }

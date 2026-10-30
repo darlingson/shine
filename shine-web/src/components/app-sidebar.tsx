@@ -11,6 +11,7 @@ import {
   TrophyIcon,
   UserIcon,
   UsersIcon,
+  UsersThreeIcon,
 } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -139,6 +140,20 @@ export function AppSidebar() {
                 >
                   <FlagIcon />
                   <span>National teams</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Staff"
+                  render={
+                    <Link
+                      to="/manage/staff"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <UsersThreeIcon />
+                  <span>Staff</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
