@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using ShineApi.Dtos;
 using ShineApi.Models;
 using ShineApi.Repositories.Interfaces;
@@ -126,6 +128,70 @@ public class CompetitionService : ICompetitionService
         return true;
     }
 
+    /// <summary>Full competition list as a CSV or JSON download. Columns match
+    /// the JSON property names; blank cells mean null. Timestamps are UTC.</summary>
+    public async Task<ExportFile?> ExportAsync(string format)
+    {
+        if (!ExportFormats.IsSupported(format))
+            return null;
+
+        var rows = (await _repository.GetAllAsync())
+            .OrderBy(c => c.Name)
+            .ThenBy(c => c.CompetitionId)
+            .Select(c => new CompetitionRow(
+                c.CompetitionId,
+                c.Name,
+                c.ShortName,
+                c.Kind,
+                c.Tier,
+                c.Scope,
+                c.Region,
+                c.SourceUrl,
+                c.CreatedAt,
+                c.UpdatedAt))
+            .ToList();
+
+        if (ExportFormats.IsCsv(format))
+        {
+            var csv = new StringBuilder();
+            csv.Append("competitionId,name,shortName,kind,tier,scope,region,sourceUrl,createdAt,updatedAt");
+            foreach (var r in rows)
+            {
+                csv.AppendLine();
+                Csv.AppendEscaped(csv, r.CompetitionId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Name);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.ShortName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Kind);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Tier?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Scope);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Region);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SourceUrl);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.CreatedAt));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.UpdatedAt));
+            }
+
+            return new ExportFile(
+                "competitions.csv",
+                "text/csv; charset=utf-8",
+                ExportFormats.WithUtf8Bom(csv));
+        }
+
+        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        return new ExportFile(
+            "competitions.json",
+            "application/json; charset=utf-8",
+            Encoding.UTF8.GetBytes(json));
+    }
+
     // ── Seasons ─────────────────────────────────────────────────────────
 
     public async Task<IEnumerable<CompetitionSeason>> GetSeasonsAsync(int competitionId)
@@ -212,6 +278,69 @@ public class CompetitionService : ICompetitionService
         _repository.DeleteSeason(season);
         await _repository.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>Every edition of every competition as a CSV or JSON download.
+    /// The competition is resolved beside each row; blank cells mean null.
+    /// Dates are ISO 8601 and timestamps are UTC.</summary>
+    public async Task<ExportFile?> ExportSeasonsAsync(string format)
+    {
+        if (!ExportFormats.IsSupported(format))
+            return null;
+
+        var rows = (await _repository.GetAllSeasonsAsync())
+            .Select(s => new CompetitionSeasonRow(
+                s.SeasonId,
+                s.CompetitionId,
+                s.Competition?.Name,
+                s.Label,
+                s.Name,
+                s.StartDate?.ToString("yyyy-MM-dd"),
+                s.EndDate?.ToString("yyyy-MM-dd"),
+                s.SourceUrl,
+                s.CreatedAt,
+                s.UpdatedAt))
+            .ToList();
+
+        if (ExportFormats.IsCsv(format))
+        {
+            var csv = new StringBuilder();
+            csv.Append("seasonId,competitionId,competitionName,label,name,startDate,endDate,sourceUrl,createdAt,updatedAt");
+            foreach (var r in rows)
+            {
+                csv.AppendLine();
+                Csv.AppendEscaped(csv, r.SeasonId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.CompetitionId.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.CompetitionName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Label);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.Name);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.StartDate);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.EndDate);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SourceUrl);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.CreatedAt));
+                csv.Append(',');
+                Csv.AppendEscaped(csv, ExportFormats.IsoTimestamp(r.UpdatedAt));
+            }
+
+            return new ExportFile(
+                "competition-seasons.csv",
+                "text/csv; charset=utf-8",
+                ExportFormats.WithUtf8Bom(csv));
+        }
+
+        var json = JsonSerializer.Serialize(rows, ExportFormats.JsonOptions);
+        return new ExportFile(
+            "competition-seasons.json",
+            "application/json; charset=utf-8",
+            Encoding.UTF8.GetBytes(json));
     }
 
     private static string? TrimOrNull(string? value)

@@ -23,6 +23,10 @@ public interface ICompetitionRepository
     /// <summary>Season lookup without a competition context — used when
     /// validating match links ("does this season exist, and whose is it?").</summary>
     Task<CompetitionSeason?> GetSeasonByIdAsync(int seasonId);
+
+    /// <summary>Every edition of every competition, with the competition
+    /// resolved — read-only full list for the seasons export.</summary>
+    Task<IEnumerable<CompetitionSeason>> GetAllSeasonsAsync();
     Task<CompetitionSeason> AddSeasonAsync(CompetitionSeason season);
     void UpdateSeason(CompetitionSeason season);
     void DeleteSeason(CompetitionSeason season);

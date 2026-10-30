@@ -159,7 +159,7 @@ public class ClubMatchService : IClubMatchService
     // CSV names each column exactly as the JSON serialized from that record
     // does.
     private static readonly string CsvHeader =
-        "matchId,matchDate,competition,season,homeClubId,homeClubName,awayClubId,awayClubName,homeScore,awayScore,venue,sourceUrl,createdAt,updatedAt";
+        "matchId,matchDate,competition,season,competitionId,competitionName,seasonId,seasonName,homeClubId,homeClubName,awayClubId,awayClubName,homeScore,awayScore,venue,sourceUrl,createdAt,updatedAt";
 
     /// <summary>Full club match list as a CSV or JSON download. Columns match the
     /// JSON property names with club names resolved; blank cells mean null. Dates
@@ -177,6 +177,10 @@ public class ClubMatchService : IClubMatchService
                 m.MatchDate.ToString("yyyy-MM-dd"),
                 m.Competition,
                 m.Season,
+                m.CompetitionId,
+                m.CompetitionRef?.Name,
+                m.SeasonId,
+                m.SeasonRef is null ? null : (m.SeasonRef.Name ?? m.SeasonRef.Label),
                 m.HomeClubId,
                 m.HomeClub?.Name,
                 m.AwayClubId,
@@ -203,6 +207,14 @@ public class ClubMatchService : IClubMatchService
                 Csv.AppendEscaped(csv, r.Competition);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, r.Season);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.CompetitionId?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.CompetitionName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SeasonId?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SeasonName);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, r.HomeClubId?.ToString());
                 csv.Append(',');

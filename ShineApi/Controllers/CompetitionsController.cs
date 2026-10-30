@@ -71,6 +71,31 @@ public class CompetitionsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
         => await _service.DeleteAsync(id) ? NoContent() : NotFound();
 
+    /// <summary>Full competition list as a CSV or JSON download (format=csv|json).</summary>
+    [HttpGet("export")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Export([FromQuery] string format = "csv")
+    {
+        var file = await _service.ExportAsync(format);
+        if (file is null)
+            return BadRequest(new { errors = new[] { "format must be 'csv' or 'json'." } });
+
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    /// <summary>Every season of every competition, competition resolved, as a
+    /// CSV or JSON download (format=csv|json).</summary>
+    [HttpGet("seasons/export")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ExportSeasons([FromQuery] string format = "csv")
+    {
+        var file = await _service.ExportSeasonsAsync(format);
+        if (file is null)
+            return BadRequest(new { errors = new[] { "format must be 'csv' or 'json'." } });
+
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
     // ── Seasons ─────────────────────────────────────────────────────────
 
     [HttpGet("{id:int}/seasons")]

@@ -191,7 +191,7 @@ public class NationalTeamMatchService : INationalTeamMatchService
     // so the CSV names each column exactly as the JSON serialized from that
     // record does.
     private static readonly string CsvHeader =
-        "matchId,matchDate,kickoffTime,competition,season,stage,homeNationalTeamId,homeNationalTeamName,awayNationalTeamId,awayNationalTeamName,homeScore,awayScore,venue,isNeutral,wentToExtraTime,homePenaltyScore,awayPenaltyScore,sourceUrl,createdAt,updatedAt";
+        "matchId,matchDate,kickoffTime,competition,season,competitionId,competitionName,seasonId,seasonName,stage,homeNationalTeamId,homeNationalTeamName,awayNationalTeamId,awayNationalTeamName,homeScore,awayScore,venue,isNeutral,wentToExtraTime,homePenaltyScore,awayPenaltyScore,sourceUrl,createdAt,updatedAt";
 
     /// <summary>Full national team match list as a CSV or JSON download. Both
     /// formats use the NationalTeamMatchRow columns with team names resolved;
@@ -211,6 +211,10 @@ public class NationalTeamMatchService : INationalTeamMatchService
                 m.KickoffTime?.ToString("HH:mm"),
                 m.Competition,
                 m.Season,
+                m.CompetitionId,
+                m.CompetitionRef?.Name,
+                m.SeasonId,
+                m.SeasonRef is null ? null : (m.SeasonRef.Name ?? m.SeasonRef.Label),
                 m.Stage,
                 m.HomeNationalTeamId,
                 m.HomeNationalTeam?.Name,
@@ -244,6 +248,14 @@ public class NationalTeamMatchService : INationalTeamMatchService
                 Csv.AppendEscaped(csv, r.Competition);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, r.Season);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.CompetitionId?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.CompetitionName);
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SeasonId?.ToString());
+                csv.Append(',');
+                Csv.AppendEscaped(csv, r.SeasonName);
                 csv.Append(',');
                 Csv.AppendEscaped(csv, r.Stage);
                 csv.Append(',');

@@ -134,6 +134,18 @@ public class CompetitionRepository : ICompetitionRepository
         => await _context.CompetitionSeason.AsNoTracking()
             .FirstOrDefaultAsync(s => s.SeasonId == seasonId);
 
+    /// <summary>Every edition of every competition, grouped under its
+    /// competition by name, newest known year first.</summary>
+    public async Task<IEnumerable<CompetitionSeason>> GetAllSeasonsAsync()
+        => await _context.CompetitionSeason.AsNoTracking()
+            .Include(s => s.Competition)
+            .OrderBy(s => s.Competition!.Name)
+            .ThenBy(s => s.CompetitionId)
+            .ThenByDescending(s => s.StartDate)
+            .ThenByDescending(s => s.Label ?? "")
+            .ThenByDescending(s => s.SeasonId)
+            .ToListAsync();
+
     public async Task<CompetitionSeason> AddSeasonAsync(CompetitionSeason season)
     {
         await _context.CompetitionSeason.AddAsync(season);

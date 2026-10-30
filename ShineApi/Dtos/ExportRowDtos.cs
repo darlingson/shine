@@ -22,11 +22,39 @@ public record PlayerCareerStintRow(
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
+public record CompetitionRow(
+    int CompetitionId,
+    string Name,
+    string? ShortName,
+    string Kind,
+    int? Tier,
+    string? Scope,
+    string? Region,
+    string? SourceUrl,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
+public record CompetitionSeasonRow(
+    int SeasonId,
+    int CompetitionId,
+    string? CompetitionName,
+    string? Label,
+    string? Name,
+    string? StartDate,
+    string? EndDate,
+    string? SourceUrl,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
 public record ClubMatchRow(
     int MatchId,
     string MatchDate,
     string? Competition,
     string? Season,
+    int? CompetitionId,
+    string? CompetitionName,
+    int? SeasonId,
+    string? SeasonName,
     int? HomeClubId,
     string? HomeClubName,
     int? AwayClubId,
@@ -44,6 +72,10 @@ public record NationalTeamMatchRow(
     string? KickoffTime,
     string? Competition,
     string? Season,
+    int? CompetitionId,
+    string? CompetitionName,
+    int? SeasonId,
+    string? SeasonName,
     string? Stage,
     int? HomeNationalTeamId,
     string? HomeNationalTeamName,
