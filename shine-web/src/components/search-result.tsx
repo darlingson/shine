@@ -54,17 +54,6 @@ export function SearchResultLink({
           {children}
         </Link>
       );
-    case "staffMember":
-      return (
-        <Link
-          to="/data/staff/$staffMemberId"
-          params={{ staffMemberId: String(result.id) }}
-          className={className}
-          onClick={onClick}
-        >
-          {children}
-        </Link>
-      );
     case "clubMatch":
       return (
         <Link

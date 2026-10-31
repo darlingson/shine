@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import {
   appointmentPeriod,
@@ -41,14 +40,8 @@ export function StaffTable({
               key={a.staffAppointmentId}
               className="border-b border-border last:border-b-0"
             >
-              <td className="px-4 py-2.5">
-                <Link
-                  to="/data/staff/$staffMemberId"
-                  params={{ staffMemberId: String(a.staffMemberId) }}
-                  className="font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {a.staffMemberName ?? "Unknown staff member"}
-                </Link>
+              <td className="px-4 py-2.5 font-medium">
+                {a.staffMemberName ?? "Unknown staff member"}
               </td>
               <td className="px-2 py-2.5">
                 <span className="flex items-center gap-2">

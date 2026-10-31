@@ -18,11 +18,6 @@ const SECTIONS = [
     blurb: "Leagues and cups, with the seasons each edition ran.",
   },
   {
-    to: "/data/staff",
-    title: "Staff",
-    blurb: "Coaches, managers and the dated roles they held.",
-  },
-  {
     to: "/data/matches/club",
     title: "Matches",
     blurb: "Browse club and national team matches.",

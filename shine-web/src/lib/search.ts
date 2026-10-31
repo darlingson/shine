@@ -1,11 +1,10 @@
 import { apiJson } from "@/lib/api";
 
-/** Searchable kinds, mirroring ShineApi's SearchKinds. */
+/** Searchable kinds with a public result page, mirroring ShineApi's SearchKinds. */
 export const SEARCH_KINDS = [
   "player",
   "club",
   "nationalTeam",
-  "staffMember",
   "clubMatch",
   "nationalTeamMatch",
 ] as const;
@@ -38,7 +37,6 @@ export const SEARCH_KIND_LABELS: Record<SearchKind, string> = {
   player: "Players",
   club: "Clubs",
   nationalTeam: "National teams",
-  staffMember: "Staff",
   clubMatch: "Club matches",
   nationalTeamMatch: "National matches",
 };
@@ -58,7 +56,6 @@ export const PUBLIC_SEARCH_KINDS = [
   "player",
   "club",
   "nationalTeam",
-  "staffMember",
   "clubMatch",
   "nationalTeamMatch",
 ] as const;
