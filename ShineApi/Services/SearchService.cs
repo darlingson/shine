@@ -50,6 +50,8 @@ public class SearchService(ShineDbContext db) : ISearchService
             results.AddRange(await SearchClubsAsync(term, limit));
         if (selected.Contains(SearchKinds.NationalTeam))
             results.AddRange(await SearchNationalTeamsAsync(term, limit));
+        if (selected.Contains(SearchKinds.StaffMember))
+            results.AddRange(await SearchStaffMembersAsync(term, limit));
         if (selected.Contains(SearchKinds.ClubMatch))
             results.AddRange(await SearchClubMatchesAsync(term, limit));
         if (selected.Contains(SearchKinds.NationalTeamMatch))
@@ -142,6 +144,26 @@ public class SearchService(ShineDbContext db) : ISearchService
             Subtitle = string.Join(" · ", new[] { n.Nickname, n.Gender, n.Level }
                 .Where(s => !string.IsNullOrWhiteSpace(s))),
             Badge = "National team",
+        }), limit);
+    }
+
+    /// <summary>Staff people are matched on names only — the registry is small,
+    /// so no fuzzy top-up like players has.</summary>
+    private async Task<List<SearchResultDto>> SearchStaffMembersAsync(string term, int limit)
+    {
+        var pattern = LikePattern(term);
+        var hits = await db.StaffMember
+            .Where(m => EF.Functions.ILike(m.FullName, pattern)
+                || (m.KnownAs != null && EF.Functions.ILike(m.KnownAs, pattern)))
+            .ToListAsync();
+
+        return Top(Rank(hits, m => TextScore(term, m.FullName, m.KnownAs), m => new SearchResultDto
+        {
+            Kind = SearchKinds.StaffMember,
+            Id = m.StaffMemberId,
+            Title = string.IsNullOrWhiteSpace(m.KnownAs) ? m.FullName : m.KnownAs,
+            Subtitle = m.Nationality,
+            Badge = "Staff",
         }), limit);
     }
 

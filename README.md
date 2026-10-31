@@ -124,7 +124,7 @@ Reads are public; writes require the listed permission (snapshotted in the acces
 - `/api/ClubMatches/{id}/teams`, `/api/NationalTeamMatches/{id}/teams` — `PATCH` (`matches:write`) to link or correct a match's two teams
 - `/api/MatchRecords` — `POST` (`matches:write`) to record a full match in one request (fixture, lineups and scorers); unmatched team references become review flags
 - `/api/MatchRecords/review-flags` — list, resolve and delete data-review flags (`matches:write`)
-- `/api/Search?q=…&kinds=…&limit=…` — public keyword search across players, clubs, national teams and both match kinds; returns a flat list of `{ kind, id, title, subtitle, badge }` ranked best-first (`limit` caps results per kind)
+- `/api/Search?q=…&kinds=…&limit=…` — public keyword search across players, clubs, national teams, staff and both match kinds; returns a flat list of `{ kind, id, title, subtitle, badge }` ranked best-first (`limit` caps results per kind)
 - `/api/Auth` — `register`, `login`, `refresh`, `revoke`, `logout`, `me`
 - `/api/Users` — list, role assign/remove (`users:manage`), permission grant/revoke (`permissions:grant`)
 
