@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OptionalSelect } from "@/components/OptionalSelect";
+import { TeamStaffCard } from "@/components/team-staff-card";
 import { Field, FormError } from "@/components/data-ui";
 import {
   NATIONAL_TEAM_GENDERS,
@@ -269,18 +270,20 @@ function NationalTeamForm({
                 {coachOfRecord ?? "none yet"}
               </span>{" "}
               — derived from this side's ongoing staff appointments (head coach
-              → manager → caretaker). Manage those under{" "}
-              <Link
-                to="/manage/staff"
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                Manage → Staff
-              </Link>
-              ; the old coach text field is retired.
+              → manager → caretaker). Manage them in the Staff section below;
+              the old coach text field is retired.
             </p>
           )}
         </CardContent>
       </Card>
+
+      {editing && nationalTeamId !== undefined && (
+        <TeamStaffCard
+          teamKind="national"
+          teamId={Number(nationalTeamId)}
+          teamName={name || initial?.name}
+        />
+      )}
     </div>
   );
 }

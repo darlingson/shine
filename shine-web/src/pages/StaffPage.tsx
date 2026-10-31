@@ -89,7 +89,7 @@ export function StaffPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {canWrite
-              ? "Coaches, managers and technical directors for clubs and national teams — one registry of people, dated roles at teams."
+              ? "The cross-team staff directory. Add and appoint people from a club or national team's own page — this view keeps the registry and full role history in one place."
               : "Read-only access — editing needs the staff:write permission."}
           </p>
         </div>
@@ -163,8 +163,8 @@ function PeopleCard({
       <CardHeader>
         <CardTitle>People ({people.length})</CardTitle>
         <CardDescription>
-          One stable record per person — roles and teams live on dated
-          appointments below, so a name here never changes later.
+          One stable record per person. To appoint someone, open the club or
+          national team and add them in its Staff section.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -263,7 +263,8 @@ function PeopleCard({
                       colSpan={canWrite ? 4 : 3}
                       className="text-center text-sm text-muted-foreground"
                     >
-                      No staff members yet — add one to appoint them at a team.
+                      No staff members yet — add them from a club or national
+                      team's Staff section.
                     </TableCell>
                   </TableRow>
                 )}

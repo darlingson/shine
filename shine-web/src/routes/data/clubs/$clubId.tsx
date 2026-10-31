@@ -1,8 +1,15 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { StaffTable } from "@/components/staff-table";
 import { clubMatchLabel } from "@/lib/clubMatches";
 import { positionLabel } from "@/lib/positions";
-import { useClub, useClubMatches, usePlayerClubs, usePlayers } from "@/lib/queries";
+import {
+  useClub,
+  useClubMatches,
+  usePlayerClubs,
+  usePlayers,
+  useStaffAppointmentPage,
+} from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/clubs/$clubId")({
@@ -15,6 +22,10 @@ function ClubDetailPage() {
   const players = usePlayers();
   const affils = usePlayerClubs();
   const matches = useClubMatches();
+  const staff = useStaffAppointmentPage({
+    clubId: Number(clubId),
+    pageSize: 100,
+  });
 
   const clubPlayers = useMemo(() => {
     if (!club.data || !players.data || !affils.data) return [];
@@ -37,7 +48,8 @@ function ClubDetailPage() {
       .sort((a, b) => b.matchDate.localeCompare(a.matchDate));
   }, [club.data, matches.data]);
 
-  const error = club.error ?? players.error ?? affils.error ?? matches.error;
+  const error =
+    club.error ?? players.error ?? affils.error ?? matches.error ?? staff.error;
   if (error) return <p className="text-sm text-destructive">{parseApiError(error)}</p>;
   if (!club.data) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
@@ -76,6 +88,18 @@ function ClubDetailPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-heading text-lg font-semibold tracking-tight">Staff</h2>
+        <p className="text-sm text-muted-foreground">
+          Coaches and other appointments recorded for this club.
+        </p>
+        <StaffTable
+          items={staff.data?.items ?? []}
+          loading={staff.isLoading}
+          emptyMessage="No staff recorded for this club yet."
+        />
       </section>
 
       <section className="flex flex-col gap-2">

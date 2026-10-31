@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TeamStaffCard } from "@/components/team-staff-card";
 import { Field, FormError } from "@/components/data-ui";
 import { parseOptionalInt } from "@/lib/forms";
 import {
@@ -229,6 +230,14 @@ function ClubForm({ clubId, initial }: { clubId?: string; initial?: Club }) {
           </form>
         </CardContent>
       </Card>
+
+      {editing && clubId !== undefined && (
+        <TeamStaffCard
+          teamKind="club"
+          teamId={Number(clubId)}
+          teamName={name || initial?.name}
+        />
+      )}
     </div>
   );
 }
