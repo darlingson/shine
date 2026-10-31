@@ -52,13 +52,18 @@ import {
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
 import {
   getStaffMember,
+  getStaffMemberFilterOptions,
   listStaffAppointments,
   listStaffMembers,
   queryStaffAppointments,
+  queryStaffMembers,
   type StaffAppointment,
   type StaffAppointmentPage,
   type StaffAppointmentQuery,
   type StaffMember,
+  type StaffMemberFilterOptions,
+  type StaffMemberPage,
+  type StaffMemberQuery,
 } from "@/lib/staff";
 import {
   getCompetition,
@@ -123,6 +128,9 @@ export const queryKeys = {
   nationalSquads: ["nationalSquads"] as const,
   staffMembers: ["staffMembers"] as const,
   staffMember: (id: number | string) => ["staffMembers", String(id)] as const,
+  staffMemberPage: (query: StaffMemberQuery) =>
+    ["staffMembers", "page", query] as const,
+  staffMemberFilterOptions: ["staffMembers", "filterOptions"] as const,
   staffAppointments: ["staffAppointments"] as const,
   staffAppointmentPage: (query: StaffAppointmentQuery) =>
     ["staffAppointments", "page", query] as const,
@@ -279,6 +287,28 @@ export function useStaffAppointmentPage(
     queryFn: () => queryStaffAppointments(query),
     enabled,
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useStaffMemberPage(
+  query: StaffMemberQuery,
+  enabled = true,
+): UseQueryResult<StaffMemberPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.staffMemberPage(query),
+    queryFn: () => queryStaffMembers(query),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useStaffMemberFilterOptions(): UseQueryResult<
+  StaffMemberFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.staffMemberFilterOptions,
+    queryFn: getStaffMemberFilterOptions,
   });
 }
 

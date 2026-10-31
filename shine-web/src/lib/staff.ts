@@ -84,6 +84,60 @@ export function listStaffMembers(): Promise<StaffMember[]> {
   return apiJson<StaffMember[]>("/api/staffmembers");
 }
 
+export const STAFF_MEMBER_SORTS = [
+  "name",
+  "nationality",
+  "createdAt",
+] as const;
+
+export type StaffMemberSort = (typeof STAFF_MEMBER_SORTS)[number];
+
+export interface StaffMemberQuery {
+  q?: string;
+  nationality?: string;
+  /** Appointments at this club or national team, any time. */
+  clubId?: number;
+  nationalTeamId?: number;
+  sort?: StaffMemberSort;
+  order?: SortOrder;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface StaffMemberPage {
+  items: StaffMember[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/** Filtered, sorted, paged staff list for a data browser. */
+export function queryStaffMembers(
+  query: StaffMemberQuery,
+): Promise<StaffMemberPage> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.nationality) params.set("nationality", query.nationality);
+  if (query.clubId !== undefined) params.set("clubId", String(query.clubId));
+  if (query.nationalTeamId !== undefined)
+    params.set("nationalTeamId", String(query.nationalTeamId));
+  if (query.sort) params.set("sort", query.sort);
+  if (query.order) params.set("order", query.order);
+  params.set("page", String(query.page ?? 1));
+  params.set("pageSize", String(query.pageSize ?? 25));
+  return apiJson<StaffMemberPage>(
+    `/api/staffmembers/query?${params.toString()}`,
+  );
+}
+
+export interface StaffMemberFilterOptions {
+  nationalities: string[];
+}
+
+export function getStaffMemberFilterOptions(): Promise<StaffMemberFilterOptions> {
+  return apiJson<StaffMemberFilterOptions>("/api/staffmembers/filter-options");
+}
+
 export function getStaffMember(id: number): Promise<StaffMember> {
   return apiJson<StaffMember>(`/api/staffmembers/${id}`);
 }
