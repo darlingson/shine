@@ -23,8 +23,7 @@ import {
   type NationalTeam,
   type NationalTeamForm,
 } from "@/lib/nationalTeams";
-import { derivedCoach } from "@/lib/staff";
-import { useNationalTeam, useStaffAppointmentPage } from "@/lib/queries";
+import { useNationalTeam } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 /** Shared add/edit form. Pass nationalTeamId to edit, omit to create. */
@@ -111,21 +110,6 @@ function NationalTeamForm({
   initial?: NationalTeam;
 }) {
   const navigate = useNavigate();
-  /** The coach of record is a fact of ongoing appointments now — head_coach
-   * beats manager beats caretaker. The legacy coach text is only the
-   * fallback until the team's appointments exist. */
-  const appointmentsQuery = useStaffAppointmentPage(
-    {
-      nationalTeamId:
-        nationalTeamId !== undefined ? Number(nationalTeamId) : undefined,
-      ongoing: true,
-      pageSize: 100,
-    },
-    nationalTeamId !== undefined,
-  );
-  const coachOfRecord =
-    derivedCoach(appointmentsQuery.data?.items) ??
-    (nationalTeamId !== undefined ? (initial?.coach ?? undefined) : undefined);
   const [name, setName] = useState(initial?.name ?? "");
   const [shortName, setShortName] = useState(initial?.shortName ?? "");
   const [nickname, setNickname] = useState(initial?.nickname ?? "");
@@ -263,17 +247,6 @@ function NationalTeamForm({
               </Button>
             </div>
           </form>
-          {editing && (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Coach of record:{" "}
-              <span className="font-medium text-foreground">
-                {coachOfRecord ?? "none yet"}
-              </span>{" "}
-              — derived from this side's ongoing staff appointments (head coach
-              → manager → caretaker). Manage them in the Staff section below;
-              the old coach text field is retired.
-            </p>
-          )}
         </CardContent>
       </Card>
 
