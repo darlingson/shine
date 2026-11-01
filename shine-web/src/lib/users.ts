@@ -131,11 +131,21 @@ export function parseApiError(e: unknown): string {
     if (m) {
       try {
         const parsed = JSON.parse(m[1]);
+        if (typeof parsed === "string") return parsed;
         if (Array.isArray(parsed)) {
           const descs = parsed
             .map((x) => (typeof x?.description === "string" ? x.description : null))
             .filter(Boolean);
           if (descs.length > 0) return descs.join(" ");
+        }
+        if (parsed && typeof parsed === "object" && "errors" in parsed) {
+          const errors = (parsed as { errors?: unknown }).errors;
+          if (Array.isArray(errors)) {
+            const messages = errors.filter(
+              (x): x is string => typeof x === "string",
+            );
+            if (messages.length > 0) return messages.join(" ");
+          }
         }
         return m[1];
       } catch {
