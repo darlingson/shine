@@ -20,7 +20,8 @@ public class StaffAppointmentRepository : IStaffAppointmentRepository
             .Include(a => a.Club)
             .Include(a => a.NationalTeam)
             .AsNoTracking()
-            .OrderByDescending(a => a.StartDate)
+            .OrderBy(a => a.StartDate == null)
+            .ThenByDescending(a => a.StartDate)
             .ThenBy(a => a.StaffAppointmentId)
             .ToListAsync();
 
