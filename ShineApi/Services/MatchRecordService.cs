@@ -265,7 +265,8 @@ public partial class MatchRecordService(ShineDbContext db) : IMatchRecordService
             return;
         }
 
-        if (competitionId > 0 && !await db.Competition.AnyAsync(c => c.CompetitionId == competitionId))
+        if (competitionId is not null &&
+            (competitionId <= 0 || !await db.Competition.AnyAsync(c => c.CompetitionId == competitionId)))
             errors.Add($"Unknown competitionId {competitionId}.");
 
         if (seasonId is not null)

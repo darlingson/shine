@@ -111,6 +111,9 @@ public class CompetitionRepository : ICompetitionRepository
             (excludeId == null || x.CompetitionId != excludeId));
     }
 
+    public async Task<bool> SeasonsExistAsync(int competitionId)
+        => await _context.CompetitionSeason.AnyAsync(s => s.CompetitionId == competitionId);
+
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 

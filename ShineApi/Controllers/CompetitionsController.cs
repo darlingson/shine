@@ -69,7 +69,15 @@ public class CompetitionsController : ControllerBase
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.CompetitionsWrite)]
     public async Task<IActionResult> Delete(int id)
-        => await _service.DeleteAsync(id) ? NoContent() : NotFound();
+    {
+        var result = await _service.DeleteAsync(id);
+        return result switch
+        {
+            CompetitionDeleteResult.Deleted => NoContent(),
+            CompetitionDeleteResult.NotFound => NotFound(),
+            _ => Conflict("This competition still has seasons; delete them first.")
+        };
+    }
 
     /// <summary>Full competition list as a CSV or JSON download (format=csv|json).</summary>
     [HttpGet("export")]

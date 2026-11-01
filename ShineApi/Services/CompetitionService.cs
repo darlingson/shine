@@ -118,14 +118,19 @@ public class CompetitionService : ICompetitionService
         return competition;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<CompetitionDeleteResult> DeleteAsync(int id)
     {
         var competition = await _repository.GetByIdAsync(id);
-        if (competition is null) return false;
+        if (competition is null) return CompetitionDeleteResult.NotFound;
+
+        // Seasons are historical records, not part of the competition identity.
+        // Refuse the delete rather than letting the FK constraint turn into a 500.
+        if (await _repository.SeasonsExistAsync(id))
+            return CompetitionDeleteResult.HasSeasons;
 
         _repository.Delete(competition);
         await _repository.SaveChangesAsync();
-        return true;
+        return CompetitionDeleteResult.Deleted;
     }
 
     /// <summary>Full competition list as a CSV or JSON download. Columns match

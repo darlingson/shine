@@ -14,6 +14,7 @@ public interface ICompetitionRepository
     void Delete(Competition competition);
     Task<bool> ExistsAsync(int id);
     Task<bool> NameExistsAsync(string name, int? excludeId = null);
+    Task<bool> SeasonsExistAsync(int competitionId);
     Task SaveChangesAsync();
 
     // Seasons — children of a competition ("FDH Premiership 2026" of "Super League").

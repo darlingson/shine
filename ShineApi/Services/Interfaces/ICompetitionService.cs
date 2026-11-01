@@ -3,6 +3,13 @@ using ShineApi.Models;
 
 namespace ShineApi.Services.Interfaces;
 
+public enum CompetitionDeleteResult
+{
+    Deleted,
+    NotFound,
+    HasSeasons
+}
+
 public interface ICompetitionService
 {
     Task<IEnumerable<Competition>> GetAllAsync();
@@ -11,7 +18,7 @@ public interface ICompetitionService
     Task<Competition?> GetByIdAsync(int id);
     Task<Competition?> CreateAsync(CreateCompetitionDto dto, List<string> errors);
     Task<Competition?> UpdateAsync(int id, UpdateCompetitionDto dto, List<string> errors);
-    Task<bool> DeleteAsync(int id);
+    Task<CompetitionDeleteResult> DeleteAsync(int id);
 
     /// <summary>Full competition list as a CSV or JSON download.</summary>
     Task<ExportFile?> ExportAsync(string format);
