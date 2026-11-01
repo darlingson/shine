@@ -83,6 +83,17 @@ public class ClubMatchesController : ControllerBase
         return match is null ? NotFound() : Ok(match);
     }
 
+    /// <summary>Sets or clears the competition (and its season) on an existing match.</summary>
+    [HttpPatch("{id:int}/competition")]
+    [HasPermission(Permissions.MatchesWrite)]
+    public async Task<IActionResult> LinkCompetition(int id, [FromBody] LinkClubMatchCompetitionDto dto)
+    {
+        var errors = new List<string>();
+        var match = await _service.LinkCompetitionAsync(id, dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
+        return match is null ? NotFound() : Ok(match);
+    }
+
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.MatchesWrite)]
     public async Task<IActionResult> Delete(int id)

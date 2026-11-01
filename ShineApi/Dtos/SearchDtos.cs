@@ -6,10 +6,12 @@ public static class SearchKinds
     public const string Player = "player";
     public const string Club = "club";
     public const string NationalTeam = "nationalTeam";
+    public const string StaffMember = "staffMember";
     public const string ClubMatch = "clubMatch";
     public const string NationalTeamMatch = "nationalTeamMatch";
 
-    public static readonly string[] All = [Player, Club, NationalTeam, ClubMatch, NationalTeamMatch];
+    public static readonly string[] All =
+        [Player, Club, NationalTeam, StaffMember, ClubMatch, NationalTeamMatch];
 
     public static bool IsKnown(string kind) => Array.IndexOf(All, kind) >= 0;
 }

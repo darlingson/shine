@@ -2,14 +2,17 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Fact } from "@/components/data-ui";
 import { Pagination } from "@/components/pagination";
+import { StaffTable } from "@/components/staff-table";
 import { formatMatchDate } from "@/lib/dates";
 import { nationalTeamMatchLabel } from "@/lib/nationalTeamMatches";
 import { positionLabel } from "@/lib/positions";
+import { derivedCoach } from "@/lib/staff";
 import {
   useNationalSquads,
   useNationalTeam,
   useNationalTeamMatchPage,
   usePlayers,
+  useStaffAppointmentPage,
 } from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
@@ -18,6 +21,7 @@ export const Route = createFileRoute("/data/national-teams/$nationalTeamId")({
 });
 
 const MATCH_PAGE_SIZE = 10;
+const STAFF_PAGE_SIZE = 10;
 
 function NationalTeamDetailPage() {
   const { nationalTeamId } = Route.useParams();
@@ -29,12 +33,31 @@ function NationalTeamDetailPage() {
   // Derive the page from the team id so switching teams starts at page one.
   const [paging, setPaging] = useState({ teamId, page: 1 });
   const page = paging.teamId === teamId ? paging.page : 1;
+  const [staffPaging, setStaffPaging] = useState({ teamId, page: 1 });
+  const staffPage = staffPaging.teamId === teamId ? staffPaging.page : 1;
   const matches = useNationalTeamMatchPage({
     nationalTeamId: teamId,
     sort: "matchDate",
     order: "desc",
     page,
     pageSize: MATCH_PAGE_SIZE,
+  });
+  // All appointments, not just ongoing ones, so the staff section is a history.
+  const appointments = useStaffAppointmentPage({
+    nationalTeamId: teamId,
+    sort: "startDate",
+    order: "desc",
+    page: staffPage,
+    pageSize: STAFF_PAGE_SIZE,
+  });
+  // Derived coach needs the ongoing rows, not just the visible history page.
+  const ongoingAppointments = useStaffAppointmentPage({
+    nationalTeamId: teamId,
+    ongoing: true,
+    sort: "startDate",
+    order: "desc",
+    page: 1,
+    pageSize: 100,
   });
 
   const names = useMemo(
@@ -75,12 +98,23 @@ function NationalTeamDetailPage() {
     });
   }, [squads.data, teamId, names]);
 
-  const error = team.error ?? players.error ?? squads.error ?? matches.error;
+  const error =
+    team.error ??
+    players.error ??
+    squads.error ??
+    matches.error ??
+    appointments.error ??
+    ongoingAppointments.error;
   if (error) return <p className="text-sm text-destructive">{parseApiError(error)}</p>;
   if (!team.data) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const t = team.data;
   const matchItems = matches.data?.items ?? [];
+  const staffItems = appointments.data?.items ?? [];
+  // The registry's ongoing coach wins; the legacy team column is the fallback
+  // for teams that have no appointments recorded yet.
+  const coach =
+    derivedCoach(ongoingAppointments.data?.items ?? []) ?? t.coach;
 
   return (
     <div className="flex flex-col gap-6">
@@ -97,7 +131,7 @@ function NationalTeamDetailPage() {
         <Fact label="Country">{t.country}</Fact>
         <Fact label="Gender">{t.gender ?? "—"}</Fact>
         <Fact label="Level">{t.level ?? "—"}</Fact>
-        <Fact label="Coach">{t.coach ?? "—"}</Fact>
+        <Fact label="Coach">{coach ?? "—"}</Fact>
       </dl>
 
       <section className="flex flex-col gap-2">
@@ -153,6 +187,28 @@ function NationalTeamDetailPage() {
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-heading text-lg font-semibold tracking-tight">
+          Staff
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Coaches and other appointments recorded for this team.
+        </p>
+        <StaffTable
+          items={staffItems}
+          loading={appointments.isLoading}
+          emptyMessage="No staff recorded for this team yet."
+        />
+        {(appointments.data?.total ?? 0) > 0 && (
+          <Pagination
+            page={staffPage}
+            pageSize={STAFF_PAGE_SIZE}
+            total={appointments.data?.total ?? 0}
+            onPageChange={(next) => setStaffPaging({ teamId, page: next })}
+          />
         )}
       </section>
 

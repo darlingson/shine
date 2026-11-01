@@ -17,6 +17,12 @@ public static class Permissions
     public const string NationalTeamsRead = "nationalteams:read";
     public const string NationalTeamsWrite = "nationalteams:write";
 
+    public const string CompetitionsRead = "competitions:read";
+    public const string CompetitionsWrite = "competitions:write";
+
+    public const string StaffRead = "staff:read";
+    public const string StaffWrite = "staff:write";
+
     public const string MatchesRead = "matches:read";
     public const string MatchesWrite = "matches:write";
 
@@ -33,6 +39,8 @@ public static class Permissions
         PlayersRead, PlayersWrite,
         ClubsRead, ClubsWrite,
         NationalTeamsRead, NationalTeamsWrite,
+        CompetitionsRead, CompetitionsWrite,
+        StaffRead, StaffWrite,
         MatchesRead, MatchesWrite,
         SquadsRead, SquadsWrite,
         UsersManage, PermissionsGrant,
@@ -61,6 +69,8 @@ public static class RolePermissions
             Permissions.PlayersRead, Permissions.PlayersWrite,
             Permissions.ClubsRead, Permissions.ClubsWrite,
             Permissions.NationalTeamsRead, Permissions.NationalTeamsWrite,
+            Permissions.CompetitionsRead, Permissions.CompetitionsWrite,
+            Permissions.StaffRead, Permissions.StaffWrite,
             Permissions.MatchesRead, Permissions.MatchesWrite,
             Permissions.SquadsRead, Permissions.SquadsWrite,
             Permissions.UsersManage, Permissions.PermissionsGrant,
@@ -70,6 +80,8 @@ public static class RolePermissions
             Permissions.PlayersRead, Permissions.PlayersWrite,
             Permissions.ClubsRead, Permissions.ClubsWrite,
             Permissions.NationalTeamsRead, Permissions.NationalTeamsWrite,
+            Permissions.CompetitionsRead, Permissions.CompetitionsWrite,
+            Permissions.StaffRead, Permissions.StaffWrite,
             Permissions.MatchesRead, Permissions.MatchesWrite,
             Permissions.SquadsRead, Permissions.SquadsWrite,
         ],
@@ -78,6 +90,8 @@ public static class RolePermissions
             Permissions.PlayersRead,
             Permissions.ClubsRead,
             Permissions.NationalTeamsRead,
+            Permissions.CompetitionsRead,
+            Permissions.StaffRead,
             Permissions.MatchesRead,
             Permissions.SquadsRead,
         ],

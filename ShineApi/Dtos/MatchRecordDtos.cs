@@ -21,6 +21,11 @@ public class MatchRecordMatchDto
     public string? Competition { get; set; }
     public string? Season { get; set; }
 
+    /// <summary>Competition identity on the recorded match — optional; a
+    /// seasonId without its competitionId is rejected.</summary>
+    public int? CompetitionId { get; set; }
+    public int? SeasonId { get; set; }
+
     [Required]
     [Range(1, int.MaxValue)]
     public int HomeClubId { get; set; }

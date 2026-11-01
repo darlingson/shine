@@ -12,12 +12,16 @@ public class ShineDbContext : IdentityDbContext
     public DbSet<Club> Club { get; set; } = null!;
     public DbSet<ClubMatch> ClubMatch { get; set; } = null!;
     public DbSet<ClubMatchSquad> ClubMatchSquad { get; set; } = null!;
+    public DbSet<Competition> Competition { get; set; } = null!;
+    public DbSet<CompetitionSeason> CompetitionSeason { get; set; } = null!;
     public DbSet<NationalTeam> NationalTeam { get; set; } = null!;
     public DbSet<NationalTeamMatch> NationalTeamMatch { get; set; } = null!;
     public DbSet<NationalTeamMatchSquad> NationalTeamMatchSquad { get; set; } = null!;
     public DbSet<Player> Player { get; set; } = null!;
     public DbSet<PlayerClub> PlayerClub { get; set; } = null!;
     public DbSet<RefreshToken> RefreshToken { get; set; } = null!;
+    public DbSet<StaffMember> StaffMember { get; set; } = null!;
+    public DbSet<StaffAppointment> StaffAppointment { get; set; } = null!;
     public DbSet<UserPermission> UserPermission { get; set; } = null!;
     public DbSet<ReviewFlag> ReviewFlag { get; set; } = null!;
 
@@ -27,6 +31,21 @@ public class ShineDbContext : IdentityDbContext
 
         modelBuilder.Entity<ClubMatchSquad>()
             .HasKey(x => new { x.MatchId, x.ClubId, x.PlayerId });
+
+        modelBuilder.Entity<Competition>(entity =>
+        {
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<CompetitionSeason>(entity =>
+        {
+            entity.HasKey(x => x.SeasonId);
+            entity.HasOne(x => x.Competition)
+                .WithMany()
+                .HasForeignKey(x => x.CompetitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.CompetitionId, x.Label }).IsUnique();
+        });
 
         modelBuilder.Entity<ClubMatch>(entity =>
         {
@@ -38,6 +57,14 @@ public class ShineDbContext : IdentityDbContext
             entity.HasOne(x => x.AwayClub)
                 .WithMany()
                 .HasForeignKey(x => x.AwayClubId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.CompetitionRef)
+                .WithMany()
+                .HasForeignKey(x => x.CompetitionId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.SeasonRef)
+                .WithMany()
+                .HasForeignKey(x => x.SeasonId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
@@ -57,10 +84,44 @@ public class ShineDbContext : IdentityDbContext
                 .WithMany()
                 .HasForeignKey(x => x.AwayNationalTeamId)
                 .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.CompetitionRef)
+                .WithMany()
+                .HasForeignKey(x => x.CompetitionId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.SeasonRef)
+                .WithMany()
+                .HasForeignKey(x => x.SeasonId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<NationalTeamMatchSquad>()
             .HasKey(x => new { x.MatchId, x.NationalTeamId, x.PlayerId });
+
+        modelBuilder.Entity<StaffMember>(entity =>
+        {
+            // Optional persona link (player-coaches): the staff record survives
+            // the deletion of its player row.
+            entity.HasOne(x => x.Player)
+                .WithMany()
+                .HasForeignKey(x => x.PlayerId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<StaffAppointment>(entity =>
+        {
+            entity.HasOne(x => x.StaffMember)
+                .WithMany(x => x.Appointments)
+                .HasForeignKey(x => x.StaffMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Club)
+                .WithMany()
+                .HasForeignKey(x => x.ClubId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.NationalTeam)
+                .WithMany()
+                .HasForeignKey(x => x.NationalTeamId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {

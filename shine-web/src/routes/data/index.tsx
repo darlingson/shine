@@ -13,6 +13,11 @@ const SECTIONS = [
     blurb: "Browse clubs and national teams.",
   },
   {
+    to: "/data/competitions",
+    title: "Competitions",
+    blurb: "Leagues and cups, with the seasons each edition ran.",
+  },
+  {
     to: "/data/matches/club",
     title: "Matches",
     blurb: "Browse club and national team matches.",

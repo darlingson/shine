@@ -10,6 +10,17 @@ public class NationalTeamMatchDto
     public string? Competition { get; set; }
     public string? Season { get; set; }
     public string? Stage { get; set; }
+
+    /// <summary>Linked competition identity, once identified.</summary>
+    public int? CompetitionId { get; set; }
+    public int? SeasonId { get; set; }
+
+    /// <summary>Display name resolved from the linked competition.</summary>
+    public string? CompetitionName { get; set; }
+
+    /// <summary>Display name resolved from the linked season (its Name, else its Label).</summary>
+    public string? SeasonName { get; set; }
+
     public int? HomeNationalTeamId { get; set; }
     public int? AwayNationalTeamId { get; set; }
     public string? HomeNationalTeamName { get; set; }
@@ -41,6 +52,12 @@ public class NationalTeamMatchQuery
 
     /// <summary>Exact season match.</summary>
     public string? Season { get; set; }
+
+    /// <summary>Matches linked to this competition.</summary>
+    public int? CompetitionId { get; set; }
+
+    /// <summary>Matches linked to this season.</summary>
+    public int? SeasonId { get; set; }
 
     /// <summary>Earliest match date, inclusive.</summary>
     public DateOnly? DateFrom { get; set; }
@@ -81,6 +98,12 @@ public class CreateNationalTeamMatchDto
     public string? Competition { get; set; }
     public string? Season { get; set; }
     public string? Stage { get; set; }
+
+    /// <summary>Competition identity — optional, final identification may happen
+    /// later via the link endpoint. A seasonId alone is not allowed.</summary>
+    public int? CompetitionId { get; set; }
+    public int? SeasonId { get; set; }
+
     public int? HomeNationalTeamId { get; set; }
     public int? AwayNationalTeamId { get; set; }
     public int? HomeScore { get; set; }
@@ -101,6 +124,12 @@ public class UpdateNationalTeamMatchDto
     public string? Competition { get; set; }
     public string? Season { get; set; }
     public string? Stage { get; set; }
+
+    /// <summary>Competition identity — optional, final identification may happen
+    /// later via the link endpoint. A seasonId alone is not allowed.</summary>
+    public int? CompetitionId { get; set; }
+    public int? SeasonId { get; set; }
+
     public int? HomeNationalTeamId { get; set; }
     public int? AwayNationalTeamId { get; set; }
     public int? HomeScore { get; set; }
@@ -123,4 +152,14 @@ public class LinkNationalTeamMatchTeamsDto
     [Required]
     [Range(1, int.MaxValue)]
     public int AwayNationalTeamId { get; set; }
+}
+
+/// <summary>Replaces the competition (and season) links on an existing match in
+/// one pass: a competition without a season clears the season; a null
+/// competition clears both. The free-text columns are not touched — they keep
+/// what the source said at the time.</summary>
+public class LinkNationalTeamMatchCompetitionDto
+{
+    public int? CompetitionId { get; set; }
+    public int? SeasonId { get; set; }
 }

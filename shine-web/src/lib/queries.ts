@@ -51,6 +51,33 @@ import {
 } from "@/lib/players";
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
 import {
+  getStaffMember,
+  getStaffMemberFilterOptions,
+  listStaffAppointments,
+  listStaffMembers,
+  queryStaffAppointments,
+  queryStaffMembers,
+  type StaffAppointment,
+  type StaffAppointmentPage,
+  type StaffAppointmentQuery,
+  type StaffMember,
+  type StaffMemberFilterOptions,
+  type StaffMemberPage,
+  type StaffMemberQuery,
+} from "@/lib/staff";
+import {
+  getCompetition,
+  getCompetitionFilterOptions,
+  listCompetitionSeasons,
+  listCompetitions,
+  queryCompetitions,
+  type Competition,
+  type CompetitionFilterOptions,
+  type CompetitionPage,
+  type CompetitionQuery,
+  type CompetitionSeason,
+} from "@/lib/competitions";
+import {
   listClubSquads,
   listNationalSquads,
   type ClubSquad,
@@ -78,6 +105,13 @@ export const queryKeys = {
   nationalTeamPage: (query: NationalTeamQuery) =>
     ["nationalTeams", "page", query] as const,
   nationalTeamFilterOptions: ["nationalTeams", "filterOptions"] as const,
+  competitions: ["competitions"] as const,
+  competition: (id: number | string) => ["competitions", String(id)] as const,
+  competitionPage: (query: CompetitionQuery) =>
+    ["competitions", "page", query] as const,
+  competitionFilterOptions: ["competitions", "filterOptions"] as const,
+  competitionSeasons: (id: number | string) =>
+    ["competitions", String(id), "seasons"] as const,
   clubMatches: ["clubMatches"] as const,
   clubMatch: (id: number | string) => ["clubMatches", String(id)] as const,
   clubMatchPage: (query: ClubMatchQuery) =>
@@ -92,6 +126,14 @@ export const queryKeys = {
   playerClubs: ["playerClubs"] as const,
   clubSquads: ["clubSquads"] as const,
   nationalSquads: ["nationalSquads"] as const,
+  staffMembers: ["staffMembers"] as const,
+  staffMember: (id: number | string) => ["staffMembers", String(id)] as const,
+  staffMemberPage: (query: StaffMemberQuery) =>
+    ["staffMembers", "page", query] as const,
+  staffMemberFilterOptions: ["staffMembers", "filterOptions"] as const,
+  staffAppointments: ["staffAppointments"] as const,
+  staffAppointmentPage: (query: StaffAppointmentQuery) =>
+    ["staffAppointments", "page", query] as const,
   users: ["users"] as const,
   search: (q: string, kinds: string, limit: number) =>
     ["search", q, kinds, limit] as const,
@@ -202,6 +244,123 @@ export function useNationalTeamFilterOptions(): UseQueryResult<
   return useQuery({
     queryKey: queryKeys.nationalTeamFilterOptions,
     queryFn: getNationalTeamFilterOptions,
+  });
+}
+
+export function useStaffMembers(
+  enabled = true,
+): UseQueryResult<StaffMember[], Error> {
+  return useQuery({
+    queryKey: queryKeys.staffMembers,
+    queryFn: listStaffMembers,
+    enabled,
+  });
+}
+
+export function useStaffMember(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<StaffMember, Error> {
+  return useQuery({
+    queryKey: queryKeys.staffMember(id),
+    queryFn: () => getStaffMember(Number(id)),
+    enabled,
+  });
+}
+
+export function useStaffAppointments(
+  enabled = true,
+): UseQueryResult<StaffAppointment[], Error> {
+  return useQuery({
+    queryKey: queryKeys.staffAppointments,
+    queryFn: listStaffAppointments,
+    enabled,
+  });
+}
+
+export function useStaffAppointmentPage(
+  query: StaffAppointmentQuery,
+  enabled = true,
+): UseQueryResult<StaffAppointmentPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.staffAppointmentPage(query),
+    queryFn: () => queryStaffAppointments(query),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useStaffMemberPage(
+  query: StaffMemberQuery,
+  enabled = true,
+): UseQueryResult<StaffMemberPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.staffMemberPage(query),
+    queryFn: () => queryStaffMembers(query),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useStaffMemberFilterOptions(): UseQueryResult<
+  StaffMemberFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.staffMemberFilterOptions,
+    queryFn: getStaffMemberFilterOptions,
+  });
+}
+
+export function useCompetitions(
+  enabled = true,
+): UseQueryResult<Competition[], Error> {
+  return useQuery({
+    queryKey: queryKeys.competitions,
+    queryFn: listCompetitions,
+    enabled,
+  });
+}
+
+export function useCompetition(
+  id: number | string,
+  enabled = true,
+): UseQueryResult<Competition, Error> {
+  return useQuery({
+    queryKey: queryKeys.competition(id),
+    queryFn: () => getCompetition(Number(id)),
+    enabled,
+  });
+}
+
+export function useCompetitionPage(
+  query: CompetitionQuery,
+): UseQueryResult<CompetitionPage, Error> {
+  return useQuery({
+    queryKey: queryKeys.competitionPage(query),
+    queryFn: () => queryCompetitions(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCompetitionFilterOptions(): UseQueryResult<
+  CompetitionFilterOptions,
+  Error
+> {
+  return useQuery({
+    queryKey: queryKeys.competitionFilterOptions,
+    queryFn: getCompetitionFilterOptions,
+  });
+}
+
+export function useCompetitionSeasons(
+  competitionId: number | string,
+  enabled = true,
+): UseQueryResult<CompetitionSeason[], Error> {
+  return useQuery({
+    queryKey: queryKeys.competitionSeasons(competitionId),
+    queryFn: () => listCompetitionSeasons(Number(competitionId)),
+    enabled,
   });
 }
 

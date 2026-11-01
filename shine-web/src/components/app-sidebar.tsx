@@ -4,6 +4,7 @@ import {
   ClipboardTextIcon,
   FlagIcon,
   HouseIcon,
+  MedalIcon,
   ShieldCheckIcon,
   ShieldIcon,
   SignOutIcon,
@@ -138,6 +139,20 @@ export function AppSidebar() {
                 >
                   <FlagIcon />
                   <span>National teams</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Competitions"
+                  render={
+                    <Link
+                      to="/manage/competitions"
+                      activeProps={{ "data-active": true }}
+                    />
+                  }
+                >
+                  <MedalIcon />
+                  <span>Competitions</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

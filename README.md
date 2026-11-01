@@ -112,23 +112,25 @@ pnpm dev
 ```
 
 - `/` — public landing page
-- `/manage` — staff sign-in + dashboard (overview, players, matches, squads, users, roles)
+- `/manage` — staff sign-in + dashboard (overview, players, matches, squads, competitions, users, roles)
 
 ## API surface
 
 Reads are public; writes require the listed permission (snapshotted in the access token, refreshed on token refresh):
 
 - `/api/Clubs`, `/api/NationalTeams`, `/api/Players`, `/api/ClubMatches`, `/api/NationalTeamMatches`, `/api/PlayerClubs`, `/api/ClubMatchSquads`, `/api/NationalTeamMatchSquads` — REST (`GET` collection + item, `POST`/`PUT`/`DELETE` with `clubs:write`, `nationalteams:write`, `players:write`, `matches:write`, `squads:write`)
+- `/api/Competitions` (+ `/api/Competitions/{id}/seasons` nested) — competition registry and its season editions (`GET` collection + item + `query`, `POST`/`PUT`/`DELETE` with `competitions:write`)
+- `/api/StaffMembers`, `/api/StaffAppointments` — staff registry and dated team roles; the appointment needs exactly one of `clubId` / `nationalTeamId` (`GET` collection + item + `query`, `POST`/`PUT`/`DELETE` with `staff:write`). In the web app staff are never browsed on their own: each club and national team owns a Staff section on its page.
 - `/api/ClubMatches/{id}/teams`, `/api/NationalTeamMatches/{id}/teams` — `PATCH` (`matches:write`) to link or correct a match's two teams
 - `/api/MatchRecords` — `POST` (`matches:write`) to record a full match in one request (fixture, lineups and scorers); unmatched team references become review flags
 - `/api/MatchRecords/review-flags` — list, resolve and delete data-review flags (`matches:write`)
-- `/api/Search?q=…&kinds=…&limit=…` — public keyword search across players, clubs, national teams and both match kinds; returns a flat list of `{ kind, id, title, subtitle, badge }` ranked best-first (`limit` caps results per kind)
+- `/api/Search?q=…&kinds=…&limit=…` — public keyword search across players, clubs, national teams, staff and both match kinds; returns a flat list of `{ kind, id, title, subtitle, badge }` ranked best-first (`limit` caps results per kind)
 - `/api/Auth` — `register`, `login`, `refresh`, `revoke`, `logout`, `me`
 - `/api/Users` — list, role assign/remove (`users:manage`), permission grant/revoke (`permissions:grant`)
 
 Exports — full-list downloads for analysts, journalists and integrations; reads stay public:
 
-- `/api/Players/export`, `/api/Clubs/export`, `/api/NationalTeams/export`, `/api/ClubMatches/export`, `/api/NationalTeamMatches/export`, `/api/PlayerClubs/export` — `GET ?format=csv|json` (default `csv`)
+- `/api/Players/export`, `/api/Clubs/export`, `/api/NationalTeams/export`, `/api/Competitions/export`, `/api/Competitions/seasons/export`, `/api/StaffMembers/export`, `/api/StaffAppointments/export`, `/api/ClubMatches/export`, `/api/NationalTeamMatches/export`, `/api/PlayerClubs/export` — `GET ?format=csv|json` (default `csv`)
 - `/api/Export/appearances` — every squad appearance, club and national matches combined, one flat denormalized row per entry (player, team, opponent, match context, participation detail)
 - CSV files are UTF-8 with BOM (Excel-friendly), quoted per RFC 4180, ISO 8601 dates, resolved display names alongside IDs; the JSON download of the same file carries exactly the CSV column names as property names, in the same order
 - [docs/exports.md](docs/exports.md) is the data dictionary: what each column means, the ID semantics between files, and the canonical value vocabularies — paste it beside any published export
@@ -153,11 +155,11 @@ Swagger UI is only served in Development; in production use `/healthz` and the `
 
 ## Status and roadmap
 
-Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, squads, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser; full-match recording that flags unmatched references for review; CSV/JSON exports for every public entity plus a combined flat appearances export for club and national squad entries; and a canonical position vocabulary (roles `GK`/`DF`/`MF`/`FW` with granular position codes) enforced on write across players, squads and club stints, surfaced as grouped pickers in the web forms and as extra columns in the player, appearance and career exports; and canonical gender values (`men`/`women`, aligned with the national-team vocabulary) enforced on write (the gender backfill was a one-off update on the live database, so existing records carry canonical values without any runtime backfill); enforced canonical foot (`left`/`right`/`both`) and player status (`active`/`retired`/`unknown`) on player writes; enforced line-up-status vocabulary (`starter`/`substitute`/`matchday_squad`/`unused_sub`/`reserve`/`suspended`/`injured`) on club and national-team squad writes; and validated national-team gender (`men`/`women`/`mixed`) on write.
+Implemented: Postgres-backed CRUD API for the core entities with service/repository layering and Swagger docs; JWT auth with rotating refresh tokens and role/permission bundles; web landing page plus staff dashboard (`/manage`) for players, matches, squads, competitions, users, and roles; public keyword search across players, clubs, national teams and matches, with a debounced search box and a shareable results page; filtering, sorting and pagination on every public list, including a Malawi national-team browser; full-match recording that flags unmatched references for review; a competitions registry that keeps stable competition identity separate from sponsor-named seasons, linked optionally from club and national-team matches and exposed through data pages and exports; a staff registry with dated club and national-team appointments, canonical roles and a derived national coach, managed inside each team's own page rather than as a standalone directory; CSV/JSON exports for every public entity plus a combined flat appearances export for club and national squad entries; and a canonical position vocabulary (roles `GK`/`DF`/`MF`/`FW` with granular position codes) enforced on write across players, squads and club stints, surfaced as grouped pickers in the web forms and as extra columns in the player, appearance and career exports; and canonical gender values (`men`/`women`, aligned with the national-team vocabulary) enforced on write (the gender backfill was a one-off update on the live database, so existing records carry canonical values without any runtime backfill); enforced canonical foot (`left`/`right`/`both`) and player status (`active`/`retired`/`unknown`) on player writes; enforced line-up-status vocabulary (`starter`/`substitute`/`matchday_squad`/`unused_sub`/`reserve`/`suspended`/`injured`) on club and national-team squad writes; and validated national-team gender (`men`/`women`/`mixed`) on write.
 
 Planned (per product description, not yet built): squad-role filters, public API hardening, moderation and audit logging, bulk import/correction workflows, and provenance enrichment (source type, confidence, last-verified date).
 
-Left as free text on purpose for now: `NationalTeam.Level` (convention is `senior`/`U23`/`U20`/`U17` when a level is known), `PlayerClub.ContractType` (convention is `permanent`/`loan`/`youth`/`trial`), and match `competition`/`season` wording — a shared competitions table is the eventual fix for those.
+Left as free text on purpose for now: `NationalTeam.Level` (convention is `senior`/`U23`/`U20`/`U17` when a level is known) and `PlayerClub.ContractType` (convention is `permanent`/`loan`/`youth`/`trial`). Match `competition`/`season` stay free text as the source's own wording, kept alongside the optional registry links so provenance survives a rename or re-sponsorship.
 
 ## Contributing
 

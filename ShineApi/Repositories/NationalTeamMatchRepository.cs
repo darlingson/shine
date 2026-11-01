@@ -18,6 +18,8 @@ public class NationalTeamMatchRepository : INationalTeamMatchRepository
         => await _context.NationalTeamMatch
             .Include(x => x.HomeNationalTeam)
             .Include(x => x.AwayNationalTeam)
+            .Include(x => x.CompetitionRef)
+            .Include(x => x.SeasonRef)
             .AsNoTracking()
             .ToListAsync();
 
@@ -29,6 +31,8 @@ public class NationalTeamMatchRepository : INationalTeamMatchRepository
         var items = await Sort(matches, query)
             .Include(m => m.HomeNationalTeam)
             .Include(m => m.AwayNationalTeam)
+            .Include(m => m.CompetitionRef)
+            .Include(m => m.SeasonRef)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync();
@@ -46,6 +50,8 @@ public class NationalTeamMatchRepository : INationalTeamMatchRepository
         => await _context.NationalTeamMatch
             .Include(x => x.HomeNationalTeam)
             .Include(x => x.AwayNationalTeam)
+            .Include(x => x.CompetitionRef)
+            .Include(x => x.SeasonRef)
             .FirstOrDefaultAsync(x => x.MatchId == id);
 
     public async Task<NationalTeamMatch> AddAsync(NationalTeamMatch match)
@@ -83,6 +89,12 @@ public class NationalTeamMatchRepository : INationalTeamMatchRepository
 
         if (query.NationalTeamId is { } teamId)
             matches = matches.Where(m => m.HomeNationalTeamId == teamId || m.AwayNationalTeamId == teamId);
+
+        if (query.CompetitionId is { } competitionId)
+            matches = matches.Where(m => m.CompetitionId == competitionId);
+
+        if (query.SeasonId is { } seasonId)
+            matches = matches.Where(m => m.SeasonId == seasonId);
 
         if (!string.IsNullOrWhiteSpace(query.Competition))
             matches = matches.Where(m => m.Competition == query.Competition);

@@ -1,20 +1,40 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Pagination } from "@/components/pagination";
+import { StaffTable } from "@/components/staff-table";
 import { clubMatchLabel } from "@/lib/clubMatches";
 import { positionLabel } from "@/lib/positions";
-import { useClub, useClubMatches, usePlayerClubs, usePlayers } from "@/lib/queries";
+import {
+  useClub,
+  useClubMatches,
+  usePlayerClubs,
+  usePlayers,
+  useStaffAppointmentPage,
+} from "@/lib/queries";
 import { parseApiError } from "@/lib/users";
 
 export const Route = createFileRoute("/data/clubs/$clubId")({
   component: ClubDetailPage,
 });
 
+const STAFF_PAGE_SIZE = 10;
+
 function ClubDetailPage() {
   const { clubId } = Route.useParams();
+  const teamId = Number(clubId);
   const club = useClub(clubId);
   const players = usePlayers();
   const affils = usePlayerClubs();
   const matches = useClubMatches();
+  const [staffPaging, setStaffPaging] = useState({ teamId, page: 1 });
+  const staffPage = staffPaging.teamId === teamId ? staffPaging.page : 1;
+  const staff = useStaffAppointmentPage({
+    clubId: teamId,
+    sort: "startDate",
+    order: "desc",
+    page: staffPage,
+    pageSize: STAFF_PAGE_SIZE,
+  });
 
   const clubPlayers = useMemo(() => {
     if (!club.data || !players.data || !affils.data) return [];
@@ -37,7 +57,8 @@ function ClubDetailPage() {
       .sort((a, b) => b.matchDate.localeCompare(a.matchDate));
   }, [club.data, matches.data]);
 
-  const error = club.error ?? players.error ?? affils.error ?? matches.error;
+  const error =
+    club.error ?? players.error ?? affils.error ?? matches.error ?? staff.error;
   if (error) return <p className="text-sm text-destructive">{parseApiError(error)}</p>;
   if (!club.data) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
@@ -75,6 +96,26 @@ function ClubDetailPage() {
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-heading text-lg font-semibold tracking-tight">Staff</h2>
+        <p className="text-sm text-muted-foreground">
+          Coaches and other appointments recorded for this club.
+        </p>
+        <StaffTable
+          items={staff.data?.items ?? []}
+          loading={staff.isLoading}
+          emptyMessage="No staff recorded for this club yet."
+        />
+        {(staff.data?.total ?? 0) > 0 && (
+          <Pagination
+            page={staffPage}
+            pageSize={STAFF_PAGE_SIZE}
+            total={staff.data?.total ?? 0}
+            onPageChange={(next) => setStaffPaging({ teamId, page: next })}
+          />
         )}
       </section>
 

@@ -18,6 +18,8 @@ public class ClubMatchRepository : IClubMatchRepository
         => await _context.ClubMatch
             .Include(x => x.HomeClub)
             .Include(x => x.AwayClub)
+            .Include(x => x.CompetitionRef)
+            .Include(x => x.SeasonRef)
             .AsNoTracking()
             .ToListAsync();
 
@@ -29,6 +31,8 @@ public class ClubMatchRepository : IClubMatchRepository
         var items = await Sort(matches, query)
             .Include(m => m.HomeClub)
             .Include(m => m.AwayClub)
+            .Include(m => m.CompetitionRef)
+            .Include(m => m.SeasonRef)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync();
@@ -46,6 +50,8 @@ public class ClubMatchRepository : IClubMatchRepository
         => await _context.ClubMatch
             .Include(x => x.HomeClub)
             .Include(x => x.AwayClub)
+            .Include(x => x.CompetitionRef)
+            .Include(x => x.SeasonRef)
             .FirstOrDefaultAsync(x => x.MatchId == id);
 
     public async Task<ClubMatch> AddAsync(ClubMatch match)
@@ -81,6 +87,12 @@ public class ClubMatchRepository : IClubMatchRepository
 
         if (query.ClubId is { } clubId)
             matches = matches.Where(m => m.HomeClubId == clubId || m.AwayClubId == clubId);
+
+        if (query.CompetitionId is { } competitionId)
+            matches = matches.Where(m => m.CompetitionId == competitionId);
+
+        if (query.SeasonId is { } seasonId)
+            matches = matches.Where(m => m.SeasonId == seasonId);
 
         if (!string.IsNullOrWhiteSpace(query.Competition))
             matches = matches.Where(m => m.Competition == query.Competition);

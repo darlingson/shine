@@ -28,7 +28,13 @@ import {
 } from "@/lib/nationalTeamMatches";
 import { nationalTeamLabel } from "@/lib/nationalTeams";
 import {
+  competitionLabel,
+  seasonLabel,
+} from "@/lib/competitions";
+import {
   useClubMatch,
+  useCompetitionSeasons,
+  useCompetitions,
   useClubs,
   useNationalTeamMatch,
   useNationalTeams,
@@ -42,6 +48,8 @@ interface MatchInitial {
   kickoffTime?: string | null;
   competition?: string | null;
   season?: string | null;
+  competitionId?: number | null;
+  seasonId?: number | null;
   stage?: string | null;
   homeTeamId?: number | null;
   awayTeamId?: number | null;
@@ -133,6 +141,8 @@ export function MatchFormPage({
           matchDate: clubMatch.data!.matchDate,
           competition: clubMatch.data!.competition,
           season: clubMatch.data!.season,
+          competitionId: clubMatch.data!.competitionId,
+          seasonId: clubMatch.data!.seasonId,
           homeTeamId: clubMatch.data!.homeClubId,
           awayTeamId: clubMatch.data!.awayClubId,
           homeScore: clubMatch.data!.homeScore,
@@ -145,6 +155,8 @@ export function MatchFormPage({
           kickoffTime: nationalMatch.data!.kickoffTime,
           competition: nationalMatch.data!.competition,
           season: nationalMatch.data!.season,
+          competitionId: nationalMatch.data!.competitionId,
+          seasonId: nationalMatch.data!.seasonId,
           stage: nationalMatch.data!.stage,
           homeTeamId: nationalMatch.data!.homeNationalTeamId,
           awayTeamId: nationalMatch.data!.awayNationalTeamId,
@@ -195,12 +207,41 @@ function MatchForm({
     ? "/manage/matches/club"
     : "/manage/matches/national";
 
+  const competitionsQuery = useCompetitions();
+  const competitionOptions = (competitionsQuery.data ?? []).map((c) => ({
+    value: c.competitionId.toString(),
+    label: competitionLabel(c),
+  }));
+
   const [matchDate, setMatchDate] = useState(initial?.matchDate ?? "");
   const [kickoffTime, setKickoffTime] = useState(
     initial?.kickoffTime?.slice(0, 5) ?? "",
   );
   const [competition, setCompetition] = useState(initial?.competition ?? "");
   const [season, setSeason] = useState(initial?.season ?? "");
+  const [linkedCompetitionId, setLinkedCompetitionId] = useState(
+    initial?.competitionId?.toString() ?? "",
+  );
+  const [linkedSeasonId, setLinkedSeasonId] = useState(
+    initial?.seasonId?.toString() ?? "",
+  );
+
+  /** Season editions cascade from the picked competition record. */
+  const seasonsQuery = useCompetitionSeasons(
+    linkedCompetitionId,
+    linkedCompetitionId !== "",
+  );
+  const seasonOptions = (seasonsQuery.data ?? []).map((s) => ({
+    value: s.seasonId.toString(),
+    label: seasonLabel(s),
+  }));
+
+  function onCompetitionLinkChange(id: string) {
+    setLinkedCompetitionId(id);
+    // A season edition belongs to exactly one competition — switching
+    // competitions invalidates any picked season.
+    setLinkedSeasonId("");
+  }
   const [stage, setStage] = useState(initial?.stage ?? "");
   const [homeTeamId, setHomeTeamId] = useState(
     initial?.homeTeamId?.toString() ?? "",
@@ -233,6 +274,10 @@ function MatchForm({
       matchDate,
       competition: competition.trim() || undefined,
       season: season.trim() || undefined,
+      competitionId: linkedCompetitionId
+        ? Number(linkedCompetitionId)
+        : undefined,
+      seasonId: linkedSeasonId ? Number(linkedSeasonId) : undefined,
       homeScore: parseOptionalInt(homeScore),
       awayScore: parseOptionalInt(awayScore),
       venue: venue.trim() || undefined,
@@ -345,6 +390,36 @@ function MatchForm({
                 value={season}
                 onChange={(e) => setSeason(e.target.value)}
                 placeholder="e.g. 2025/26"
+              />
+            </Field>
+            <Field label="Linked competition" htmlFor="match-competition-link">
+              <Combobox
+                id="match-competition-link"
+                aria-label="Linked competition registry record"
+                value={linkedCompetitionId}
+                onValueChange={onCompetitionLinkChange}
+                options={competitionOptions}
+                placeholder="None"
+                searchPlaceholder="Search competitions…"
+                emptyMessage="No competitions yet — add one under Manage → Competitions."
+              />
+            </Field>
+            <Field label="Linked season" htmlFor="match-season-link">
+              <Combobox
+                id="match-season-link"
+                aria-label="Linked competition season"
+                value={linkedSeasonId}
+                onValueChange={setLinkedSeasonId}
+                options={seasonOptions}
+                disabled={!linkedCompetitionId}
+                placeholder={
+                  linkedCompetitionId ? "None" : "Pick a competition first"
+                }
+                emptyMessage={
+                  linkedCompetitionId
+                    ? "No seasons under this competition yet."
+                    : "Pick a competition first."
+                }
               />
             </Field>
             {!isClub && (

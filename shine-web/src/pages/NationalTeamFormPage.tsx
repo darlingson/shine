@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OptionalSelect } from "@/components/OptionalSelect";
+import { TeamStaffCard } from "@/components/team-staff-card";
 import { Field, FormError } from "@/components/data-ui";
 import {
   NATIONAL_TEAM_GENDERS,
@@ -32,17 +33,19 @@ export function NationalTeamFormPage({
   nationalTeamId?: string;
 }) {
   const { hasPermission } = useAuth();
-  const canWrite = hasPermission("nationalteams:write");
+  const canWriteTeam = hasPermission("nationalteams:write");
+  const canWriteStaff = hasPermission("staff:write");
   const editing = nationalTeamId !== undefined;
   const teamQuery = useNationalTeam(nationalTeamId ?? "", editing);
 
-  if (!canWrite) {
+  if (!canWriteTeam && !(editing && canWriteStaff)) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>{editing ? "Edit national team" : "Add national team"}</CardTitle>
           <CardDescription>
-            You need the nationalteams:write permission to make changes.
+            You need nationalteams:write to add a team. Editing staff also needs
+            staff:write.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -97,6 +100,7 @@ export function NationalTeamFormPage({
       key={nationalTeamId ?? "new"}
       nationalTeamId={nationalTeamId}
       initial={editing ? (teamQuery.data as NationalTeam) : undefined}
+      canWrite={canWriteTeam}
     />
   );
 }
@@ -104,9 +108,11 @@ export function NationalTeamFormPage({
 function NationalTeamForm({
   nationalTeamId,
   initial,
+  canWrite,
 }: {
   nationalTeamId?: string;
   initial?: NationalTeam;
+  canWrite: boolean;
 }) {
   const navigate = useNavigate();
   const [name, setName] = useState(initial?.name ?? "");
@@ -114,7 +120,6 @@ function NationalTeamForm({
   const [nickname, setNickname] = useState(initial?.nickname ?? "");
   const [gender, setGender] = useState(initial?.gender ?? "");
   const [level, setLevel] = useState(initial?.level ?? "");
-  const [coach, setCoach] = useState(initial?.coach ?? "");
   const [country, setCountry] = useState(initial?.country ?? "Malawi");
   const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? "");
   const [busy, setBusy] = useState(false);
@@ -122,6 +127,7 @@ function NationalTeamForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!canWrite) return;
     setBusy(true);
     setError(null);
     const dto: NationalTeamForm = {
@@ -130,7 +136,6 @@ function NationalTeamForm({
       nickname: nickname.trim() || undefined,
       gender: gender.trim() || undefined,
       level: level.trim() || undefined,
-      coach: coach.trim() || undefined,
       country: country.trim() || "Malawi",
       sourceUrl: sourceUrl.trim() || undefined,
     };
@@ -164,16 +169,19 @@ function NationalTeamForm({
           {editing ? "Edit national team" : "Add national team"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {editing
-            ? "Update the record. Changes apply immediately."
-            : "Register a national side that squad entries attach to."}
+          {!canWrite
+            ? "Team details are read-only. Staff can still be managed below with staff:write."
+            : editing
+              ? "Update the record. Changes apply immediately."
+              : "Register a national side that squad entries attach to."}
         </p>
       </div>
 
       <Card>
         <CardContent className="pt-6">
           <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-            <Field label="Name" htmlFor="nt-name">
+            <fieldset disabled={!canWrite} className="contents">
+              <Field label="Name" htmlFor="nt-name">
               <Input
                 id="nt-name"
                 required
@@ -221,14 +229,6 @@ function NationalTeamForm({
                 onChange={(e) => setCountry(e.target.value)}
               />
             </Field>
-            <Field label="Coach" htmlFor="nt-coach">
-              <Input
-                id="nt-coach"
-                value={coach}
-                onChange={(e) => setCoach(e.target.value)}
-                placeholder="e.g. Lovemore Fazili"
-              />
-            </Field>
             <Field label="Source URL" htmlFor="nt-source">
               <Input
                 id="nt-source"
@@ -238,6 +238,7 @@ function NationalTeamForm({
                 placeholder="https://…"
               />
             </Field>
+            </fieldset>
             <div className="sm:col-span-2">
               <FormError message={error} />
             </div>
@@ -251,13 +252,23 @@ function NationalTeamForm({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy || name.trim() === ""}>
-                {busy ? "Saving…" : editing ? "Save changes" : "Add team"}
-              </Button>
+              {canWrite && (
+                <Button type="submit" disabled={busy || name.trim() === ""}>
+                  {busy ? "Saving…" : editing ? "Save changes" : "Add team"}
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
       </Card>
+
+      {editing && nationalTeamId !== undefined && (
+        <TeamStaffCard
+          teamKind="national"
+          teamId={Number(nationalTeamId)}
+          teamName={name || initial?.name}
+        />
+      )}
     </div>
   );
 }

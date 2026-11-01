@@ -1,6 +1,6 @@
 import { apiJson } from "@/lib/api";
 
-/** Searchable kinds, mirroring ShineApi's SearchKinds. */
+/** Searchable kinds with a public result page, mirroring ShineApi's SearchKinds. */
 export const SEARCH_KINDS = [
   "player",
   "club",

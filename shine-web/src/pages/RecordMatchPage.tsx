@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { PositionSelect } from "@/components/PositionSelect";
 import { Field, FormError } from "@/components/data-ui";
 import {
@@ -22,7 +23,12 @@ import {
 } from "@/components/ui/select";
 import { parseOptionalInt } from "@/lib/forms";
 import { createClub, type Club } from "@/lib/clubs";
-import { useClubs } from "@/lib/queries";
+import { competitionLabel, seasonLabel } from "@/lib/competitions";
+import {
+  useClubs,
+  useCompetitionSeasons,
+  useCompetitions,
+} from "@/lib/queries";
 import {
   SQUAD_STATUSES,
   SQUAD_STATUS_LABELS,
@@ -125,6 +131,30 @@ export function RecordMatchPage() {
   const [matchDate, setMatchDate] = useState("");
   const [competition, setCompetition] = useState("");
   const [season, setSeason] = useState("");
+  const [linkedCompetitionId, setLinkedCompetitionId] = useState("");
+  const [linkedSeasonId, setLinkedSeasonId] = useState("");
+
+  const competitionsQuery = useCompetitions();
+  const competitionOptions = (competitionsQuery.data ?? []).map((c) => ({
+    value: c.competitionId.toString(),
+    label: competitionLabel(c),
+  }));
+  /** Season editions cascade from the picked competition record. */
+  const seasonsQuery = useCompetitionSeasons(
+    linkedCompetitionId,
+    linkedCompetitionId !== "",
+  );
+  const seasonOptions = (seasonsQuery.data ?? []).map((s) => ({
+    value: s.seasonId.toString(),
+    label: seasonLabel(s),
+  }));
+
+  function onCompetitionLinkChange(id: string) {
+    setLinkedCompetitionId(id);
+    // A season edition belongs to exactly one competition — switching
+    // competitions invalidates any picked season.
+    setLinkedSeasonId("");
+  }
   const [homeClubId, setHomeClubId] = useState("");
   const [awayClubId, setAwayClubId] = useState("");
   const [homeScore, setHomeScore] = useState("");
@@ -199,6 +229,10 @@ export function RecordMatchPage() {
           matchDate,
           competition: competition.trim() || undefined,
           season: season.trim() || undefined,
+          competitionId: linkedCompetitionId
+            ? Number(linkedCompetitionId)
+            : undefined,
+          seasonId: linkedSeasonId ? Number(linkedSeasonId) : undefined,
           homeClubId: Number(homeClubId),
           awayClubId: Number(awayClubId),
           homeScore: parseOptionalInt(homeScore),
@@ -363,6 +397,36 @@ export function RecordMatchPage() {
                 value={season}
                 onChange={(e) => setSeason(e.target.value)}
                 placeholder="e.g. 2026"
+              />
+            </Field>
+            <Field label="Linked competition" htmlFor="rm-comp-link">
+              <Combobox
+                id="rm-comp-link"
+                aria-label="Linked competition registry record"
+                value={linkedCompetitionId}
+                onValueChange={onCompetitionLinkChange}
+                options={competitionOptions}
+                placeholder="None"
+                searchPlaceholder="Search competitions…"
+                emptyMessage="No competitions yet — add one under Manage → Competitions."
+              />
+            </Field>
+            <Field label="Linked season" htmlFor="rm-season-link">
+              <Combobox
+                id="rm-season-link"
+                aria-label="Linked competition season"
+                value={linkedSeasonId}
+                onValueChange={setLinkedSeasonId}
+                options={seasonOptions}
+                disabled={!linkedCompetitionId}
+                placeholder={
+                  linkedCompetitionId ? "None" : "Pick a competition first"
+                }
+                emptyMessage={
+                  linkedCompetitionId
+                    ? "No seasons under this competition yet."
+                    : "Pick a competition first."
+                }
               />
             </Field>
             <Field label="Home club" htmlFor="rm-home">
