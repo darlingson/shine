@@ -51,6 +51,22 @@ public class StaffAppointmentsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = appointment.StaffAppointmentId }, appointment);
     }
 
+    /// <summary>Create a new person and their first appointment together.</summary>
+    [HttpPost("with-member")]
+    [HasPermission(Permissions.StaffWrite)]
+    public async Task<IActionResult> CreateWithMember(
+        [FromBody] CreateStaffAppointmentWithMemberDto dto)
+    {
+        var errors = new List<string>();
+        var appointment = await _service.CreateWithMemberAsync(dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
+        if (appointment is null)
+            return Conflict(
+                "This staff member already has that role starting on that date at this team.");
+
+        return CreatedAtAction(nameof(GetById), new { id = appointment.StaffAppointmentId }, appointment);
+    }
+
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.StaffWrite)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateStaffAppointmentDto dto)
@@ -59,6 +75,23 @@ public class StaffAppointmentsController : ControllerBase
 
         var errors = new List<string>();
         var appointment = await _service.UpdateAsync(id, dto, errors);
+        if (errors.Count > 0) return BadRequest(new { errors });
+        return appointment is null
+            ? Conflict(
+                "This staff member already has that role starting on that date at this team.")
+            : Ok(appointment);
+    }
+
+    /// <summary>Update the person and their appointment together.</summary>
+    [HttpPut("{id:int}/with-member")]
+    [HasPermission(Permissions.StaffWrite)]
+    public async Task<IActionResult> UpdateWithMember(
+        int id, [FromBody] UpdateStaffAppointmentWithMemberDto dto)
+    {
+        if (await _service.GetByIdAsync(id) is null) return NotFound();
+
+        var errors = new List<string>();
+        var appointment = await _service.UpdateWithMemberAsync(id, dto, errors);
         if (errors.Count > 0) return BadRequest(new { errors });
         return appointment is null
             ? Conflict(

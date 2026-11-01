@@ -113,3 +113,43 @@ public class UpdateStaffAppointmentDto
 
     public string? SourceUrl { get; set; }
 }
+
+/// <summary>Create a brand-new person and their first appointment in one write.
+/// The pair succeeds or fails together, so a rejected appointment cannot leave
+/// an orphaned registry row behind.</summary>
+public class CreateStaffAppointmentWithMemberDto
+{
+    [Required]
+    public CreateStaffMemberDto Member { get; set; } = new();
+
+    [Required]
+    public string? Role { get; set; }
+
+    public int? ClubId { get; set; }
+    public int? NationalTeamId { get; set; }
+
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+
+    public string? SourceUrl { get; set; }
+}
+
+/// <summary>Update the person and their appointment in one write. Both records
+/// are committed together, avoiding a half-saved edit when one validation
+/// fails.</summary>
+public class UpdateStaffAppointmentWithMemberDto
+{
+    [Required]
+    public UpdateStaffMemberDto Member { get; set; } = new();
+
+    [Required]
+    public string? Role { get; set; }
+
+    public int? ClubId { get; set; }
+    public int? NationalTeamId { get; set; }
+
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+
+    public string? SourceUrl { get; set; }
+}
