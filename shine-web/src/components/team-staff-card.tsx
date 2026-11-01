@@ -33,17 +33,17 @@ import {
 import { DeleteButton, Field, FormError } from "@/components/data-ui";
 import {
   STAFF_ROLES,
+  appointmentDatesAreValid,
   appointmentPeriod,
   createStaffAppointment,
-  createStaffMember,
+  createStaffMemberWithAppointment,
   deleteStaffAppointment,
   isOngoing,
   staffMemberLabel,
   staffRoleLabel,
-  updateStaffAppointment,
-  updateStaffMember,
+  updateStaffMemberWithAppointment,
   type StaffAppointment,
-  type StaffAppointmentForm,
+  type StaffAppointmentDetails,
   type StaffMember,
   type StaffMemberForm,
 } from "@/lib/staff";
@@ -59,8 +59,7 @@ import { parseApiError } from "@/lib/users";
 type TeamKind = "club" | "national";
 
 /** Staff for one club or national team — people are added here, in the team
- * context, and the appointment carries the role and dates. The shared staff
- * registry and its global page still exist for cross-team browsing. */
+ * context, and the appointment carries the role and dates. */
 export function TeamStaffCard({
   teamKind,
   teamId,
@@ -383,25 +382,14 @@ function AddStaffForm({
       setError("A new staff member needs a full name.");
       return;
     }
+    if (!appointmentDatesAreValid(startDate, endDate)) {
+      setError("An appointment cannot end before it starts.");
+      return;
+    }
 
     setBusy(true);
     try {
-      let memberId: number;
-      if (mode === "existing") {
-        memberId = Number(staffMemberId);
-      } else {
-        const person = await createStaffMember({
-          fullName: fullName.trim(),
-          knownAs: knownAs.trim() || undefined,
-          nationality: nationality.trim() || "Malawi",
-          playerId: playerId !== "" ? Number(playerId) : undefined,
-          sourceUrl: personSourceUrl.trim() || undefined,
-        });
-        memberId = person.staffMemberId;
-      }
-
-      const dto: StaffAppointmentForm = {
-        staffMemberId: memberId,
+      const appointment: StaffAppointmentDetails = {
         role,
         ...(teamKind === "club"
           ? { clubId: teamId }
@@ -410,7 +398,25 @@ function AddStaffForm({
         endDate: endDate || undefined,
         sourceUrl: sourceUrl.trim() || undefined,
       };
-      await createStaffAppointment(dto);
+
+      if (mode === "existing") {
+        await createStaffAppointment({
+          staffMemberId: Number(staffMemberId),
+          ...appointment,
+        });
+      } else {
+        // One API write: a rejected appointment must not leave a person behind.
+        await createStaffMemberWithAppointment(
+          {
+            fullName: fullName.trim(),
+            knownAs: knownAs.trim() || undefined,
+            nationality: nationality.trim() || "Malawi",
+            playerId: playerId !== "" ? Number(playerId) : undefined,
+            sourceUrl: personSourceUrl.trim() || undefined,
+          },
+          appointment,
+        );
+      }
       await onSaved();
     } catch (err) {
       setError(parseApiError(err));
@@ -606,6 +612,10 @@ function EditStaffForm({
       setError("Choose a role for this appointment.");
       return;
     }
+    if (!appointmentDatesAreValid(startDate, endDate)) {
+      setError("An appointment cannot end before it starts.");
+      return;
+    }
 
     setBusy(true);
     try {
@@ -616,10 +626,7 @@ function EditStaffForm({
         playerId: playerId !== "" ? Number(playerId) : undefined,
         sourceUrl: personSourceUrl.trim() || undefined,
       };
-      await updateStaffMember(member.staffMemberId, person);
-
-      const dto: StaffAppointmentForm = {
-        staffMemberId: member.staffMemberId,
+      const details: StaffAppointmentDetails = {
         role,
         clubId: appointment.clubId ?? undefined,
         nationalTeamId: appointment.nationalTeamId ?? undefined,
@@ -627,7 +634,12 @@ function EditStaffForm({
         endDate: endDate || undefined,
         sourceUrl: sourceUrl.trim() || undefined,
       };
-      await updateStaffAppointment(appointment.staffAppointmentId, dto);
+      // One API write: person and appointment are committed together.
+      await updateStaffMemberWithAppointment(
+        appointment.staffAppointmentId,
+        person,
+        details,
+      );
       await onSaved();
     } catch (err) {
       setError(parseApiError(err));

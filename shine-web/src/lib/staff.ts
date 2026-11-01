@@ -80,6 +80,17 @@ export interface StaffAppointmentForm {
   sourceUrl?: string;
 }
 
+/** Appointment fields when the person and role are written together. */
+export type StaffAppointmentDetails = Omit<StaffAppointmentForm, "staffMemberId">;
+
+/** Dates use ISO yyyy-MM-dd strings, so lexicographic comparison is enough. */
+export function appointmentDatesAreValid(
+  startDate: string,
+  endDate: string,
+): boolean {
+  return startDate === "" || endDate === "" || endDate >= startDate;
+}
+
 export function listStaffMembers(): Promise<StaffMember[]> {
   return apiJson<StaffMember[]>("/api/staffmembers");
 }
@@ -239,6 +250,17 @@ export function createStaffAppointment(
   });
 }
 
+/** Create a new staff person and their first appointment in one API write. */
+export function createStaffMemberWithAppointment(
+  member: StaffMemberForm,
+  appointment: StaffAppointmentDetails,
+): Promise<StaffAppointment> {
+  return apiJson<StaffAppointment>("/api/staffappointments/with-member", {
+    method: "POST",
+    body: JSON.stringify({ member, ...appointment }),
+  });
+}
+
 export function updateStaffAppointment(
   id: number,
   dto: StaffAppointmentForm,
@@ -246,6 +268,18 @@ export function updateStaffAppointment(
   return apiJson<StaffAppointment>(`/api/staffappointments/${id}`, {
     method: "PUT",
     body: JSON.stringify(dto),
+  });
+}
+
+/** Update the person and their appointment in one API write. */
+export function updateStaffMemberWithAppointment(
+  id: number,
+  member: StaffMemberForm,
+  appointment: StaffAppointmentDetails,
+): Promise<StaffAppointment> {
+  return apiJson<StaffAppointment>(`/api/staffappointments/${id}/with-member`, {
+    method: "PUT",
+    body: JSON.stringify({ member, ...appointment }),
   });
 }
 
