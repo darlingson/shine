@@ -27,17 +27,19 @@ import { parseApiError } from "@/lib/users";
 /** Shared add/edit form. Pass clubId to edit, omit to create. */
 export function ClubFormPage({ clubId }: { clubId?: string }) {
   const { hasPermission } = useAuth();
-  const canWrite = hasPermission("clubs:write");
+  const canWriteClub = hasPermission("clubs:write");
+  const canWriteStaff = hasPermission("staff:write");
   const editing = clubId !== undefined;
   const clubQuery = useClub(clubId ?? "", editing);
 
-  if (!canWrite) {
+  if (!canWriteClub && !(editing && canWriteStaff)) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>{editing ? "Edit club" : "Add club"}</CardTitle>
           <CardDescription>
-            You need the clubs:write permission to make changes.
+            You need clubs:write to add a club. Editing staff also needs
+            staff:write.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -92,11 +94,20 @@ export function ClubFormPage({ clubId }: { clubId?: string }) {
       key={clubId ?? "new"}
       clubId={clubId}
       initial={editing ? (clubQuery.data as Club) : undefined}
+      canWrite={canWriteClub}
     />
   );
 }
 
-function ClubForm({ clubId, initial }: { clubId?: string; initial?: Club }) {
+function ClubForm({
+  clubId,
+  initial,
+  canWrite,
+}: {
+  clubId?: string;
+  initial?: Club;
+  canWrite: boolean;
+}) {
   const navigate = useNavigate();
   const [name, setName] = useState(initial?.name ?? "");
   const [shortName, setShortName] = useState(initial?.shortName ?? "");
@@ -111,6 +122,7 @@ function ClubForm({ clubId, initial }: { clubId?: string; initial?: Club }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!canWrite) return;
     setBusy(true);
     setError(null);
     const dto: ClubForm = {
@@ -150,16 +162,19 @@ function ClubForm({ clubId, initial }: { clubId?: string; initial?: Club }) {
           {editing ? "Edit club" : "Add club"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {editing
-            ? "Update the record. Changes apply immediately."
-            : "Register a club that players and matches attach to."}
+          {!canWrite
+            ? "Club details are read-only. Staff can still be managed below with staff:write."
+            : editing
+              ? "Update the record. Changes apply immediately."
+              : "Register a club that players and matches attach to."}
         </p>
       </div>
 
       <Card>
         <CardContent className="pt-6">
           <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-            <Field label="Name" htmlFor="club-name">
+            <fieldset disabled={!canWrite} className="contents">
+              <Field label="Name" htmlFor="club-name">
               <Input
                 id="club-name"
                 required
@@ -210,6 +225,7 @@ function ClubForm({ clubId, initial }: { clubId?: string; initial?: Club }) {
                 placeholder="https://…"
               />
             </Field>
+            </fieldset>
             <div className="sm:col-span-2">
               <FormError message={error} />
             </div>
@@ -223,9 +239,11 @@ function ClubForm({ clubId, initial }: { clubId?: string; initial?: Club }) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy}>
-                {busy ? "Saving…" : editing ? "Save changes" : "Add club"}
-              </Button>
+              {canWrite && (
+                <Button type="submit" disabled={busy}>
+                  {busy ? "Saving…" : editing ? "Save changes" : "Add club"}
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
