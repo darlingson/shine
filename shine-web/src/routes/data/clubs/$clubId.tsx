@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Pagination } from "@/components/pagination";
 import { StaffTable } from "@/components/staff-table";
 import { clubMatchLabel } from "@/lib/clubMatches";
 import { positionLabel } from "@/lib/positions";
@@ -16,15 +17,23 @@ export const Route = createFileRoute("/data/clubs/$clubId")({
   component: ClubDetailPage,
 });
 
+const STAFF_PAGE_SIZE = 10;
+
 function ClubDetailPage() {
   const { clubId } = Route.useParams();
+  const teamId = Number(clubId);
   const club = useClub(clubId);
   const players = usePlayers();
   const affils = usePlayerClubs();
   const matches = useClubMatches();
+  const [staffPaging, setStaffPaging] = useState({ teamId, page: 1 });
+  const staffPage = staffPaging.teamId === teamId ? staffPaging.page : 1;
   const staff = useStaffAppointmentPage({
-    clubId: Number(clubId),
-    pageSize: 100,
+    clubId: teamId,
+    sort: "startDate",
+    order: "desc",
+    page: staffPage,
+    pageSize: STAFF_PAGE_SIZE,
   });
 
   const clubPlayers = useMemo(() => {
@@ -100,6 +109,14 @@ function ClubDetailPage() {
           loading={staff.isLoading}
           emptyMessage="No staff recorded for this club yet."
         />
+        {(staff.data?.total ?? 0) > 0 && (
+          <Pagination
+            page={staffPage}
+            pageSize={STAFF_PAGE_SIZE}
+            total={staff.data?.total ?? 0}
+            onPageChange={(next) => setStaffPaging({ teamId, page: next })}
+          />
+        )}
       </section>
 
       <section className="flex flex-col gap-2">
