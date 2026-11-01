@@ -198,7 +198,7 @@ function CompetitionForm({
         </h1>
         <p className="text-sm text-muted-foreground">
           {editing
-            ? "The identity is stable — season names accrue under it, never rename it."
+            ? "The identity is stable — record sponsor-era names as seasons; edit this only for genuine corrections."
             : "Register a league or cup that matches attach to."}
         </p>
       </div>
@@ -391,6 +391,8 @@ function SeasonsEditor({ competitionId }: { competitionId: number }) {
           competitionId={competitionId}
           busyId={busyId}
           setBusyId={setBusyId}
+          runAndRefetch={runAndRefetch}
+          setFormError={setFormError}
         />
         {formError && <FormError message={formError} />}
         {loading && !formError ? (
@@ -424,6 +426,7 @@ function SeasonsEditor({ competitionId }: { competitionId: number }) {
                     competitionId={competitionId}
                     busy={busyId === s.seasonId}
                     onBusy={(n) => setBusyId(n)}
+                    runAndRefetch={runAndRefetch}
                   />
                 ))}
                 {seasons.length === 0 && (
@@ -443,236 +446,242 @@ function SeasonsEditor({ competitionId }: { competitionId: number }) {
       </CardContent>
     </Card>
   );
+}
 
-  function AddSeasonForm({
-    competitionId,
-    busyId,
-    setBusyId,
-  }: {
-    competitionId: number;
-    busyId: number | null;
-    setBusyId: (n: number | null) => void;
-  }) {
-    const [values, setValues] = useState<SeasonFieldValues>(emptySeasonValues);
+function AddSeasonForm({
+  competitionId,
+  busyId,
+  setBusyId,
+  runAndRefetch,
+  setFormError,
+}: {
+  competitionId: number;
+  busyId: number | null;
+  setBusyId: (n: number | null) => void;
+  runAndRefetch: (op: () => Promise<unknown>) => Promise<void>;
+  setFormError: (message: string | null) => void;
+}) {
+  const [values, setValues] = useState<SeasonFieldValues>(emptySeasonValues);
 
-    function set(field: keyof SeasonFieldValues, value: string) {
-      setValues((prev) => ({ ...prev, [field]: value }));
-    }
-
-    async function onAdd(e: React.FormEvent) {
-      e.preventDefault();
-      if (values.label.trim() === "" && values.name.trim() === "") {
-        setFormError("A season needs at least a label or a name.");
-        return;
-      }
-      setBusyId(-1);
-      const dto = toSeasonDto(values);
-      await runAndRefetch(async () => {
-        await createCompetitionSeason(competitionId, dto);
-        setValues(emptySeasonValues());
-      });
-    }
-
-    return (
-      <form onSubmit={onAdd} className="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2">
-        <Field label="Label" htmlFor="season-add-label">
-          <Input
-            id="season-add-label"
-            value={values.label}
-            onChange={(e) => set("label", e.target.value)}
-            placeholder="2026 or 2025/26 (leave empty if unknown)"
-          />
-        </Field>
-        <Field label="Display name" htmlFor="season-add-name">
-          <Input
-            id="season-add-name"
-            value={values.name}
-            onChange={(e) => set("name", e.target.value)}
-            placeholder="e.g. FDH Premiership 2026"
-          />
-        </Field>
-        <Field label="Start date" htmlFor="season-add-start">
-          <Input
-            id="season-add-start"
-            type="date"
-            value={values.startDate}
-            onChange={(e) => set("startDate", e.target.value)}
-          />
-        </Field>
-        <Field label="End date" htmlFor="season-add-end">
-          <Input
-            id="season-add-end"
-            type="date"
-            value={values.endDate}
-            onChange={(e) => set("endDate", e.target.value)}
-          />
-        </Field>
-        <Field label="Source URL" htmlFor="season-add-source">
-          <Input
-            id="season-add-source"
-            type="url"
-            value={values.sourceUrl}
-            onChange={(e) => set("sourceUrl", e.target.value)}
-            placeholder="https://…"
-          />
-        </Field>
-        <div className="flex items-end justify-end">
-          <Button type="submit" disabled={busyId !== null}>
-            {busyId === -1 ? "Saving…" : "Add season"}
-          </Button>
-        </div>
-      </form>
-    );
+  function set(field: keyof SeasonFieldValues, value: string) {
+    setValues((prev) => ({ ...prev, [field]: value }));
   }
 
-  function SeasonRow({
-    season,
-    competitionId,
-    busy,
-    onBusy,
-  }: {
-    season: CompetitionSeason;
-    competitionId: number;
-    busy: boolean;
-    onBusy: (n: number | null) => void;
-  }) {
-    const [editing, setEditing] = useState(false);
-    const [values, setValues] = useState<SeasonFieldValues>(
-      seasonValuesFrom(season),
-    );
-
-    function set(field: keyof SeasonFieldValues, value: string) {
-      setValues((prev) => ({ ...prev, [field]: value }));
+  async function onAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (values.label.trim() === "" && values.name.trim() === "") {
+      setFormError("A season needs at least a label or a name.");
+      return;
     }
+    setBusyId(-1);
+    const dto = toSeasonDto(values);
+    await runAndRefetch(async () => {
+      await createCompetitionSeason(competitionId, dto);
+      setValues(emptySeasonValues());
+    });
+  }
 
-    async function onSave(e: React.FormEvent) {
-      e.preventDefault();
-      onBusy(season.seasonId);
-      const dto = toSeasonDto(values);
-      await runAndRefetch(async () => {
-        await updateCompetitionSeason(
-          competitionId,
-          season.seasonId,
-          dto,
-        );
-        setEditing(false);
-      });
-    }
+  return (
+    <form onSubmit={onAdd} className="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2">
+      <Field label="Label" htmlFor="season-add-label">
+        <Input
+          id="season-add-label"
+          value={values.label}
+          onChange={(e) => set("label", e.target.value)}
+          placeholder="2026 or 2025/26 (leave empty if unknown)"
+        />
+      </Field>
+      <Field label="Display name" htmlFor="season-add-name">
+        <Input
+          id="season-add-name"
+          value={values.name}
+          onChange={(e) => set("name", e.target.value)}
+          placeholder="e.g. FDH Premiership 2026"
+        />
+      </Field>
+      <Field label="Start date" htmlFor="season-add-start">
+        <Input
+          id="season-add-start"
+          type="date"
+          value={values.startDate}
+          onChange={(e) => set("startDate", e.target.value)}
+        />
+      </Field>
+      <Field label="End date" htmlFor="season-add-end">
+        <Input
+          id="season-add-end"
+          type="date"
+          value={values.endDate}
+          onChange={(e) => set("endDate", e.target.value)}
+        />
+      </Field>
+      <Field label="Source URL" htmlFor="season-add-source">
+        <Input
+          id="season-add-source"
+          type="url"
+          value={values.sourceUrl}
+          onChange={(e) => set("sourceUrl", e.target.value)}
+          placeholder="https://…"
+        />
+      </Field>
+      <div className="flex items-end justify-end">
+        <Button type="submit" disabled={busyId !== null}>
+          {busyId === -1 ? "Saving…" : "Add season"}
+        </Button>
+      </div>
+    </form>
+  );
+}
 
-    if (editing) {
-      return (
-        <TableRow>
-          <TableCell colSpan={4}>
-            <form
-              onSubmit={onSave}
-              className="grid gap-3 sm:grid-cols-2"
-            >
-              <Field label="Label" htmlFor={`season-${season.seasonId}-label`}>
-                <Input
-                  id={`season-${season.seasonId}-label`}
-                  value={values.label}
-                  onChange={(e) => set("label", e.target.value)}
-                  placeholder="2026 (empty if unknown)"
-                />
-              </Field>
-              <Field label="Display name" htmlFor={`season-${season.seasonId}-name`}>
-                <Input
-                  id={`season-${season.seasonId}-name`}
-                  value={values.name}
-                  onChange={(e) => set("name", e.target.value)}
-                  placeholder="e.g. TNM Super League 2025"
-                />
-              </Field>
-              <Field
-                label="Start date"
-                htmlFor={`season-${season.seasonId}-start`}
-              >
-                <Input
-                  id={`season-${season.seasonId}-start`}
-                  type="date"
-                  value={values.startDate}
-                  onChange={(e) => set("startDate", e.target.value)}
-                />
-              </Field>
-              <Field label="End date" htmlFor={`season-${season.seasonId}-end`}>
-                <Input
-                  id={`season-${season.seasonId}-end`}
-                  type="date"
-                  value={values.endDate}
-                  onChange={(e) => set("endDate", e.target.value)}
-                />
-              </Field>
-              <Field
-                label="Source URL"
-                htmlFor={`season-${season.seasonId}-source`}
-              >
-                <Input
-                  id={`season-${season.seasonId}-source`}
-                  type="url"
-                  value={values.sourceUrl}
-                  onChange={(e) => set("sourceUrl", e.target.value)}
-                  placeholder="https://…"
-                />
-              </Field>
-              <div className="flex items-end justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={busy}
-                  onClick={() => {
-                    setValues(seasonValuesFrom(season));
-                    setEditing(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={busy}>
-                  {busy ? "Saving…" : "Save season"}
-                </Button>
-              </div>
-            </form>
-          </TableCell>
-        </TableRow>
+function SeasonRow({
+  season,
+  competitionId,
+  busy,
+  onBusy,
+  runAndRefetch,
+}: {
+  season: CompetitionSeason;
+  competitionId: number;
+  busy: boolean;
+  onBusy: (n: number | null) => void;
+  runAndRefetch: (op: () => Promise<unknown>) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [values, setValues] = useState<SeasonFieldValues>(
+    seasonValuesFrom(season),
+  );
+
+  function set(field: keyof SeasonFieldValues, value: string) {
+    setValues((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function onSave(e: React.FormEvent) {
+    e.preventDefault();
+    onBusy(season.seasonId);
+    const dto = toSeasonDto(values);
+    await runAndRefetch(async () => {
+      await updateCompetitionSeason(
+        competitionId,
+        season.seasonId,
+        dto,
       );
-    }
+      setEditing(false);
+    });
+  }
 
+  if (editing) {
     return (
       <TableRow>
-        <TableCell className="font-medium">{seasonLabel(season)}</TableCell>
-        <TableCell>{season.label ?? "—"}</TableCell>
-        <TableCell>
-          {(season.startDate ?? season.endDate)
-            ? `${season.startDate ?? "?"} → ${season.endDate ?? "open"}`
-            : "—"}
-        </TableCell>
-        <TableCell className="text-right">
-          <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={() => {
-                setValues(seasonValuesFrom(season));
-                setEditing(true);
-              }}
+        <TableCell colSpan={4}>
+          <form
+            onSubmit={onSave}
+            className="grid gap-3 sm:grid-cols-2"
+          >
+            <Field label="Label" htmlFor={`season-${season.seasonId}-label`}>
+              <Input
+                id={`season-${season.seasonId}-label`}
+                value={values.label}
+                onChange={(e) => set("label", e.target.value)}
+                placeholder="2026 (empty if unknown)"
+              />
+            </Field>
+            <Field label="Display name" htmlFor={`season-${season.seasonId}-name`}>
+              <Input
+                id={`season-${season.seasonId}-name`}
+                value={values.name}
+                onChange={(e) => set("name", e.target.value)}
+                placeholder="e.g. TNM Super League 2025"
+              />
+            </Field>
+            <Field
+              label="Start date"
+              htmlFor={`season-${season.seasonId}-start`}
             >
-              Edit
-            </Button>
-            <DeleteButton
-              name={seasonLabel(season)}
-              onConfirm={async () => {
-                onBusy(season.seasonId);
-                await runAndRefetch(async () => {
-                  await deleteCompetitionSeason(
-                    competitionId,
-                    season.seasonId,
-                  );
-                });
-              }}
-            />
-          </div>
+              <Input
+                id={`season-${season.seasonId}-start`}
+                type="date"
+                value={values.startDate}
+                onChange={(e) => set("startDate", e.target.value)}
+              />
+            </Field>
+            <Field label="End date" htmlFor={`season-${season.seasonId}-end`}>
+              <Input
+                id={`season-${season.seasonId}-end`}
+                type="date"
+                value={values.endDate}
+                onChange={(e) => set("endDate", e.target.value)}
+              />
+            </Field>
+            <Field
+              label="Source URL"
+              htmlFor={`season-${season.seasonId}-source`}
+            >
+              <Input
+                id={`season-${season.seasonId}-source`}
+                type="url"
+                value={values.sourceUrl}
+                onChange={(e) => set("sourceUrl", e.target.value)}
+                placeholder="https://…"
+              />
+            </Field>
+            <div className="flex items-end justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  setValues(seasonValuesFrom(season));
+                  setEditing(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={busy}>
+                {busy ? "Saving…" : "Save season"}
+              </Button>
+            </div>
+          </form>
         </TableCell>
       </TableRow>
     );
   }
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{seasonLabel(season)}</TableCell>
+      <TableCell>{season.label ?? "—"}</TableCell>
+      <TableCell>
+        {(season.startDate ?? season.endDate)
+          ? `${season.startDate ?? "?"} → ${season.endDate ?? "open"}`
+          : "—"}
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              setValues(seasonValuesFrom(season));
+              setEditing(true);
+            }}
+          >
+            Edit
+          </Button>
+          <DeleteButton
+            name={seasonLabel(season)}
+            onConfirm={async () => {
+              onBusy(season.seasonId);
+              await runAndRefetch(async () => {
+                await deleteCompetitionSeason(
+                  competitionId,
+                  season.seasonId,
+                );
+              });
+            }}
+          />
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 }
