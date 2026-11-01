@@ -81,7 +81,7 @@ moving between clubs produces several rows; a loan can too.
 
 ## competitions.csv
 
-One row per competition **identity** — the stable record that never renames.
+One row per competition **identity** — the stable record shared across sponsor eras; season rows carry the changing names.
 
 | Column | Meaning |
 |---|---|

@@ -1,9 +1,10 @@
 namespace ShineApi.Models;
 
 /// <summary>A football competition a match can belong to (a league or a cup).
-/// The identity is stable and never renames: sponsor-driven name changes accrue
-/// on its seasons instead — "Super League" carries the "TNM Super League" and
-/// "FDH Premiership" eras (see <see cref="CompetitionSeason"/>).</summary>
+/// The identity is stable: sponsor-driven name changes accrue on its seasons
+/// instead — "Super League" carries the "TNM Super League" and "FDH Premiership"
+/// eras (see <see cref="CompetitionSeason"/>). Edit this name only to correct a
+/// genuine mistake; era names belong on the season rows.</summary>
 public class Competition
 {
     public int CompetitionId { get; set; }

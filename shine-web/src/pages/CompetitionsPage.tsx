@@ -67,7 +67,7 @@ export function CompetitionsPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {canWrite
-              ? "Leagues and cups matches attach to — a name here never changes later."
+              ? "Leagues and cups matches attach to — keep sponsor-era names on seasons."
               : "Read-only access — editing needs the competitions:write permission."}
           </p>
         </div>
