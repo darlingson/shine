@@ -10,9 +10,10 @@ namespace ShineApi.Services;
 /// The landing spotlight: a pure function of the date. Each day presents a
 /// different player and a different team — a window into the record, not a
 /// ranking and not a curation workflow. The pick is `day-number mod pool-size`
-/// over a deterministic order, so no state is stored, any day's spotlight is
-/// reproducible, and the response can be cached. Performance totals appear
-/// only as the featured subject's own record, never compared or ranked.
+/// over a deterministic order, so no state is stored and the pick is stable
+/// for a given date and record; the response can be cached. Performance
+/// totals appear only as the featured subject's own record, never compared
+/// or ranked.
 /// </summary>
 public class SpotlightService(ShineDbContext db) : ISpotlightService
 {
@@ -47,6 +48,7 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
     private async Task<Player?> PickPlayerAsync(DateOnly day)
     {
         var withFacts = db.Player
+            .AsNoTracking()
             .Where(p => db.PlayerClub.Any(pc => pc.PlayerId == p.PlayerId)
                 || db.ClubMatchSquad.Any(s => s.PlayerId == p.PlayerId)
                 || db.NationalTeamMatchSquad.Any(s => s.PlayerId == p.PlayerId))
@@ -59,7 +61,8 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
         count = await db.Player.CountAsync();
         return count == 0
             ? null
-            : await db.Player.OrderBy(p => p.PlayerId).Skip(day.DayNumber % count).FirstAsync();
+            : await db.Player.AsNoTracking().OrderBy(p => p.PlayerId)
+                .Skip(day.DayNumber % count).FirstAsync();
     }
 
     private sealed record TeamPick(int Id, string Kind, string Name);
@@ -68,10 +71,12 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
     private async Task<TeamPick?> PickTeamAsync(DateOnly day)
     {
         var clubs = await db.Club
+            .AsNoTracking()
             .OrderBy(c => c.ClubId)
             .Select(c => new TeamPick(c.ClubId, SearchKinds.Club, c.Name))
             .ToListAsync();
         var nationalTeams = await db.NationalTeam
+            .AsNoTracking()
             .OrderBy(t => t.NationalTeamId)
             .Select(t => new TeamPick(t.NationalTeamId, SearchKinds.NationalTeam, t.Name))
             .ToListAsync();
@@ -90,23 +95,27 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
         var id = player.PlayerId;
 
         var clubRecord = await db.ClubMatchSquad
+            .AsNoTracking()
             .Where(s => s.PlayerId == id)
             .GroupBy(_ => 1)
             .Select(g => new { Apps = g.Count(), Goals = g.Sum(s => s.Goals), Assists = g.Sum(s => s.Assists) })
             .FirstOrDefaultAsync();
         var nationalRecord = await db.NationalTeamMatchSquad
+            .AsNoTracking()
             .Where(s => s.PlayerId == id)
             .GroupBy(_ => 1)
             .Select(g => new { Apps = g.Count(), Goals = g.Sum(s => s.Goals), Assists = g.Sum(s => s.Assists) })
             .FirstOrDefaultAsync();
 
         var currentClub = await db.PlayerClub
+            .AsNoTracking()
             .Include(pc => pc.Club)
             .Where(pc => pc.PlayerId == id && pc.IsCurrent)
             .OrderByDescending(pc => pc.StartDate)
             .FirstOrDefaultAsync();
 
         var latestNationalSide = await db.NationalTeamMatchSquad
+            .AsNoTracking()
             .Include(s => s.NationalTeam)
             .Include(s => s.Match)
             .Where(s => s.PlayerId == id)
@@ -144,6 +153,7 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
     private async Task<List<SpotlightMatchDto>> RecentPlayerMatchesAsync(int playerId)
     {
         var clubEntries = await db.ClubMatchSquad
+            .AsNoTracking()
             .Include(s => s.Match).ThenInclude(m => m!.HomeClub)
             .Include(s => s.Match).ThenInclude(m => m!.AwayClub)
             .Where(s => s.PlayerId == playerId)
@@ -151,6 +161,7 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
             .Take(RecentMatchCount)
             .ToListAsync();
         var nationalEntries = await db.NationalTeamMatchSquad
+            .AsNoTracking()
             .Include(s => s.Match).ThenInclude(m => m!.HomeNationalTeam)
             .Include(s => s.Match).ThenInclude(m => m!.AwayNationalTeam)
             .Where(s => s.PlayerId == playerId)
@@ -204,10 +215,13 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
 
     private async Task<SpotlightTeamDto?> BuildClubTeamAsync(int clubId, DateOnly day)
     {
-        var club = await db.Club.FirstOrDefaultAsync(c => c.ClubId == clubId);
+        var club = await db.Club
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.ClubId == clubId);
         if (club is null) return null; // deleted between the pick and the build
 
         var recentMatches = await db.ClubMatch
+            .AsNoTracking()
             .Include(m => m.HomeClub)
             .Include(m => m.AwayClub)
             .Where(m => m.HomeClubId == clubId || m.AwayClubId == clubId)
@@ -234,10 +248,13 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
 
     private async Task<SpotlightTeamDto?> BuildNationalTeamAsync(int nationalTeamId, DateOnly day)
     {
-        var team = await db.NationalTeam.FirstOrDefaultAsync(t => t.NationalTeamId == nationalTeamId);
+        var team = await db.NationalTeam
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.NationalTeamId == nationalTeamId);
         if (team is null) return null; // deleted between the pick and the build
 
         var recentMatches = await db.NationalTeamMatch
+            .AsNoTracking()
             .Include(m => m.HomeNationalTeam)
             .Include(m => m.AwayNationalTeam)
             .Where(m => m.HomeNationalTeamId == nationalTeamId || m.AwayNationalTeamId == nationalTeamId)
@@ -270,10 +287,13 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
     }
 
     /// <summary>The derived "the coach" — highest-priority ongoing appointment
-    /// (head_coach → manager → caretaker), same resolution the staff display uses.</summary>
+    /// (head_coach → manager → caretaker). Undated stints (unknown start) rank
+    /// below dated ones of the same priority, since Postgres would otherwise
+    /// put their NULL start first on a descending sort.</summary>
     private async Task<string?> ResolveCoachAsync(int? clubId, int? nationalTeamId, DateOnly day)
     {
         var appointments = await db.StaffAppointment
+            .AsNoTracking()
             .Include(a => a.StaffMember)
             .Where(a => clubId.HasValue ? a.ClubId == clubId : a.NationalTeamId == nationalTeamId)
             .Where(a => a.EndDate == null || a.EndDate >= day)
@@ -281,6 +301,7 @@ public class SpotlightService(ShineDbContext db) : ISpotlightService
 
         var coach = appointments
             .OrderBy(a => StaffRoles.CoachPriority(a.Role))
+            .ThenBy(a => a.StartDate == null)
             .ThenByDescending(a => a.StartDate)
             .FirstOrDefault();
 

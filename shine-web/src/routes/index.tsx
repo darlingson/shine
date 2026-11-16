@@ -184,20 +184,36 @@ function SpotlightSection() {
         </p>
       </div>
       <div className="grid items-start gap-4 lg:grid-cols-5">
-        {player && <SpotlightPlayerCard player={player} />}
-        {team && <SpotlightTeamCard team={team} />}
+        {player && (
+          <SpotlightPlayerCard
+            player={player}
+            className={team ? "lg:col-span-3" : "lg:col-span-5"}
+          />
+        )}
+        {team && (
+          <SpotlightTeamCard
+            team={team}
+            className={player ? "lg:col-span-2" : "lg:col-span-5"}
+          />
+        )}
       </div>
     </section>
   );
 }
 
-function SpotlightPlayerCard({ player }: { player: SpotlightPlayer }) {
+function SpotlightPlayerCard({
+  player,
+  className,
+}: {
+  player: SpotlightPlayer;
+  className?: string;
+}) {
   const { record } = player;
   const hasRecord =
     record.clubAppearances > 0 || record.nationalAppearances > 0;
 
   return (
-    <Card className="lg:col-span-3">
+    <Card className={className}>
       <CardHeader>
         <div className="flex items-center gap-3">
           <Monogram name={player.name} />
@@ -300,14 +316,20 @@ const LINEUP_LABELS: Record<string, string> = {
   injured: "Injured",
 };
 
-function SpotlightTeamCard({ team }: { team: SpotlightTeam }) {
+function SpotlightTeamCard({
+  team,
+  className,
+}: {
+  team: SpotlightTeam;
+  className?: string;
+}) {
   const teamHref =
     team.kind === "club"
       ? `/data/clubs/${team.id}`
       : `/data/national-teams/${team.id}`;
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className={className}>
       <CardHeader>
         <div className="flex items-center gap-3">
           <Monogram name={team.name} />
