@@ -1,82 +1,60 @@
 # Player & Team Spotlight — Landing Page Plan
 
-> Branch: `feat/player-spotlight`. The landing page becomes a spotlight page: the leaderboard section (top scorers / providers / caps / latest) is removed, replaced by one editorially-picked player and one team.
+> Branch: `feat/player-spotlight`. The landing page becomes a spotlight page: the leaderboard section (top scorers / providers / caps / latest) is removed, replaced by a rotating player spotlight and a rotating team spotlight.
 
 ## Principle
 
-Shine is a player database, not a performance tracker. The spotlight presents a **player** — who they are, where they play, what their record looks like — chosen by an editor because they are worth knowing about right now (a new signing, a national call-up, a women's-game profile, a milestone). It is never an automatic ranking of goals or minutes. Performance numbers appear only as the player's own record, in context.
+Shine is a player database. The spotlight is a window into the record: it presents **the player** — who they are, where they play, what their record looks like — and rotates through everyone in the database over time. It is not a performance ranking and not a curated highlight; no one picks anyone. As the record grows, the spotlight keeps moving through it.
 
-Following the product ethos, every pick carries an editorial note and a `SourceUrl` — why this player, and where that came from.
+Any performance numbers that appear are the player's own record, in context, never compared or ranked.
 
 ## Decisions
 
 | Decision | Choice |
 |---|---|
-| Who picks | Editorial: admins curate picks in the manage dashboard; no algorithmic selection |
-| What shows on landing | One featured player + one featured team |
+| Who picks | No one. Selection is automatic rotation over the existing record |
+| Rotation | Deterministic daily: the same player/team all day (UTC), a different one each day |
+| What shows on landing | One player + one team |
 | Card depth | Rich: a dedicated public API composes profile + record server-side |
-| When nothing is picked | Spotlight sections render nothing; hero/search/about still carry the page |
+| When sparse | Show it anyway with the facts that exist — an honest thin record fits the product; sections hide only when the database itself is empty |
 | Leaderboards | Deleted (also stops the landing page downloading every squad entry to compute stats client-side) |
 
-## Data model (API)
+## Selection mechanics
 
-New entity `Spotlight` — one row per pick, history retained:
-
-```text
-Spotlight
-  Id                  int, PK
-  SubjectKind         text  — 'player' | 'club' | 'nationalTeam'   (required)
-  PlayerId            int?  — set when SubjectKind = 'player'
-  ClubId              int?  — set when SubjectKind = 'club'
-  NationalTeamId      int?  — set when SubjectKind = 'nationalTeam'
-  Note                text  — the editorial blurb ("why this player")  (required, max ~500 chars)
-  SourceUrl           text  — provenance for the pick                  (optional)
-  IsCurrent           bool  — exactly one true per SubjectKind, enforced atomically on write
-  CreatedAt / UpdatedAt timestamps
-```
-
-Mirrors existing in-repo patterns:
-
-- exactly-one-of reference validation, same as `StaffAppointment` (`clubId` / `nationalTeamId`)
-- `IsCurrent` with atomic write-side toggle, same as `PlayerClub.IsCurrent` and the recent atomic team-staff writes
-- past picks stay as rows — a "past spotlights" view falls out for free later
+- **Player pool:** all players, deterministic order (by `Id`). Prefer players with at least one recorded fact (a club affiliation or a squad entry) so the spotlight rarely lands on a bare name; fall back to the full pool when no such players exist.
+- **Team pool:** clubs and national teams in one pool, same idea.
+- **Index:** `days-since-epoch mod pool-size` — stable for the whole day, cacheable, and every entry in the record gets a turn. No state, no cron, nothing to store.
+- **Testability:** the endpoint accepts an optional `?date=YYYY-MM-DD` to compute any day's spotlight deterministically.
 
 ## API surface
 
-Public (no auth):
+Public, read-only, no auth, **no new entity, no admin UI, no new permission**:
 
-- `GET /api/Spotlight` — the composed landing bundle: current player pick (profile, current club + national team, career record: appearances, goals, assists, national caps, recent matches with participation) and current team pick (profile, coach/staff lead, recent results, squad size). Returns `{ player: null, team: null }` when nothing is current.
-- `GET /api/Spotlight/history` — past picks, newest first (powers a future archive page; cheap to include now).
-
-Manage (auth, new permission `spotlight:write` in the existing permission-bundle pattern):
-
-- `GET /api/Spotlight/picks` — all picks with their subject's resolved display name
-- `POST /api/Spotlight` — create; setting `IsCurrent = true` demotes the previous current pick of the same kind in one transaction
-- `PUT /api/Spotlight/{id}` — edit / activate / retire
-- `DELETE /api/Spotlight/{id}`
-
-Composition lives in a `SpotlightService` (Controllers → Services → Repositories layering, like the rest). Record totals aggregate squad entries via EF; recent matches are the latest 5 with the player's participation line.
+- `GET /api/Spotlight` — the composed bundle:
+  - `player`: profile, current club, national team, career record (appearances, goals, assists, national caps), recent matches with participation, position/foot/age as available
+  - `team`: profile, kind (club / national team), coach or staff lead from the appointments registry, recent results, squad size
+  - `asOf`: the rotation date used
+- Composition lives in a `SpotlightService` (Controllers → Services → Repositories layering, like the rest); all aggregation is server-side via EF.
+- `Cache-Control` header so CDNs/proxies can hold the response for the day.
 
 ## Web
 
-- `lib/spotlight.ts` — typed client + TanStack Query hook for the bundle and picks.
+- `lib/spotlight.ts` — typed client + TanStack Query hook for the bundle.
 - `routes/index.tsx` — rebuilt:
   - **Keep:** hero (live totals, SearchBox, contribute card), about strip, footer.
   - **Remove:** all leaderboards, `Scorer`, `Leaderboard`, `Empty`, and the `useClubSquads` / `useNationalSquads` fetches the landing no longer needs.
-  - **Add:** "Spotlight" section — featured player card (monogram, name, position, current club, national team, record totals, recent matches, editorial note with source link, CTA to `/data/players/$id`) and featured team card (name, kind badge, coach, recent results, CTA to the team's data page). Sections render only when a pick exists.
-- `routes/manage/spotlight.tsx` — new manage page: pick list with current markers, editor form (subject picker, note, source URL, set-current), gated on `spotlight:write`; sidebar entry alongside existing manage sections.
+  - **Add:** spotlight section — player card (monogram, name, position, current club, national team, record totals, recent matches, CTA to `/data/players/$id`) and team card (name, kind badge, coach, recent results, CTA to the team's data page). Loading skeleton while fetching; sections hidden when the database is empty.
 
 ## Sequence
 
-Small scoped commits, per the contributing guide:
+Two scoped commits:
 
-1. **API:** `Spotlight` model + migration, CRUD controller/service/repo, exactly-one-of + atomic current-toggle validation, `spotlight:write` permission + role seeder update.
-2. **API:** composed public `GET /api/Spotlight` bundle (record aggregation service) + history endpoint; export/Swagger touch-ups.
-3. **Web:** `lib/spotlight.ts` client + manage page for picks.
-4. **Web:** landing page rebuild — remove leaderboards, add spotlight sections with loading skeleton and empty-state behavior.
+1. **API:** `SpotlightController` + `SpotlightService` — deterministic rotation, server-side composition, `?date=` override, cache headers, Swagger docs.
+2. **Web:** `lib/spotlight.ts` client, landing page rebuild — remove leaderboards, add spotlight cards with loading/empty behavior.
 
 ## Left for during implementation
 
-- Player card contents beyond the core (DOB/age? foot? height?) — keep it lean, the data page holds the rest
+- How much bio on the card (DOB/age? foot? height?) — keep it lean, the data page holds the rest
 - Recent-matches count (default 5)
 - Monogram styling per team kind (club vs national team)
+- If rotation ever needs biasing (e.g. prefer recently-added records), it stays a pure function of the date — no state
