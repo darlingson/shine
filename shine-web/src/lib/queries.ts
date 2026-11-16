@@ -50,6 +50,7 @@ import {
   type PlayerQuery,
 } from "@/lib/players";
 import { listPlayerClubs, type PlayerClub } from "@/lib/playerclubs";
+import { getSpotlight, type SpotlightResponse } from "@/lib/spotlight";
 import {
   getStaffMember,
   getStaffMemberFilterOptions,
@@ -137,6 +138,7 @@ export const queryKeys = {
   users: ["users"] as const,
   search: (q: string, kinds: string, limit: number) =>
     ["search", q, kinds, limit] as const,
+  spotlight: ["spotlight"] as const,
 };
 
 export function usePlayers(): UseQueryResult<Player[], Error> {
@@ -488,5 +490,15 @@ export function useSearch(
     queryKey: queryKeys.search(term, kindKey, limit),
     queryFn: () => search(term, { kinds, limit }),
     enabled: term.length >= SEARCH_MIN_LENGTH,
+  });
+}
+
+export function useSpotlight(): UseQueryResult<SpotlightResponse, Error> {
+  return useQuery({
+    queryKey: queryKeys.spotlight,
+    queryFn: () => getSpotlight(),
+    // The pick rotates daily; a short stale window keeps the landing page
+    // from refetching on every mount without pinning a whole day.
+    staleTime: 5 * 60 * 1000,
   });
 }
